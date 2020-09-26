@@ -1,0 +1,255 @@
+================================================================================
+== APPENDIX A3: UTILITIES (HOL Zero User Manual)                              ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2011                            ==
+================================================================================
+
+
+! Note that almost all utility descriptions are missing in this early release 
+! HOL Zero.
+
+********************************************************************************
+********************************************************************************
+
+mk_var_type : string -> hol_type
+dest_var_type : hol_type -> string
+is_var_type : hol_type -> bool
+
+mk_comp_type : string * hol_type list -> hol_type
+dest_comp_type : hol_type -> string * hol_type list
+is_comp_type : hol_type -> bool
+
+mk_fun_type : hol_type * hol_type -> hol_type
+dest_fun_type : hol_type -> hol_type * hol_type
+is_fun_type : hol_type -> bool
+
+type_inst : (hol_type * hol_type) list -> hol_type -> hol_type
+
+mk_var : string * hol_type -> term
+dest_var : term -> string * hol_type
+is_var : term -> bool
+
+mk_gconst : string -> term
+mk_iconst : string * (hol_type * hol_type) list -> term
+dest_const : term -> string * hol_type
+is_const : term -> bool
+
+mk_comb : term * term -> term
+dest_comb : term -> term * term
+is_comb : term -> bool
+
+mk_abs : term * term -> term
+dest_abs : term -> term * term
+is_abs : term -> bool
+
+type_of : term -> hol_type
+
+type destructed_type =
+        Type_var of string
+      | Type_comp of (string * hol_type list)
+dest_type : hol_type -> destructed_type
+
+is_bool_type : hol_type -> bool
+
+a_ty : hol_type
+b_ty : hol_type
+c_ty : hol_type
+
+
+type_tyvars : hol_type -> hol_type list
+type_match0 : (hol_type * hol_type) list
+                         -> hol_type -> hol_type -> (hol_type * hol_type) list
+type_match : hol_type -> hol_type -> (hol_type * hol_type) list
+
+
+type destructed_term =
+        Term_var of (string * hol_type)
+      | Term_const of (string * hol_type)
+      | Term_comb of (term * term)
+      | Term_abs of (term * term)
+dest_term : term -> destructed_term
+
+var_name : term -> string
+var_type : term -> hol_type
+
+mk_const : string * hol_type -> term
+const_name : term -> string
+const_type : term -> hol_type
+
+list_mk_comb : term * term list -> term
+
+dest_cbin : string -> term -> term * term
+dest_cbinder : string -> term -> term * term
+
+is_bool_term : term -> bool
+
+mk_eq : term * term -> term
+dest_eq : term -> term * term
+is_eq : term -> bool
+
+mk_imp : term * term -> term
+dest_imp : term -> term * term
+is_imp : term -> bool
+
+mk_exists : term * term -> term
+dest_exists : term -> term * term
+is_exists : term -> bool
+
+
+dest_thm : thm -> term list * term
+asms : thm -> term list
+concl : thm -> term
+
+
+term_tyvars : term -> hol_type list
+
+aconv : term -> term -> bool
+
+free_vars : term -> term list
+var_free_in : term -> term -> bool
+
+variant : term list -> term -> term
+cvariant : term list -> term -> term
+
+tyvar_inst : (hol_type * hol_type) list -> term -> term
+var_inst : (term * term) list -> term -> term
+
+
+list_mk_fun_type : hol_type list * hol_type -> hol_type
+strip_fun_type : hol_type -> hol_type list * hol_type
+
+
+type_lt : hol_type -> hol_type -> bool
+
+
+rator : term -> term
+rand : term -> term
+strip_comb : term -> term * term list
+
+list_mk_abs : term list * term -> term
+avar : term -> term
+body : term -> term
+strip_abs : term -> term list * term
+
+strip_cbinary : assochand -> string -> term -> term list
+is_cbinary : string -> term -> bool
+
+strip_cbinder : string -> term -> term list * term
+is_cbinder : string -> term -> bool
+
+eq_lhs : term -> term
+eq_rhs : term -> term
+
+list_mk_imp : term list * term -> term
+strip_imp : term -> term list * term
+
+mk_conj : term * term -> term
+list_mk_conj : term list -> term
+dest_conj : term -> term * term
+strip_conj : term -> term list
+flatstrip_conj : term -> term list
+is_conj : term -> bool
+
+mk_forall : term * term -> term
+list_mk_forall : term list * term -> term
+dest_forall : term -> term * term
+strip_forall : term -> term list * term
+is_forall : term -> bool
+
+list_mk_exists : term list * term -> term
+strip_exists : term -> term list * term
+
+mk_select : term * term -> term
+dest_select : term -> term * term
+is_select : term -> bool
+
+
+genvar : hol_type -> term
+list_variant : term list -> term list -> term list
+list_cvariant : term list -> term list -> term list
+
+list_free_vars : term list -> term list
+term_free_in : term -> term -> bool
+all_vars : term -> term list
+list_all_vars : term list -> term list
+
+subst : (term * term) list -> term -> term
+var_match : term -> term -> (term * term) list
+term_match : term -> term -> (term * term) list * (hol_type * hol_type) list
+
+term_union : term list -> term list -> term list
+rename_avar : string -> term -> term
+find_subterm : (term -> bool) -> term -> term
+find_subterms : (term -> bool) -> term -> terms
+term_lt : term -> term -> bool
+
+
+dest_eqthm : thm -> term * term
+eqthm_lhs : thm -> term
+eqthm_rhs : thm -> term
+is_eqthm : thm -> bool
+
+
+thm_free_vars : thm -> term list
+thm_aconv : thm -> thm -> bool
+
+
+mk_let : (term * term) list * term -> term
+dest_let : term -> (term * term) list * term
+is_let : term -> bool
+
+
+mk_not : term -> term
+dest_not : term -> term
+is_not : term -> bool
+
+mk_disj : term * term -> term
+list_mk_disj : term list -> term
+dest_disj : term -> term * term
+strip_disj : term -> term list
+flatstrip_disj : term -> term list
+is_disj : term -> bool
+
+mk_uexists : term * term -> term
+dest_uexists : term -> term * term
+is_uexists : term -> bool
+
+mk_cond : term * term * term -> term
+dest_cond : term -> term * term * term
+is_cond : term -> bool
+
+
+false_tm : term
+
+mk_prod_type : hol_type * hol_type -> hol_type
+list_mk_prod_type : hol_type list -> hol_type
+dest_prod_type : hol_type -> hol_type * hol_type
+strip_prod_type : hol_type -> hol_type list
+is_prod_type : hol_type -> bool
+
+mk_pair : term * term -> term
+list_mk_pair : term list -> term
+dest_pair : term -> term * term
+strip_pair : term -> term list
+flatstrip_pair : term -> term list
+is_pair : term -> bool
+
+
+ind_ty : hol_type
+
+ind_zero_tm : term
+ind_suc_fn : term
+
+nat_ty : hol_type
+
+zero_tm : term
+suc_fn : term
+
+mk_suc : term -> term
+dest_suc : term -> term
+is_suc : term -> bool
+
+mk_nat : num -> term
+dest_nat : term -> num
+is_nat : term -> bool

@@ -1,0 +1,34 @@
+#! /bin/bash -e
+
+# hzhelp <input>
+# - Command-line help facility for HOL Zero commands & terminology
+# 
+# by Mark Adams
+# Copyright (c) Proof Technologies, 2010-2013
+
+# This script uses the User Manual appendix files, located in HOL Zero directory
+# 'doc/User_Manual', and the HOL glossary, located in 'doc', to provide a
+# command-line help facility for HOL Zero commands and terminology.
+#
+# If <input> is a HOL Zero ML command, then the user manual A-appendix entry for
+# this command is displayed.  If <input> is a space-separated series of
+# A-appendix numbers (e.g. "A3 A4 A5"), then the signature of each entry is
+# listed for those appendices given by the numbers.  If <input> is
+# "all-commands", then the signatures of all A-appendix entries is listed.
+#
+# If <input> is a HOL Zero theorem name, then the user manual B2-appendix entry
+# for this theorem is displayed.  If <input> is "all-theorems", the names of all
+# B2-appendix theorems is listed.
+#
+# If <input> is a word defined in the HOL glossary, then the entry for that word
+# is displayed.  If <input> is "all-words", then the name of each word defined
+# in the glossary is listed.
+
+# Appendix files are assumed to exist in HOL Zero directory 'doc/User_Manual',
+# with A-appendix names of the form "A<n>_<title>", where <n> is some number.
+# A-appendix entries are assumed to be separated by a line of "*"s (of at least
+# 40 chars).
+# 
+# Configured variable BUILD sets the HOL Zero home directory.
+
+

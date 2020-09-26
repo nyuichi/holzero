@@ -1,0 +1,51 @@
+================================================================================
+==                        HOL ZERO SOURCE CODE FILES                          ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2013                            ==
+================================================================================
+
+This file lists the HOL Zero base system .ml source code files.  Files defining
+ML modules also have a corresponding .mli file for the module type.
+
+File          ML Module  Description
+
+banner.ml     Banner     HOL Zero banner printer
+bool.ml       Bool       Extra theory and inference rules for predicate logic
+boolalg.ml    BoolAlg    Algebraic theorems for predicate logic
+boolclass.ml  BoolClass  Predicate logic relying on the Axiom of Choice
+commonhol.ml  CommonHOL  The Common HOL API
+corethry.ml   CoreThry   Core theory for the HOL logic
+def1.ml       Def1       Derived commands for constant definition
+def2.ml       Def2       Derived commands for function definition
+dltree.ml     DLTree     Library support for dynamic lookup trees
+dmodes.ml     DModes     Display modes for the pretty printers
+eqcong.ml     EqCong     Equality congruence rules
+equal.ml      Equal      Extra theory and support for equality reasoning
+exn.ml        Exn        General purpose exceptions
+help.ml       Help       Help facility
+holzero.ml    -          Main build file for the HOL Zero base system
+ind.ml        Ind        Theory asserting the existence of an infinite type
+lexer.ml      Lexer      Lexer for type/term quotations
+lib.ml        Lib        Library of generic functional programming utilities
+names.ml      Names      Lexical classification of names for parsing/printing
+nat.ml        Nat        Theory for natural numbers
+natarith.ml   NatArith   Theory for natural arithmetic operators
+nateval.ml    NatEval    Conversions for evaluating natural numeral arithmetic
+natnumrl.ml   NatNumrl   Theory for natural number numerals
+natrel.ml     NatRel     Theory for natural arithmetic relations
+pair.ml       Pair       Theory for ordered pairs
+parser.ml     Parser     Syntax and top-level parsers for type/term quotations
+preterm.ml    Preterm    Intermediate parser/printer datatypes for types/terms
+printer.ml    Printer    Pretty printers for types/terms/theorems
+reader.ml     Reader     Library support for generic reader combinators
+store.ml      Store      Databases for theorems and lemmas
+system.ml     -          OCaml-specific and installation-specific settings
+term.ml       Term       Internal datatype for terms; constant decl
+thm.ml        Thm        Internal datatype for theorems; primitive rules/defn
+type.ml       Type       Internal datatype for types; type operator decl
+typeanal.ml   TypeAnal   Type analysis of pretypes/preterms
+typeannot.ml  TypeAnnot  Type annotation of preterms
+utils1.ml     Utils1     Essential derived operations on types/terms
+utils2.ml     Utils2     More derived operations on types/terms/theorems
+wrap.ml       Wrap       Wrappers for primitive rules and theory commands

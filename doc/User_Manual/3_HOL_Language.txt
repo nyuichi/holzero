@@ -1,0 +1,1283 @@
+================================================================================
+== CHAPTER 3: HOL LANGUAGE (HOL Zero User Manual)                             ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+
+The HOL language is a powerful formal language capable of describing most of
+mathematics.  This chapter explains the language and HOL Zero's version of its
+concrete syntax.  It also explains various useful utility operations that can
+be performed on expressions, and how to configure input and display.
+
+
+3.1 LEXICAL SYNTAX
+
+This section explains HOL Zero's lexical syntax, used in both type and term
+quotations (see Sections 3.2.2 and 3.3.2 respectively).  See Appendix C for a
+formal grammar for the lexical syntax.
+
+3.1.1 TOKENS
+
+Type and term quotations break down into a list of lexical tokens.  Identifier
+tokens are used to explicitly refer to HOL entities (i.e. variables, constants,
+type variables and type constants).  Reserved word tokens help give syntactic
+structure to quotations.  Any spacing between identifiers and/or reserved words
+is not itself captured in tokens.
+
+  For example, the following term quotation:                   Example 3.1
+
+     `\x. y + foo x`
+
+  breaks down into 7 tokens:
+
+     "\", "x", ".", "y", "+", "foo", "x".
+
+  Identifier tokens refer to the variables "x", "y" and "foo" and constant "+".
+  The other tokens, "\" and ".", are reserved word tokens.
+
+HOL is case sensitive for both entity names and reserved words.
+
+3.1.2 REGULAR AND IRREGULAR NAMES
+
+All HOL entities at least have a name attribute, which in HOL Zero is a sequence
+of ASCII characters.  There are no restrictions on the form of this name - it
+can potentially involve any combination of digits, underscores, symbolic
+characters, spaces or even unprintable characters, as well as alphabetic
+characters.
+
+However, the form of identifier token that can used to refer to a given HOL
+entity depends on whether the entity's name is "regular" or "irregular".  The
+identifier for a regular name can simply be the name itself (as for all the
+entities in Example 3.1), whereas the identifier for an irregular name requires
+quoting (see Section 3.1.5).
+
+There are three forms of regular name:
+
+  Alphanumeric
+     - Starts with a letter or "_", followed by zero or more letters, digits,
+      "_"s and "'"s
+
+  Numeric
+     - Starts with a digit, followed by zero or more digits and "_"s
+     - Cannot be immediately followed by a letter or "'"
+
+  Symbolic
+     - One or more of the following characters:
+           ! # & * + - . / ; < = > ? @ | ~ ^ [ ] \ { }
+
+All other names are irregular.  This includes any names that include spacing
+characters, punctuation characters, non-printable characters or a mixture of
+alphanumeric and symbolic characters.  It also includes the empty character
+sequence.
+
+  Spacing characters:
+      <space> <tab> <line-feed> <form-feed> <carriage-return>
+
+  Punctuation characters:
+      ( ) , :
+
+  Non-printable characters:
+      Any character with ASCII code < 32 or > 126
+
+3.1.3 RESERVED WORDS
+
+There are three forms of reserved word token:
+
+  Punctuation
+     - A single punctuation character (see Section 3.1.2)
+
+  Keyword
+     - A regular non-numeric name, from the following fixed set of 8 tokens:
+          and else if in let then \ .
+
+  Enumeration bracket
+     - A regular non-numeric name for delimiting the start or end of
+      enumeration expressions
+     - The user can extend the set of enumeration brackets (see Section 3.4.4)
+     - No enumeration brackets are defined in the HOL Zero base system
+
+Identifiers for entities with names that clash with reserved words require
+quoting (see Section 3.1.5).
+
+Note that the lexical token "=" is a special case in HOL lexical syntax.
+Although it is normally an identifier, and is classified as an identifier by the
+lexical syntax, it is effectively a keyword when it occurs as part of a let-
+declaration (see Section 3.4.2).
+
+3.1.4 JUXTAPOSITION OF TOKENS
+
+Quotations must be written with sufficient spacing/parenthesis to distinguish
+adjacent alphanumeric/numeric tokens or adjacent symbolic tokens (whether these
+tokens are identifiers or reserved words).  For example, in `\ ^ . ^ = 5` (where
+"^" is actually a variable), spacing is inserted between "\" and "^", and "^"
+and ".", which are all symbolic tokens.
+
+3.1.5 IDENTIFIER QUOTING
+
+Identifiers for entities with irregular names or names that clash with reserved
+words must be specially delimited.  This involves adding a double-quote
+character at the start and end of the name, as in `"then" = "foo x"` (meaning
+the variable named "then" equals the variable named "foo x").  This is called
+"identifier quoting".
+
+Any '"' or '\' characters in a quoted name must be backslash-escaped, as in
+`"\\ \""` (for a backslash character followed by a space character followed by a
+double-quote character).  Any backquote or non-printable characters in a quoted
+name must be referred to by a backslash followed by their 3-digit decimal ASCII
+code (with leading zeros for characters with ASCII code less than 100), as in
+"\007\127" for ASCII character 7 followed by ASCII character 127.  Such 3-digit
+ASCII codes can also be used for printable characters, as in "\111\107" (for
+"ok"), but this is of course not required.
+
+Variables and constants with numeric names must also be quoted (because numeric
+tokens in term quotations denote natural number numerals - see Section 3.4.5).
+This does not apply to type variables and type constants with numeric names.
+
+The quoting of entity names that do not require quotes (i.e. regular, non-
+clashing names) is allowed, and denotes the same as the unquoted entity name.
+
+3.1.6 SPECIAL MARKINGS
+
+Identifiers in HOL Zero can have special one-character prefix markings to
+portray extra information.  The "$"-mark indicates that the identifier occurs
+defixed (see Seciton 3.5.8), as in `$=`.  The "'" and "%"-marks respectively
+indicate that the identifier is for a type variable or a variable (see Section
+3.6.2), as in `:'a` and `%x`.
+
+These markings are part of the same lexical token as the main part of the
+identifier, and must immediately precede it, without any intervening space.  If
+the identifier uses quoting (see Section 3.1.5), then the markings must be
+written outside and immediately preceding the opening double-quote, as in
+`%"let"`.
+
+If an identifier has both a defixing mark and a variable or type variable mark,
+then the defixing mark must come first, as in `$%=`.
+
+
+3.2 TYPES
+
+HOL types exist to help enforce a notion of well-formedness on terms, by
+restricting how terms can be constructed (specifically, how function application
+terms can be constructed).  A type denotes a distinct non-empty set of values,
+and all denotable values have precisely one type.  Every term has a type, and
+the possible values denoted by a term are necessarily all elements of its type.
+Types have ML abstract datatype 'hol_type'.
+
+3.2.1 PRIMITIVE TYPE SYNTAX
+
+HOL types are composed of two fundamental kinds of entity:
+
+  Type Variables
+     - Entities for referring to an aribtrary type, for the purposes of
+      parametric polymorphism (see Section 3.2.4).  A type variable has one
+      attribute only: a name.  Its scope is throughout the HOL object in which
+      it appears.
+
+  Type Constants
+     - Entities for giving fundamental structure to HOL types.  A type constant
+      has two attributes: a name and an "arity" (i.e. the fixed number of type
+      parameters in each instance of the type constant).  Its scope is across
+      the entire HOL theory.  Type constants with arity 0 are called "base
+      types", and type constants with arity greater than 0 are called "type
+      operators".
+
+The HOL Zero base system comes with 5 type constants ("bool", "ind", "nat", "->"
+and "#" - see Section 4.5).  The HOL language can be extended to have more by
+using type constant declaration (see Section 4.3.1).
+
+Type variables and type constants are the basis for forming HOL types, which
+fundamentally break down into two primitive syntactic categories:
+
+  Type Variable
+     - Denotes an occurrence of a given type variable.  This is an atomic
+      category.
+
+  Compound Type
+     - Denotes an instance of a given type constant.  It carries a list of type
+      parameters (of length equal to the type constant's arity).  This is an
+      atomic category if the type constant is a base type, and a recursive
+      category if the type constant is a type operator.
+
+These two primitive categories are used for the internal representation of
+types in HOL Zero.
+
+3.2.2 CONCRETE TYPE SYNTAX
+
+Concrete syntax for HOL type objects takes the form of type quotations, which
+are used for both input and display.  Basic aspects of this syntax, that
+directly correspond to the primitive syntactic categories, are explained in this
+section.  Further details about the full syntax are provided in Sections 3.5,
+3.6, 3.9 and 3.10.  Appendix C provides a formal grammar for the type syntax.
+
+Type quotations are written with backquote start and end delimiters (as are term
+quotations - see Section 3.3.2), and start with a ":" inside.  After the ":",
+type expressions are written as follows:
+
+  Type variables are by default written with a leading apostrophe followed by
+  the type variable name.
+
+    'a            for some type variable "a"
+
+  Compound types for type operators are written with the type constant name
+  preceded by a parenthesised comma-separated list of the type parameters,
+  except for 2-arity type operators with infix fixity (see Section 3.5.4), and
+  1-arity type operators which do not require paratheses around the parameter.
+  Compound types for base types are written with just the type constant name.
+
+    (t1,..,tn)c   for some n-arity type operator "c" and subtypes "t1" .. "tn"
+    t c           for some 1-arity type operator "c"
+    c             for some base type "c"
+
+HOL Zero has all the desirable parser and printer completeness and soundness
+properties for type quotations, i.e. any HOL type can be parsed in,
+unambiguously pretty printed and reparsed back in to give the same internal
+faithful representation.
+
+Note that an alternative way of inputting types is by using syntax constructor
+functions (see Section 3.8.2).
+
+3.2.3 FUNCTION TYPES
+
+One particular type operator, with name "->" and infix fixity and referred to
+as the "function type operator", is fundamental to HOL language.  It takes two
+type parameters (respectively called the "domain type" and the "range type"),
+and denotes functions that map elements in the domain type to elements in the
+range type.
+
+An instance of the function type operator is referred to as a "function type".
+For example `:nat->bool` is a function type, for functions that map natural
+numbers to boolean values.  The type of a lambda abstraction term is necessarily
+a function type, with domain type being the type of the binding variable, and
+range type being the type of the abstraction body.
+
+To be well-formed, a function application term (see Section 3.3.1) has
+restrictions on the types of its subterms.  The function subterm must have a
+function type, and its domain type must be equal to the type of the argument
+subterm.
+
+  For example, the following function application is well-formed:
+
+    # `(f:nat->bool) (x:nat)`;;
+    - : term = `(f:nat->bool) x`
+
+  But the following function application is ill-formed:
+
+    # `(f:bool->bool) (x:nat)`;;
+    Exception: [HZ] TYPE ERROR: Function subterm domain type not equal to
+    argument subterm type.
+
+3.2.4 TYPE POLYMORPHISM
+
+Types in HOL can be polymorphic, i.e. a single type can cater for a family of
+types by the use of type variables.  The type variables in a type can then be
+instantiated to give a more specific type.  This saves on replicating theory for
+each required instantiation.
+
+The 'type_tyvars' and 'term_tyvars' utilities return the type variables in a
+given HOL type and term respectively.
+
+    # type_tyvars `:('a#'b->bool)->('a#'b)->bool`;;
+    - : hol_type list = [`:'a`; `:'b`]
+
+    # term_tyvars `!(x:'a). P x`;;
+    - : hol_type list = [`:'a`]
+
+....
+
+See Section 3.7 for details about how type variables can be manipulated.
+
+
+3.3 TERMS
+
+Well-formed expressions in the HOL language are called "terms".  They have ML
+abstract datatype 'term'.
+
+Terms are used as the basis for representing theorems (see Section 4.1).
+
+3.3.1 PRIMITIVE TERM SYNTAX
+
+HOL terms are composed of two fundamental kinds of entity:
+
+  Variables
+     - Entities for referring to an aribtrary value of given type.  A variable
+      has two attributes: a name and a type.  Its scope is throughout the HOL
+      term or theorem object in which it appears.
+
+  Constants
+     - Entities for referring to a fixed (but not necessarily determined)
+      value.  A constant has two attributes: a name and a "generic type" (the
+      most general type that any instances of the constant can have).  Its
+      scope is throughout the entire HOL theory.
+
+The HOL Zero base system comes with 45 constants (see Section 4.5).  The HOL
+language can be extended to have more by using constant declaration (see Section
+4.3.2).
+
+These entities are the basis for forming terms, which fundamentally break down
+into four primitive syntactic categories:
+
+  Variable
+     - Denotes an occurrence of a given variable.  This is an atomic category.
+
+  Constant
+     - Denotes an instance of a given constant, and carries a type which must
+      match the constant's generic type.  This is an atomic category.
+
+  Function Application
+     - Denotes the value that a given function maps a given argument to.  This
+     is a recursive category, and carries a "function" subterm and an
+     "argument" subterm.
+
+  Lambda Abstraction
+     - Denotes an anonymous function that maps its argument to a value
+      according to a given expression.  This is a recursive category, and
+      carries a "binding variable" subterm and a "body" subterm, where the
+      binding variable acts as a placeholder for the function's argument, and
+      the body is an expression that constructs the value that the argument
+      maps to, expressed in terms of the binding variable.
+
+These four primitive categories are used for the internal representation of
+terms in HOL Zero.
+
+3.3.2 CONCRETE TERM SYNTAX
+
+Concrete syntax for HOL term objects take the form of term quotations, which are
+used for both input and display.  The syntax is powerful enough to enable
+mathematics to be written in an intuitive and yet formal style.
+
+  For example, the following term:                             Example 3.?
+
+    `!v1 v2. f v1 = f v2 ==> v1 = v2`
+
+  means "For all 'v1' and 'v2', function 'f' mapping 'v1' and 'v2' to the same
+  values implies that 'v1' equals 'v2'".
+
+Basic aspects of this concrete syntax, that directly correspond to the primitive
+syntactic categories, are explained in this section.  Further details about the
+full syntax are provided in Sections 3.4, 3.5, 3.6, 3.9 and 3.10.  Appendix C
+provides a formal grammar for the term syntax.
+
+Term quotations are written with backquote start and end delimiters.  Inside
+these delimiters, term expressions are written as follows:
+
+  Variables are, by default, written with just their name.
+
+    v             for some variable "v"
+
+  Constants are written with just their name.
+
+    c             for some constant "c"
+
+  Function applications are written with the function subterm, followed by a
+  space, followed by the argument subterm.
+
+    f a           for some function subterm "f" and some argument subterm "a"
+
+  Lambda abstractions are written with a "\", followed by the binding variable,
+  followed by ".", followed by the body subterm.
+
+    \v. b         for some binding variable "v" and some body subterm "b"
+
+Parentheses are used to surround subterms if there would otherwise be ambiguity
+about the structure of the term.  To avoid excessive bracketing, two forms of
+shorthand are used to cater for common cases.
+
+In the first form of shorthand, a lambda abstraction denoting a function that
+takes multiple arguments can be written using a series of binding variables and
+one body, as in `\v1 v2 v3. b`.  This is shorthand for a nested lambda
+abstraction, as in `\v1. (\v2. (\v3. b))`.
+
+In the second form of shorthand, the application of a function that takes
+multiple arguments can be written in "curried" form, where the function is
+followed by its arguments in series, as in `f a1 a2 a3`.  This is shorthand for
+a nested series of function applications, as in `((f a1) a2) a3`, where the
+innermost function maps the first argument to a value that is itself a function,
+and this maps the second argument to a function that takes the next argument,
+and so on, with the final function mapping the final value to the end result.
+
+HOL Zero has all the desirable parser and printer completeness and soundness
+properties for term quotations, i.e. any HOL term can be parsed in,
+unambiguously pretty printed and reparsed back in to give the same internal
+faithful representation.
+
+Note that an alternative way of inputting terms is by using syntax constructor
+functions (see Section 3.8.2).
+
+3.3.3 FUNCTIONS
+
+Note that functions themselves are values (think of a function as a mapping),
+and so, for example, a constant or a variable can denote a function, a function
+application can itself be a function, and the binding variable in a lambda
+abstraction can itself be a function.
+
+It is this lack of fundamental distinction between the treatment of functions
+from the treatment of values that makes HOL a higher-order language, because
+binding variables (which are just binding variables) can refer to functions.
+This lack of distinction also means that operators, such as universal
+quantification (i.e. "for all"), implication and equality, are all constants in
+HOL, because they are all fixed values.  This makes the language simple and yet
+powerful.
+
+Note that all functions in HOL are total, so that every function application has
+a value.
+
+3.3.4 FREE/BOUND VARIABLES AND ALPHA-EQUIVALENCE
+
+Every variable in a given term is either free or bound within the term.  A bound
+variable is a binding variable that occurs inside its binding's body.  A free
+variable is any variable that occurs in the term but is not bound.
+
+The 'free_vars' utility returns the free variables in a given term.  For
+example:
+
+    # free_vars `\x. x = 5 \/ x = y`;;
+    - : term list = [`y:nat`]
+
+The scope of a bound variable is limited to its corresponding binding, whereas
+the scope of a free variable is the entire term (but excluding any binding
+subterms with a binding variable with the same name and type).
+
+Two terms are said to be "alpha-equivalent" if they are identical modulo the
+names of any binding variables in the terms.  This is a fundamental notion
+of equivalence in the HOL logic.
+
+The 'alpha_eq' utility returns whether the given terms are alpha-equivalent.
+For example:
+
+    # alpha_eq `!x. x = 5 \/ x = y` `!z. z = 5 \/ z = y`;;
+    - : bool = true
+
+3.3.5 TYPE CALCULATION
+
+The type of any term can be calculated ultimately from the types of the term's
+atoms.  This can be done by recursively applying the following two rules to
+subterms until term atoms are reached:
+
+  The type of a function application is the range type of the function's type;
+
+  The type of a lambda abstraction is a function type, with the binding
+  variable's type as its domain type and the body's type as its range type.
+
+The 'type_of' utility returns the HOL type of a given term.  For example:
+
+    # type_of `(2, true, x:'a)`;;
+    - : hol_type = `:nat#bool#'a`
+
+3.3.6 TYPE INFERENCE
+
+As part of the process of parsing a term quotation into an internal term,
+inputted quotations undergo a process of type inference, to determine the types
+of each term atom.  The type inference algorithm used in HOL Zero is an adaption
+of Hindley-Milner type inference (adapted to cater for variable overloading).
+
+  For example, for the following term quotation:
+
+    `x = y \/ y = (true,false)`
+
+  type inference will determine that the type of both "x" and "y" is
+
+    `:bool#bool`.
+
+Type inference will spot any type inconsistencies within the term quotation, and
+raise an error message accordingly (see Section 3.10.3).
+
+Inputted term quotations are allowed to have ambiguity about the specific types
+of their subterms (except for overloaded variables - see Section 3.3.7), so long
+as the unknown types are self-consistent.  Type inference infers the most
+general possible types for subterms, and allocates numbered type variables for
+any undetermined types.
+
+  For example, in the following subterm:
+
+    `f x = (a,false)`
+
+  variable "x" is allocated type `:'1`,
+  variable "a" is allocated type `:'2` and
+  variable "f" is allocated type `:'1->'2#bool`.
+
+To avoid ambiguity, type annotation can be used to explicitly state the types of
+subterms in term quotations (see Section 3.6.1).  Note that a type annotation
+fixes the type of its associated subterm in the term quotation, and that type
+inference only infers the types of subterms that are not type-annotated.
+
+  For example, in the following subterm:
+
+    `f x = (a:nat,false)`
+
+  variable "x" is allocated type `:'1`,
+  variable "a" is allocated type `:nat` and
+  variable "f" is allocated type `:'1->nat#bool`.
+
+3.3.7 VARIABLE OVERLOADING
+
+Variables in HOL are allowed to be overloaded with other variables - i.e.
+variables with the same name but different type can exist in the same scope.
+
+  For example, there are two distinct variables in the following term:
+
+    `(x:nat) = x /\ (x:ind) = x`
+
+Term quotations with overloaded variables need to be sufficiently type-annotated
+to avoid any ambiguity (see Section 3.6.1).
+
+
+3.4 SPECIALLY-SUPPORTED CONSTANTS
+
+Certain constants have their own special syntax in term quotations, to aid
+readability.  This section covers these constants.
+
+3.4.1 CONDITIONAL EXPRESSIONS
+
+A conditional expression denotes the value of one of two subterms (called
+"branches"), where the choice is determined by an additional, boolean-valued
+subterm (called the "condition").  The first branch (called the "then-branch")
+is chosen if the condition is "true", and the second (called the "else-branch")
+if the condition is "false".
+
+Conditional expressions are written with "if", followed by the condition,
+followed by "then", followed by the then-branch, followed by "else", followed by
+the else-branch, as in:
+
+    `if c then t1 else t2`   (`c` has type `:bool`; `t1` has same type as `t2`)
+
+which means "the value `t1` if `c` takes the value `true`, and the value `t2` if
+`c` takes the value `false`".
+
+However, this is actually "shorthand" for an application of the "COND" constant:
+
+    `COND c t1 t2`
+
+3.4.2 LET-EXPRESSIONS
+
+A let-expression is used to introduce local placeholder variables with assigned
+values to a subterm.  Each part that introduces a placeholder variable and its
+assigned value is called a "let-binding", and the subterm to which these apply
+is called the "let-body".
+
+Let-expressions are written with "let", followed by a series of "and"-separated
+let-bindings, followed by "in", followed by the let-body.  Each let-binding is
+written as a variable, followed by "=", followed by the assigned value.  For
+example:
+
+    `let v1 = t1 and v2 = t2 and ... and vn = tn in t0`
+                                 (where `v1`, `v2`, ... `vn` are variables)
+
+means "the expression `t0`, but with variable `v1` replaced with `t1`, and then
+variable `v2` replaced with `t2, and then ... and then variable `vn` replaced
+with `tn`".  This has the same value as `(\v1 v2 ... vn . t0) t1 t2 ... tn`.
+
+This is shorthand for a compound application of the "LET" constant:
+
+    `LET (... (LET (LET (\v1 v2 ... vn . t0) t1) t2)...) tn`
+
+Note that the "=" used in a let-binding, for separating a placeholder variable
+from its assigned value, is effectively a keyword token although it has
+identifier token status during parsing.  This is an oddity of the HOL lexical
+syntax.
+
+3.4.3 PAIR EXPRESSIONS
+
+Pair expressions are written with opening and closing parentheses, with
+components separated by commas, as in:
+
+    `(t1, t2, ..., tn)`
+
+which means an n-component compound pair, with components `t1`, `t2`, ..., `tn`.
+
+This is shorthand for a compound application of the "PAIR" constant:
+
+    `PAIR t1 (PAIR t2 (... tn)...)`
+
+3.4.4 ENUMERATION EXPRESSIONS
+
+Enumerations give a serial listing of the items of some uniform structure, with
+delimiters at the start and end that indicate the particular form of the
+structure.  Items in an enumeration are separated by ",".
+
+  For example, if lists were to be defined, a 3-item list could be written as
+  follows:
+
+    `[ a, b, c ]`
+
+  The fact that it is a list would be indicated by the use of "[" and "]" as
+  the opening and closing delimiters.  This would be shorthand for a compound
+  application of the list item insertion operator (say "CONS") to the constant
+  for an empty list (say "NIL"):
+
+    `CONS a (CONS b (CONS c NIL))`
+
+This enumeration form can be written for terms of a given structure if
+delimiters have been associated with the structure's item insertion operator and
+empty structure constants.  This is done by using the 'set_enum_brackets'
+command, which takes an argument pair for the names of the insert and empty
+constants and an argument pair for the opening and closing delimiters.
+
+  For example, the enumeration brackets for lists would be set by:
+
+    # set_enum_brackets ("CONS","NIL") ("[","]");;
+    [HZ] Setting "[" and "]" as enumeration brackets for constructor "CONS"
+    with zero "NIL".
+    - : unit = ()
+
+The names supplied for enumeration brackets must be regular non-numeric, i.e.
+either symbolic or alphanumeric (see Section 3.1.2), and once associated, these
+names become reserved words.
+
+Information about the enumeration brackets already set is provided by the
+'get_all_enum_info' command.  For example:
+
+    # get_all_enum_info ();;
+    - : ((string * string) * (string * string)) list =
+    [(("CONS", "NIL"), ("[", "]"));
+     (("SERIAL_STMT", "NULL_STMT"), ("begin", "end"))]
+
+3.4.5 NUMERALS
+
+Numerals represent natural number values, and simply take the form of a numeric
+name (as in `19`).  Any "_"s in a numeric name are purely used for padding, and
+have no effect on denoted value (so `65_535` represents the same internal term
+as `65535`).
+
+A numeral is not a constant in HOL Zero, but is actually shorthand for a series
+of applications of the "BIT0" and "BIT1" functions on the constant "ZERO", with
+an outer tagging by the "NUMERAL" function.  For example `19` is shorthand for
+the following:
+
+    `NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 ZERO)))))`      Example 3.4
+
+The "ZERO" constant represents the natural number 0.  The "BIT0" function
+doubles its argument, and the "BIT1" function doubles its argument and adds 1.
+The "NUMERAL" function simply returns its argument, and is used as to tag an
+atomic numeral.  Using compounded "BIT0" and "BIT1" operations on "ZERO"
+directly corresponds to binary notation, with "BIT0" for 0-bits and "BIT1" for
+1-bits, but with the bit order reversed.  So Example 3.4 represents 10011 (base
+2), i.e. 19 (base 10).  Note that any innermost "BIT0"s have no effect on value.
+Internal terms with innermost "BIT0"s are not printed as numerals, to ensure
+numerals have unique internal representation.
+
+
+3.5 FIXITY
+
+Variable, constant and type constant names can be assigned special syntactic
+status, called "fixity", enabling identifiers for entities with these names to
+be written before, after or in between their arguments.  Fixity is crucially
+important for aiding the readability of quotations.
+
+3.5.1 TERM FIXITY AND TYPE FIXITY
+
+Term fixity refers to the fixity of variable and constant names.  Any variables
+or constants sharing the same name have the same term fixity.
+
+The available term fixities are: nonfix, prefix, infix, postfix, binder.
+
+Type fixity refers to the fixity of type constant names, and is independent of
+term fixity (and so, for example, the same name could have infix type fixity
+and prefix term fixity).
+
+The available type fixities are: nonfix, infix.
+
+3.5.2 NONFIX FIXITY
+
+The default fixity of a name is nonfix.  In term fixity, nonfix is for functions
+that get applied in classic curried form (as in `P x y z`) occurring with or
+without any arguments, and for non-functions (as in `x`).
+
+In type fixity, nonfix is for type operators that appear after their type
+parameters (as in `:('a,'b)map`) and for base types (as in `:bool`).  Note that
+even though type operators appear after their parameters, they have nonfix
+fixity (and not postfix fixity).
+
+3.5.3 PREFIX FIXITY
+
+The prefix fixity is for unary term operators that appear before their argument
+(as in `~ true`).  Unlike for nonfix operators, brackets are not required for
+compound applications of a prefix operator (so `~ ~ true` is the same as `~ (~
+true)`).
+
+3.5.4 INFIX FIXITY
+
+The infix fixity is for binary operators or type operators that appear in
+between their two arguments or type parameters (as in `x + y`, or `:'a -> 'b`).
+
+To reduce the number of brackets required when writing compound infix
+expressions, infix fixities have a precedence number and an associativity hand.
+Operators with a higher precedence bind more tightly, and so higher-precedence-
+operator subexpressions of a lower-precedence-operator expression do not need to
+be surrounded by brackets.  Associativity hand (left-associative, right-
+associative or non-associative) indicates how a non-bracketed compound
+expression over the same operator breaks down, where brackets for left- and
+right-associative operators implicitly collect on the hand's side, and compound
+expressions over non-associative operators are always written with explicit
+brackets.
+
+  For example, "+" has left-associativity, and "*" has higher precedence than
+  "+", so the following term:
+
+    `(a + b * c + d + e) * f`
+
+  represents the same internal term as:
+
+    `(((a + (b * c)) + d) + e) * f`
+
+3.5.5 POSTFIX FIXITY
+
+The postfix fixity is for unary term operators that appear after their argument
+(as in `5 !!`, for some postfix operator "!!").  Brackets are required for
+compound applications of a postfix operator (as in `(5 !!) !!`).
+
+3.5.6 BINDER FIXITY
+
+The binder fixity is for binders, such as "!" (for all), "?" (exists) and
+"@" (select), that take a lambda abstraction argument and thus bind a binding
+variable.  These are written in the same way as lambda abstractions (as in
+`!x. x > 5`, which means "for all x, x > 5", and is actually shorthand for
+`$! (\x. x > 5)`).  Like for lambda abstractions, binding a series of variables
+with the same operator can be written as a single binding (as in `!x y. x = y`).
+
+3.5.7 BINDING POWER
+
+The following list summaries how tightly the fixities bind.  Earlier items in
+the list bind more tightly than later items:
+
+    nonfix
+    postfix
+    prefix
+    infix
+    binder
+
+Subterms that bind more tightly do not need parentheses, and terms are always
+displayed without unnecessary parentheses.
+
+  For example:
+
+    `P 0 /\ (!x. ~ P (x + 1) ==> ~ P x) ==> (!x. P x)`
+
+  is the same internal term as
+
+    `(P 0 /\ (!x. (~ (P (x + 1))) ==> (~ (P x)))) ==> (!x. (P x))`
+
+3.5.8 DEFIXING
+
+Prepending an entity name by a "$" mark in its identifier gives the identifier
+nonfix status.  This is called "defixing".  Note that there should be no
+separating space between "$" and the entity name.
+
+It is necessary to use defixing in order to refer to an operator that is not
+applied to the full number of arguments mandated by its fixity.
+
+See Section 3.1.6 for more details about the lexical syntax of defixing marks.
+
+3.5.9 SETTING AND QUERYING FIXITY
+
+The ML datatype 'fixity' is used to portray fixity.  It has the following
+classes:
+
+    Nonfix
+    Prefix
+    Infix (int * assochand)
+    Postfix
+    Binder
+
+    where 'assochand' is LeftAssoc, RightAssoc or NonAssoc
+
+The fixity of term and type names can be set using the 'set_fixity' and
+'set_type_fixity' commands respectively.  These take arguments for the name and
+the new fixity.  For example:
+
+    # set_fixity ("##", Infix (200,RightAssoc));;
+    [HZ] Setting fixity for name "##".
+
+For type fixity, the fixity argument must be either nonfix or infix.
+
+The term or type fixity of a given name can be queried using the
+'get_fixity' and 'get_type_fixity' commands respectively.  For example:
+
+    # get_type_fixity "->";;
+    - : fixity = Infix (5, RightAssoc)
+
+A name can be released from its term or type fixity using the 'reset_fixity'
+and 'reset_type_fixity' commands respectively.  For example:
+
+    # reset_type_fixity "x";;
+    [HZ] Resetting type fixity for name "x".
+
+
+3.6 ANNOTATION
+
+Three forms of annotation can be used in quotations.  The purpose of annotations
+is to add clarifying information about a quotation and thus avoid ambiguity.
+HOL Zero ensures that quotations are always displayed with a sufficient level of
+annotation to avoid any ambiguity.
+
+3.6.1 TYPE ANNOTATION
+
+Subterms can be type-annotated by surrounding the subterm with parentheses and
+following the subterm by ":" and then its type (as in `(f:'a->'b) x`).  Note
+that the parentheses can be missed out for top-level type annotations (as in
+`x:bool`), or for enumeration items (as in `[a:nat,b]`) or pair items (as in
+`(a:nat,b:bool)`).
+
+Outputted term and theorem quotations have their term atoms automatically type-
+annotated sufficiently to remove any ambiguity about the specific types of
+subterms.  For example:
+
+    # `f x`;;
+    - : term = `(f:'1->'2) x`
+
+By default, the automatic type-annotation of outputted terms and theorems is at
+a minimal level sufficient for removing any ambiguity.  However, the display
+mode command 'set_type_annotation_mode' can be used to make every term atom get
+printed with a type annotation (see Section 3.9.2).
+
+Inputted term quotations can be type annotated in order to tie down the types of
+subterms.  Type inference otherwise assigns the most general type for each
+subterm of an inputted quotation (see Section 3.3.6).  Use of a type annotation
+fixes the type of its associated subterm in the term quotation, and type
+inference only infers the types of subterms that are not type-annotated.
+
+Inputted term quotations normally require no type annotations in order to be
+accepted by the parser (so long as they are well-formed).  However, term
+quotations that involve variable overloading (see Section 3.3.7) need to be
+sufficiently type-annotated to ensure that types of overloaded variables visible
+at the top level of the term or of a lambda abstraction subterm are fully
+resolved at that point (without taking into account contextual information from
+outside the lambda abstraction).
+
+  For example, the following is rejected, because of its ambiguous binding
+  variable (which could be of type `:'a` or of type `:'b`):
+
+    # `x = (x:'a) /\ !x. x=(x:'a) \/ (x:'b)=x`;;
+    Exception: [HZ] TYPE ERROR: Overloaded var "x" type not resolved at name
+    closure.
+
+  But the following has no ambiguity (the free "x" has type `:'b`) and is
+  accepted:
+
+    # `x = x /\ !(x:'a). x=(x:'a) \/ (x:'b)=x`;;
+    - : term = `x = x /\ (!(x:'a). (x:'a) = x \/ (x:'b) = x)`
+
+  The following is also accepted (all "x"s inside the lambda abstraction are
+  assumed to refer to the same variable):
+
+    # `x = (x:'b) /\ !x. x=(x:'a) \/ x=x`;;
+    - : term = `(x:'b) = x /\ (!(x:'a). x = x \/ x = x)`
+
+Note that a type-annotated identifier retains its fixity even if the fixity is
+not nonfix (as in `x (=:'a->'a->bool) y`).
+
+3.6.2 VARIABLE AND TYPE VARIABLE MARKING
+
+Identifiers for variables can be distinguished from identifiers for constants
+with the same name by annotating with a "%"-mark preceding the name, without any
+separating space (as in `%x`).  Note that such a variable is not obliged to have
+the same type as the constant it overloads.
+
+  For example, the following denotes a variable with name "true" (as opposed to
+  the boolean constant "true"):
+
+    # `%true`;;
+    - : term = `%true:'1`;;
+
+Similarly, identifiers for type variables can be distinguished from type
+constants by preceding the name with a "'"-mark (as in `:'bool`, to denote the
+type variable with name "bool").
+
+In term quotations, unannotated identifiers with a constant's name are assumed
+to refer to the constant.  Similarly, in type quotations and type annotations,
+unannotated identifiers with a type constant's name are assumed to refer to the
+type constant.
+
+Variables that are not overloaded with constants are by default printed without
+a variable mark, whereas all type variables are by default printed with a type
+variable mark.  This can be changed by using the 'set_var_marking_mode' and
+'set_tyvar_marking_mode' display mode commands (see Section 3.9.3).
+
+Note that any "%"-marked variable identifiers will have the same fixity as
+constant identifiers for the same name (unless the identifier is defixed using
+"$" - see Section 3.5.8).
+
+See Section 3.1.6 for more details about the lexical syntax of variable and type
+variable marks.
+
+
+3.7 INSTANTIATION AND MATCHING
+
+.... instantiation
+
+    # type_inst : (hol_type * hol_type) list -> hol_type -> hol_type
+
+    # tyvar_inst : (hol_type * hol_type) list -> term -> term
+
+    # var_inst : (term * term) list -> term -> term
+
+
+3.8 SYNTAX FUNCTIONS
+
+Syntax functions are ML utility functions dedicated to a particular syntactic
+category of type or term, acting at the top level of a type or term expression.
+There are three kinds of syntax function: destructors, constructors and
+discriminators.  All three kinds are defined for each of the primitive syntactic
+categories of types and terms, as well as for most of the function constants and
+type operators defined in the HOL Zero base system.
+
+See Appendix A3 for a full description of each syntax function.
+
+3.8.1 SYNTAX DESTRUCTORS
+
+Syntax destructor functions are for breaking down a HOL type or term expression
+which has a particular syntactic category at its top level, returning the
+subcomponents of the expression.  The basic destructor for a given syntactic
+category has an ML name of the form 'dest_<category>' (see Section 3.8.4 for a
+full list of category names).
+
+  For example, the 'dest_conj' destructor breaks down conjuction terms:
+
+    # dest_conj `x = 5 /\ y = 3`;;
+    - : term * term = (`x = 5`, `y = 3`)
+
+An ML HolFail exception is raised if the top level of the supplied expression
+does not conform to the given syntactic category.  For example:
+
+    # dest_conj `x = 5 \/ (y = 3 /\ z = 4)`;;
+    Exception: [HZ] FAIL: dest_conj - Not a conjunction.
+
+Syntax destructors are defined for various kinds of compound expression.  These
+have an ML name of the form 'strip_<category>'.  For example:
+
+    # strip_conj `x = 5 /\ y = 3 /\ z = 4`;;
+    - : term list = [`x = 5`; `y = 3`; `z = 4`]
+
+Expressions can also always be broken down in terms of a primitive syntactic
+category.
+
+  For example, in primitive syntax, the top level of a conjunction term is a
+  function application.  Thus the above conjunction can also be broken down as
+  follows:
+
+    # dest_comb `x = 5 /\ y = 3`;;
+    - : term * term = (`$/\ (x = 5)`, `y = 3`)
+
+A generic destructor is provided for terms, called 'dest_term', that breaks down
+a term into one of the four primitive syntactic categories of term.  For
+example:
+
+    # dest_term `x`;;
+    - : destructed_term = Term_var ("x", `:'1`)
+
+    # dest_term `false`;;
+    - : destructed_term = Term_const ("false", `:bool`)
+
+    # dest_term `x = 5`;;
+    - : destructed_term = Term_comb (`$= (x:nat)`, `5`)
+
+    # dest_term `\x. x = 5`;;
+    - : destructed_term = Term_abs (`x:nat`, `x = 5`)
+
+Similarly, a generic destructor is provided for types, called 'dest_type', for
+the two primitive syntactic categories of type.  For example:
+
+    # dest_type `:'a`;;
+    - : destructed_type = Type_var "a"
+
+    # dest_type `:'a->'b`;;
+    - : destructed_type = Type_comp ("->", [`:'a`; `:'b`])
+
+3.8.2 SYNTAX CONSTRUCTORS
+
+Syntax constructor functions are for creating a type or term expression from its
+subcomponents.  These act as an alternative to type and term quotations (see
+Sections 3.2.2 and 3.3.2) for creating internal types and terms.  They take one
+or more subexpressions as arguments and return an expression.  Basic constructor
+functions have an ML name of the form 'mk_<category>' (see Section 3.8.4 for a
+full list of category names).
+
+  For example, the 'mk_eq' constructor creates an equality term:
+
+    # mk_eq (`x:nat`,`5`);;
+    - : term = `x = 5`
+
+Constructors typically have restrictions on the form of their arguments, to
+ensure that they can only create well-formed expressions.  Arguments that do not
+fit the restrictions result in an ML HolFail exception being raised.  For
+example:
+
+    # mk_eq (`true`,`5`);;
+    Exception: [HZ] FAIL: mk_eq - Arg 1 type not equal to Arg 2 type.
+
+Syntax constructors are also defined for creating compound expressions.  These
+have an ML name of the form 'list_mk_<categroy>'.  For example:
+
+    # list_mk_forall ([`x:nat`;`y:nat`], `x = 0 \/ y < x`);;
+    - : term = `!x y. x = 0 \/ y < x`;;
+
+3.8.3 SYNTAX DISCRIMINATORS
+
+Syntax discriminators are ML functions for testing that the top level of an
+expression conforms to a particular syntactic category.  They simply return
+'true' if the expression conforms and 'false' otherwise.  Discriminators have an
+ML name of the form 'is_<category>' (see Section 3.8.4 for a full list of
+category names).  Note that discriminators do not raise ML exceptions.
+
+  For example, 'is_fun_type' is the discriminator for function types:
+
+    # is_fun_type `:A->B->C`;;
+    - : bool = true
+
+3.8.4 SYNTACTIC CATEGORY NAMES
+
+The part of an ML syntax function name used to refer to a particular syntactic
+category is a lowercase alphabetic name for the category.
+
+The categories of HOL term supported by syntax functions, together with their
+category names, are as follows:
+
+    variable              'var'
+    constant              'const'
+    function application  'comb'
+    lambda abstraction    'abs'
+
+    "="      'eq'            "/\"     'conj'          "\/"     'disj'
+    "\/"     'disj'          "==>"    'imp'           "~"      'not'
+    "!"      'forall'        "?"      'exists'        "?!"     'uexists'
+    "@"      'select'        "COND"*  'if'            "LET"*   'let'
+
+    "PAIR"*  'pair'          "FST"    'fst'           "SND"    'snd'
+
+    "SUC"    'suc'           "PRE"    'pre'
+    "+"      'add'           "*"      'mult'          "-"      'sub'
+    "EXP"    'exp'           "EVEN"   'even'          "ODD"    'odd'
+    "<"      'lt'            "<="     'le'
+    ">"      'gt'            ">="     'ge'
+
+  * - Note that these are specially-supported constants, that have their own
+      syntax in term quotations (see Section 3.4).
+
+The categories of type supported by syntax functions, together with their
+category names, are as follows:
+
+    type variable         'var_type'
+    compound type         'comp_type'
+
+    "->"     'fun_type'      "#"      'prod_type'
+
+
+3.9 DISPLAY MODES
+
+Details about the way that type, term and theorem quotations are displayed are
+determined by the display modes.  Note that these modes make no difference to
+the form of quotations accepted for input.
+
+3.9.1 PRIMITIVE TERM SYNTAX DISPLAY
+
+Terms and theorems can be outputted purely in basic term concrete syntax
+(covered in Section 3.3.2), corresponding to the primitive syntactic categories,
+by setting the language level mode to "Minimal".
+
+Displaying just primitive term syntax can help the user understand the structure
+of a term quotation, and can be especially useful for the novice.  Specially
+supported constants (see Section 3.4) are printed without their own syntax, and
+term operators with fixity (see Section 3.5) are printed defixed.
+
+For example:
+
+    # `!n. f n = if n > 1 then (n,m) else (m,n)`;;
+    - : term = `!n. f n = (if n > 1 then (n,m) else (m,n))`
+
+    # set_language_level_mode Minimal;;
+    [HZ] Setting language level mode to Minimal.
+    - : unit = ()
+
+    # `!n. f n = if n > 1 then (n,m) else (m,n)`;;
+    - : term =
+   `$! (\n. $= (f n) (COND ($> n (BIT1 ZERO)) (PAIR n m) (PAIR m n)))`
+
+Normal full term syntax display can be resumed by setting the level back to
+"Full".
+
+    # set_language_level_mode Full;;
+    [HZ] Setting language level mode to Full.
+    - : unit = ()
+
+Note that, when displaying primitive term syntax, all types are still printed as
+normal (i.e. with any type constant fixities that have been set).
+
+3.9.2 TYPE ANNOTATION MODE
+
+Terms and theorems in HOL Zero are always displayed with sufficient type
+annotation to avoid any ambiguity about the types of any subterms (see Section
+3.6.1).  By default, this is done at a minimal level, so that there are no more
+annotations than required to avoid ambiguity.  However, all occurrences of all
+variables and all polymorphic constants can be type-annotated by setting the
+type annotation mode to "Full".
+
+For example:
+
+    # `f x = x + 2`;;
+    - : term = `f x = x + 2`
+
+    # set_type_annotation_mode Full;;
+    [HZ] Setting type annotation mode to Full.
+    - : unit = ()
+
+    # `f x = x + 2`;;
+    - : term = `(f:nat->nat) (x:nat) (=:nat->nat->bool) (x:nat) + 2`
+
+Normal type annotation can be resumed by setting the level back to "Minimal".
+
+    # set_type_annotation_mode Minimal;;
+    [HZ] Setting type annotation mode to Minimal.
+    - : unit = ()
+
+3.9.3 VARIABLE AND TYPE VARIABLE MARKING MODES
+
+Types, terms and theorems in HOL Zero are always displayed with sufficient
+variable marking and type variable marking to avoid any ambiguity about the
+distinction between variables and constants or between type variables and type
+constants (see Section 3.6.2).  By default, all type variables are labelled as
+such, and term variables are only labelled if their name is overloaded with a
+constant in the theory.  This can be changed by setting the variable and type
+variable marking modes.
+
+For example:
+
+    # `!x. (P x <=> true) \/ (P x <=> false)`;;
+    - : term = `!(x:'1). (P x <=> true) \/ (P x <=> false)`
+
+    # set_var_marking_mode Full;;
+    [HZ] Setting variable marking mode to Full.
+    - : unit = ()
+
+    # set_tyvar_marking_mode Minimal;;
+    [HZ] Setting type variable marking mode to Minimal.
+    - : unit = ()
+
+    # `!x. (P x <=> true) \/ (P x <=> false)`;;
+    - : term = `!(%x:1). (%P %x <=> true) \/ (%P %x <=> false)`
+
+3.9.4 DISPLAY MODES SUMMARY
+
+The current display mode settings are summarised by executing the
+'show_display_modes' command, which takes and returns unit value.
+
+For example:
+
+    # show_display_modes ();;
+    HOL Zero Display Modes
+       Type annotation mode:        Minimal
+       Variable marking mode:       Minimal
+       Type variable marking mode:  Full
+       Language level mode:         Full
+    - : unit = ()
+
+
+3.10 QUOTATION PARSER ERROR MESSAGES
+
+Inputting an ill-formed type or term quotation will result in a parser error
+message rather than an internal type or term.  Parser error messages are raised
+as ML HolError exceptions.
+
+Parser errors break down into 3 categories (corresponding to the 3 main stages
+of parsing): lexical errors, syntax errors and type errors.  Lexical errors are
+spotted before any syntax errors, which are spotted before any type errors.
+Just one parser error message (corresponding to the first error spotted, reading
+left to right) is displayed per quotation.  A parser error message starts with
+its category in uppercase letters, followed by a detailed description of the
+error.
+
+3.10.1 LEXICAL ERRORS
+
+Lexical errors are concerned with ill-formed tokens (see Section 3.1) in type
+and term quotations.  This can relate to:
+
+  Problems with usage of defixing/variable/type variable marks:
+    # `$ = a b`;;
+    Exception: [HZ] LEXICAL ERROR: Defix mark ($) must immediately precede
+    name, without space.
+
+  Wrong escaping of characters inside quotes:
+    # `f "\744"`;;
+    Exception: [HZ] LEXICAL ERROR: Character escape code out of range - must
+    be 000 to 255.
+
+  Alphabetic characters inside numeric tokens:
+    # `23x`;;
+    Exception: [HZ] LEXICAL ERROR: Non-numeric character in numeric token.
+
+  Unprintable characters:
+    # `.`;;     [ where "." signifies unprintable ASCII character 183 ]
+    Exception: [HZ] LEXICAL ERROR: Unprintable ASCII character 183 - use ASCII
+    escape code inside quotes.
+
+3.10.2 SYNTAX ERRORS
+
+Syntax errors are concerned with problems in how tokens are combined in type and
+term quotations.  This can relate to:
+
+  Opening delimiters (such as "(") missing a corresponding close:
+    # `x = (3 + y * 4`;;
+    Exception: [HZ] SYNTAX ERROR: Opening "(" but no subsequent ")".
+
+  Early occurrence of a reserved word, thus missing a subterm:
+    # `(a,b,,d)`;;
+    Exception: [HZ] SYNTAX ERROR: Missing pair component.
+
+  Unexpected occurrence of a token when some other token is required:
+    # `let x = 5 else in x + y`;;
+    Exception: [HZ] SYNTAX ERROR: Unexpected reserved word "else" instead of
+    "and" or "in".
+
+  Unexpected occurrence of a token after a syntactically-correct leading
+  subterm:
+    # `x = 5 else`;;
+    Exception: [HZ] SYNTAX ERROR: Unexpected reserved word "else" after
+    syntactically-correct leading subterm.
+
+  Unexpected end of quotation:
+    # `if (P x) then Q x else`;;
+    Exception: [HZ] SYNTAX ERROR: Unexpected end of quotation instead of
+    conditional else-branch.
+
+  Marked type variable tokens occurring inside terms, or marked variable tokens
+  occurring inside types:
+    # `p <=> 'a \/ b`;;
+    Exception: [HZ] SYNTAX ERROR: Type variable "a" encountered outside type
+    annotation.
+
+  Problems relating to usage of identifiers with fixity:
+    # `= x`;;
+    Exception: [HZ] SYNTAX ERROR: Missing LHS for infix "=".
+
+  An empty quotation:
+    # `:`;;
+    Exception: [HZ] SYNTAX ERROR: Empty type quotation.
+
+3.10.3 TYPE ERRORS
+
+Type errors are concerned with problems in inferring consistent types for the
+term atoms in term quotations, and with ill-formed supplied types in type and
+term quotations.  Specifically, this can relate to:
+
+  Supplied type constant parameter lists having the wrong arity:
+    # `:nat bool`;;
+    Exception: [HZ] TYPE ERROR: Type constant "bool" has arity 0 but is used
+    with type param list length 1.
+
+  Function subterms not having an inferred function type:
+    # `(f:'a) x = 5`;;
+    Exception: [HZ] TYPE ERROR: Function subterm does not have function type.
+
+  Function and argument subterms having incompatible inferred types:
+    # `true + 1`;;
+    Exception: [HZ] TYPE ERROR: Function subterm domain type incompatible with
+    argument subterm type.
+
+  Type annotations not being compatible with their subterm's inferred type:
+    # `(3:bool) = 4`;;
+    Exception: [HZ] TYPE ERROR: Subterm type incompatible with type annotation.
+
+  Inferred types of variables leading to ambiguous variable overloading:
+    # `!x. (x:'a)=x /\ (x:'b)=x`;;
+    Exception: [HZ] TYPE ERROR: Overloaded var "x" type not resolved at name
+    closure.

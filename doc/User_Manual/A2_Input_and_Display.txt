@@ -1,0 +1,140 @@
+================================================================================
+== APPENDIX A2: INPUT AND DISPLAY (HOL Zero User Manual)                      ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+
+********************************************************************************
+
+help : string -> unit
+
+This is a help facility for HOL Zero commands and HOL terminology.  If the
+supplied string is a HOL Zero ML command, then the user manual A-appendix entry
+for this command is displayed.  If the supplied string is a space-separated
+series of A-appendix numbers (e.g. "A3 A4 A5"), then the signature of each entry
+is listed for those appendices given by the numbers.  If the supplied string is
+"all-commands", then the signatures of all A-appendix entries are listed.
+
+If the supplied string is a HOL Zero theorem name, then the user manual B1- or
+B2-appendix entry for this theorem is displayed.  If the supplied string is
+"all-theorems", the names of all B1- and B2-appendix theorems are listed.
+
+If the supplied string is a word defined in the glossary, then the entry for
+that word is displayed.  If the supplied string is "all-words", then the names
+of all words defined in the glossary are listed.
+
+    # help "disch_rule";;
+
+********************************************************************************
+
+reset_fixity : string -> unit
+
+This is the term fixity resetting command for variable/constant names.  It takes
+a name, and resets the term fixity of the name to Nonfix.  A note of the fixity
+change is reported, and unit is returned.
+
+See also: set_fixity, reset_type_fixity.
+
+********************************************************************************
+
+reset_type_fixity : string -> unit
+
+This is the type fixity resetting command for type constant names.  It takes a
+name, and resets the type fixity of the name to Nonfix.  A note of the fixity
+change is reported, and unit is returned.
+
+See also: set_type_fixity, reset_fixity.
+
+********************************************************************************
+
+set_enum_brackets : string * string -> string * string -> unit
+
+This is the enumeration bracket setting command.  It takes two pairs of strings,
+where the first pair is the name of an enumeration insertion operator constant
+and the name of an enumeration empty structure constant, and the second pair is
+the name of the opening and closing enumeration brackets to be associated with
+these constants.  The brackets are registered as the enumeration brackets
+corresponding to the supplied constants, and become reserved words of the HOL
+language.  A note of the bracket declaration is reported, and unit is returned.
+
+********************************************************************************
+
+set_fixity : string * fixity -> unit
+
+This is the term fixity setting command for variable/constant names.  It takes a
+name and a fixity, and sets the term fixity of the name to the supplied fixity.
+The name must have current term fixity Nonfix (except in the benign case of the
+new fixity being the same as the current), and the new fixity must not be Nonfix
+(except in the benign case of its current fixity being Nonfix).  A note of the
+fixity change is reported, and unit is returned.
+
+See also: reset_fixity, set_type_fixity.
+
+********************************************************************************
+
+set_type_fixity : string * fixity -> unit
+
+This is the type fixity setting command for type constant names.  It takes a
+name and a fixity, and sets the type fixity of the name to the supplied fixity.
+The name must have current type fixity Nonfix (except in the benign case of the
+new fixity being the same as the current), and the new fixity must not be Nonfix
+(except in the benign case of its current fixity being Nonfix).  A note of the
+fixity change is reported, and unit is returned.
+
+See also: reset_type_fixity, set_fixity.
+
+********************************************************************************
+
+
+parse_type : string -> hol_type
+parse_term : string -> term
+
+print_type : hol_type -> unit
+print_qtype : hol_type -> unit
+
+print_term : term -> unit
+print_qterm : term -> unit
+
+get_all_enum_info : unit -> ((string * string) * (string * string)) list
+
+type hand = Left | Right
+type assochand = LeftAssoc | RightAssoc | NonAssoc
+
+type fixity =
+      Nonfix
+    | Prefix
+    | Infix of (int * assochand)
+    | Postfix
+    | Binder
+
+
+********************************************************************************
+
+get_type_fixity : string -> fixity
+
+********************************************************************************
+
+get_all_type_fixities : unit -> (string * fixity) list
+
+********************************************************************************
+
+get_fixity : string -> fixity
+get_all_fixities : unit -> (string * fixity) list
+
+type level = Minimal | Full
+
+set_type_annotation_mode : level -> unit
+get_type_annotation_mode : unit -> level
+
+set_tyvar_marking_mode : level -> unit
+get_tyvar_marking_mode : unit -> level
+
+set_var_marking_mode : level -> unit
+get_var_marking_mode : unit -> level
+
+set_language_level_mode : level -> unit
+get_language_level_mode : unit -> level
+
+show_display_modes : unit -> unit

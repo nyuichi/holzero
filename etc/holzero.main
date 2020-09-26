@@ -1,0 +1,63 @@
+
+
+# Argument validation
+
+# Check that 'VERSION' and 'holzero.ml' exist
+if [ ! -d "$BUILD" ]; then
+  echo "holzero: Missing HOL Zero home directory '$BUILD'."
+  exit 1
+elif [ ! -f "$BUILD"/VERSION ]; then
+  echo "holzero: Missing 'VERSION' from HOL Zero home directory '$BUILD'."
+  exit 1
+elif [ ! -d "$BUILD"/src ]; then
+  echo "holzero: Missing HOL Zero source directory '$BUILD/src'."
+  exit 1
+elif [ ! -f "$BUILD"/src/holzero.ml ]; then
+  echo "holzero: Missing 'holzero.ml' from HOL Zero source directory \
+'$BUILD/src'."
+  exit 1
+fi
+
+# Check that 'hzocaml' exists
+if [ ! -d "$BIN" ]; then
+  echo "holzero: Missing HOL Zero executables directory '$BIN'."
+  exit 1
+elif [ ! -f "$BIN"/hzocaml ]; then
+  echo "holzero: Missing 'hzocaml' from HOL Zero executables directory '$BIN'."
+  exit 1
+fi
+
+# Check that any files supplied as arguments exist
+for file in $*; do
+  if [ ! -f "$file" ]; then
+    echo "holzero: User supplied file '$file' does not exist."
+    exit 1
+  fi
+done
+
+
+# Build HOL Zero
+
+# Store directory of the call to 'holzero', so can return to it in ML session
+CURRENT=`pwd`
+
+# Create temporary script for processing HOL Zero source + supplied files in ML
+TMP="/tmp/hz_build.ml"
+echo "#cd \"$BUILD/src\";;" > $TMP
+cat "$BUILD"/src/holzero.ml >>$TMP
+for file in $*; do
+  echo "#use \"$file\";;"   >>$TMP
+done
+echo "#cd \"$CURRENT\";;"   >>$TMP
+
+# Run temporary script through 'hzocaml' ML toplevel
+if [ `echo $TERM | sed -e 's/-.*//'` = xterm ] &&
+   ( which rlwrap &> /dev/null ); then
+  # Use 'rlwrap' if it's installed
+  rlwrap $BIN/hzocaml -I "$CAMLP5_LIB" -init $TMP
+else
+  $BIN/hzocaml -I "$CAMLP5_LIB" -init $TMP
+fi
+
+# Delete the temporary script
+rm -f $TMP

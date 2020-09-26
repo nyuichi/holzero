@@ -1,0 +1,1450 @@
+================================================================================
+== APPENDIX A5: INFERENCE RULES (HOL Zero User Manual)                        ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2015                            ==
+================================================================================
+
+
+This appendix gives descriptions of the inference rules in HOL Zero's ML user
+interface.
+
+
+********************************************************************************
+
+add_asm_rule : term -> thm -> thm
+
+This is the assumption insertion rule.  It takes a boolean term and a theorem,
+and returns the same theorem but with the supplied term added to its
+assumptions.  The returned theorem is the inputted theorem if the term is
+already in the assumptions.
+
+      `q`   A |- p
+      ------------
+      A u {q} |- p
+
+See also: assume_rule.
+
+********************************************************************************
+
+alpha_conv : term -> term -> thm
+
+This is the alpha renaming conversion.  It replaces the binding variable and all
+occurrences of it in the supplied lambda abstraction term (the 2nd argument)
+with the supplied variable (the 1st argument).  The supplied variable must have
+the same type as the original binding variable, and must not occur free in the
+original body.
+
+            `y`   `\x. t`
+      -------------------------
+      |- (\x. t) = (\y. t[y/x])
+
+See also: alpha_link_conv.
+
+********************************************************************************
+
+alpha_link_conv : term -> term -> thm
+
+This is the alpha linking conversion.  It takes two alpha-equivalent terms and
+returns a theorem stating that the second is equal to the first, under no
+assumptions.  Fails if the supplied terms are not alpha-equivalent.
+
+      `t'`   `t`
+      ----------
+      |- t = t'
+
+See also: alpha_conv.
+
+********************************************************************************
+
+app_beta_rhs_rule : thm -> term -> thm
+
+This rule is for expanding a function defined in terms of a lambda abstraction.
+It takes an equality theorem and a term argument, where the theorem RHS is a
+lambda abstraction with a binding variable of the same type as the term
+argument.  It returns a theorem stating that the theorem argument's LHS applied
+to the term argument is equal to the beta reduction of the lambda abstraction
+applied to the term argument.
+
+      A |- f = (\v. t)   `s`
+      ----------------------
+        A |- f s = t[s/v]
+
+********************************************************************************
+
+assume_rule : term -> thm                                       [ Primitive ]
+
+This is the assumption rule.  It takes a boolean term, and returns a theorem
+stating that the term holds under the single assumption of the term itself.
+
+         `p`
+      --------
+      {p} |- p
+
+See also: add_asm_rule.
+
+********************************************************************************
+
+beta_conv : term -> thm                                         [ Primitive ]
+
+This is the beta reduction conversion.  It takes a lambda abstraction
+application term, and returns a theorem stating that the application is equal to
+the lambda abstraction body but with all occurrences of the binding variable
+replaced with the application's argument, under no assumptions.
+
+           `(\x. t) s`
+      ---------------------
+      |- (\x. t) s = t[s/x]
+
+See also: eta_conv.
+
+********************************************************************************
+
+bspec_rule : term -> thm -> thm
+
+This is the beta-reducing universal elimination rule.  It strips off the
+outermost universal quantifier from the supplied theorem, and replaces in the
+body each occurrence of the stripped binding variable with the supplied term.
+If the supplied term is a lambda abstraction, it also performs beta-reduction on
+each substituted occurrence that is applied to an argument.  The type of the
+supplied term must equal the type of the stripped binding variable.
+
+            `\y. t`   A |- !x. p
+      --------------------------------
+      A |- p[ \y.t / x; t[s/y] / x s ]
+
+See also: spec_rule, list_spec_rule, spec_all_rule, gen_rule.
+
+********************************************************************************
+
+ccontr_rule : term -> thm -> thm
+
+This is the classical contradiction rule.  It takes a boolean term and a theorem
+with falsity as its conclusion.  It returns a theorem with the supplied term as
+its conclusion, and with the same assumptions as the supplied theorem but with
+the logical negation of the supplied term removed.  Note that the logical
+negation of the supplied term does not have to be in the supplied theorem's
+assumptions for the rule to succeed.
+
+      `p`   A |- false
+      ----------------
+        A\{~p} |- p
+
+See also: contr_rule, deduct_contrapos_rule.
+
+********************************************************************************
+
+choose_rule : term * thm -> thm -> thm
+
+This is the existential elimination rule.  It removes, from the assumptions of a
+supplied main theorem, the body of a supplied existential theorem (but with all
+occurrences of the binding variable replaced with a supplied variable), and
+adds the assumptions of the existential theorem.  The supplied variable is not
+allowed to be free in existential theorem's conclusion or in the original main
+theorem's other assumptions or its conclusion.  Note that the altered body of
+the existential theorem does not have to be present in the assumptions of the
+main theorem for the rule to succeed.
+
+      `y`   A1 |- ?x. p    A2 |- q      [ "y" not free in:
+      ----------------------------          `?x. p`, `q` or `A2\{p[y/x]}` ]
+          A1 u A2\{p[y/x]} |- q
+
+See also: exists_rule, mk_exists_rule.
+
+********************************************************************************
+
+conj_rule : thm -> thm -> thm
+
+This is the conjunction introduction rule.  It conjoins the two supplied
+theorems and unions their assumptions.
+
+      A1 |- p    A2 |- q
+      ------------------
+      A1 u A2 |- p /\ q
+
+See also: conjunct1_rule, conjunct2_rule, mk_conj_rule.
+
+********************************************************************************
+
+conjunct1_rule : thm -> thm
+
+This is the conjunction elimination rule for the LHS.  It removes the RHS
+conjunct from the supplied conjunction theorem.
+
+      A |- p /\ q
+      -----------
+        A |- p
+
+See also: conjunct2_rule, conjunct_rule, mk_conj_rule.
+
+********************************************************************************
+
+conjunct2_rule : thm -> thm
+
+This is the conjunction elimination rule for the RHS.  It removes the LHS
+conjunct from the supplied conjunction theorem.
+
+      A |- p /\ q
+      -----------
+        A |- q
+
+See also: conjunct1_rule, conjunct_rule, mk_conj_rule.
+
+********************************************************************************
+
+contr_rule : term -> thm -> thm
+
+This is the intuitionistic contradiction rule.  It takes a boolean term and a
+theorem with falsity as its conclusion.  It returns a theorem with the supplied
+term as its conclusion, under the same assumptions as the supplied theorem.
+
+      `p`   A |- false
+      ----------------
+           A |- p
+
+See also: ccontr_rule, deduct_contrapos_rule.
+
+********************************************************************************
+
+deduct_antisym_rule : thm -> thm -> thm
+
+This is the antisymmetry rule for deduction.  It takes two theorem arguments.
+It returns a theorem stating that the supplied conclusions are equivalent, under
+the unioned assumptions but with each theorem's conclusion removed from the
+other's assumptions.
+
+          A1 |- p    A2 |- q
+      --------------------------
+      A1\{q} u A2\{p} |- p <=> q
+
+See also: imp_antisym_rule, undisch_rule.
+
+********************************************************************************
+
+deduct_contrapos_rule : term -> thm -> thm
+
+This is the contraposition rule for deduction.  It swaps and logically negates
+the supplied assumption term and the conclusion of the supplied theorem.  Note
+that the supplied term does not have to be present in the assumptions of the
+supplied theorem for the rule to succeed.   If the logical negation of the
+supplied theorem's conclusion is the supplied term, then it will not occur in
+the resulting theorem's assumptions.
+
+          `q`   A |- p
+      ---------------------
+      (A u {~p})\{q} |- ~ q
+
+See also: not_intro_rule, disch_rule, contr_rule, ccontr_rule.
+
+********************************************************************************
+
+disch_rule : term -> thm -> thm                                 [ Primitive ]
+
+This is the implication introduction rule.  It takes a boolean term and a
+theorem, and removes the term from the theorem's assumptions (if present) and
+adds it as an antecedent of the conclusion.  Note that the term does not have to
+be in the assumptions of the supplied theorem for the rule to succeed.
+
+        `p`   A |- q
+      ----------------
+      A\{p} |- p ==> q
+
+See also: undisch_rule, mp_rule.
+
+********************************************************************************
+
+disj1_rule : thm -> term -> thm
+
+This is the disjunction introduction rule for the LHS.  It disjoins the supplied
+boolean term to the RHS of the supplied theorem.
+
+      A |- p   `q`
+      ------------
+      A |- p \/ q
+
+See also: disj2_rule, disj_cases_rule, mk_disj1_rule.
+
+********************************************************************************
+
+disj2_rule : term -> thm -> thm
+
+This is the disjunction introduction rule for the RHS.  It disjoins the supplied
+boolean term to the LHS of the supplied theorem.
+
+      `p`   A |- q
+      ------------
+      A |- p \/ q
+
+See also: disj1_rule, disj_cases_rule, mk_disj2_rule.
+
+********************************************************************************
+
+disj_cases_rule : thm -> thm -> thm -> thm
+
+This is the disjunction elimination rule.  It takes a disjunction theorem and
+two extra theorems that share the same conclusion.  It returns a theorem with
+the same conclusion as the extra theorems.  The assumptions of the returned
+theorem union the assumptions of the extra theorems, but with the disjunction
+theorem's LHS removed from the first's assumptions and its RHS removed from the
+second's, unioned together with the disjunction theorem's assumptions.
+
+      A |- p \/ q    A1 |- r    A2 |- r
+      ---------------------------------
+          A u A1\{p} u A2\{q} |- r
+
+See also: disj1_rule, disj2_rule, mk_disj_rule.
+
+********************************************************************************
+
+eq_imp_rule1 : thm -> thm
+
+This is the first equivalence elimination rule.  It takes a theorem stating the
+equivalence of two boolean terms, and returns a theorem stating that the LHS
+implies the RHS, under the same assumptions.
+
+      A |- p <=> q
+      ------------
+      A |- p ==> q
+
+See also: eq_imp_rule2, imp_antisym_rule, eq_mp_rule, undisch_rule, mk_imp_rule.
+
+********************************************************************************
+
+eq_imp_rule2 : thm -> thm
+
+This is the second equivalence elimination rule.  It takes a theorem stating the
+equivalence of two boolean terms, and returns a theorem stating that the RHS
+implies the LHS, under the same assumptions.
+
+      A |- p <=> q
+      ------------
+      A |- q ==> p
+
+See also: eq_imp_rule1, imp_antisym_rule, eq_mp_rule, undisch_rule, mk_imp_rule.
+
+********************************************************************************
+
+eq_mp_rule : thm -> thm -> thm                                  [ Primitive ]
+
+This is the equality modus ponens rule.  It takes an equality theorem and a
+second theorem, where the equality theorem's LHS is alpha-equivalent to the
+conclusion of the second theorem.  It returns a theorem stating that the
+equality theorem's RHS holds, under the unioned assumptions of the supplied
+theorems.
+
+      A1 |- p <=> q    A2 |- p
+      ------------------------
+            A1 u A2 |- q
+
+See also: mp_rule, eq_imp_rule1, eq_imp_rule2, imp_antisym_rule.
+
+********************************************************************************
+
+eqf_elim_rule : thm -> thm
+
+The is the falsity equivalence elimination rule.  It takes an equality theorem
+with falsity on the RHS, and returns the logical negation of the LHS, under the
+same assumptions.
+
+      A |- p <=> false
+      ----------------
+          A |- ~ p
+
+See also: eqf_intro_rule, not_intro_rule, not_elim_rule, mk_not_rule,
+          eqt_elim_rule, deduct_contrapos_rule.
+
+********************************************************************************
+
+eqf_intro_rule : thm -> thm
+
+This is the falsity equivalence introduction rule.  It takes a theorem with
+logical negation at its top level, and returns a theorem stating that the body
+of the negation is equivalent to falsity, under the same assumptions.
+
+          A |- ~ p
+      ----------------
+      A |- p <=> false
+
+See also: eqf_elim_rule, not_elim_rule, not_intro_rule, mk_not_rule,
+          eqt_intro_rule.
+
+********************************************************************************
+
+eqt_elim_rule : thm -> thm
+
+This is the truth equivalence elimination rule.  It takes an equality theorem
+that has truth on the RHS, and returns a theorem stating that the LHS holds,
+under the same assumptions.
+
+      A |- p <=> true
+      ---------------
+          A |- p
+
+See also: eqt_intro_rule, eqf_elim_rule.
+
+********************************************************************************
+
+eqt_intro_rule : thm -> thm
+
+This is the truth equivalence introduction rule.  It takes any theorem, and
+returns the theorem stating that the conclusion is equivalent to truth, under
+the same assumptions.
+
+           A |- p
+      ---------------
+      A |- p <=> true
+
+See also: eqt_elim_rule, eqf_intro_rule.
+
+********************************************************************************
+
+eta_conv : term -> thm
+
+This is the eta reduction conversion.  It takes a lambda abstraction term, where
+the body is a function application, and the binding variable is the argument
+subterm of the function application and not free in the function subterm.  It
+returns a theorem stating that the term is equal to the function subterm, under
+no assumptions.
+
+         `\x. f x`
+      ----------------
+      |- (\x. f x) = f
+
+See also: beta_conv.
+
+********************************************************************************
+
+eval_add_conv : term -> thm
+
+This is the evaluation conversion for numeral addition.  It takes a term of the
+form `m + n`, where "m" and "n" are both natural number numerals, and returns a
+theorem stating that this equals its numeral value, under no assumptions.
+
+         `m + n`
+      ------------
+      |- m + n = z
+
+See also: eval_sub_conv, eval_mult_conv, eval_exp_conv.
+
+********************************************************************************
+
+eval_even_conv : term -> thm
+
+This is the evaluation conversion for numeral evenness.  It takes a term of the
+form `EVEN n`, where "n" is a natural number numeral, and returns a theorem
+stating its boolean value, under no assumptions.
+
+          `EVEN n`
+      ---------------
+      |- EVEN n <=> z
+
+See also: eval_odd_conv.
+
+********************************************************************************
+
+eval_exp_conv : term -> thm
+
+This is the evaluation conversion for numeral exponentiation.  It takes a term
+of the form `m EXP n`, where "m" and "n" are both natural number numerals, and
+returns a theorem stating that this equals its numeral value, under no
+assumptions.
+
+         `m EXP n`
+      --------------
+      |- m EXP n = z
+
+See also: eval_add_conv, eval_sub_conv, eval_mult_conv.
+
+********************************************************************************
+
+eval_ge_conv : term -> thm
+
+This is the evaluation conversion for numeral greater-than-or-equal comparison.
+It takes a term of the form `m >= n`, where "m" and "n" are both natural number
+numerals, and returns a theorem stating that this input equals its boolean
+value, under no assumptions.
+
+          `m >= n`
+      ---------------
+      |- m >= n <=> z
+
+See also: eval_gt_conv, eval_le_conv, eval_lt_conv, eval_nat_eq_conv.
+
+********************************************************************************
+
+eval_gt_conv : term -> thm
+
+This is the evaluation conversion for numeral greater-than comparison.  It takes
+a term of the form `m > n`, where "m" and "n" are both natural number numerals,
+and returns a theorem stating that this input equals its boolean value, under no
+assumptions.
+
+          `m > n`
+      --------------
+      |- m > n <=> z
+
+See also: eval_ge_conv, eval_le_conv, eval_lt_conv, eval_nat_eq_conv.
+
+********************************************************************************
+
+eval_le_conv : term -> thm
+
+This is the evaluation conversion for numeral less-than-or-equal comparison.  It
+takes a term of the form `m <= n`, where "m" and "n" are both natural number
+numerals, and returns a theorem stating that this input equals its boolean
+value, under no assumptions.
+
+          `m <= n`
+      ---------------
+      |- m <= n <=> z
+
+See also: eval_lt_conv, eval_ge_conv, eval_gt_conv, eval_nat_eq_conv.
+
+********************************************************************************
+
+eval_lt_conv : term -> thm
+
+This is the evaluation conversion for numeral less-than comparison.  It takes a
+term of the form `m < n`, where "m" and "n" are both natural number numerals,
+and returns a theorem stating that this input equals its boolean value, under no
+assumptions.
+
+          `m < n`
+      --------------
+      |- m < n <=> z
+
+See also: eval_le_conv, eval_ge_conv, eval_gt_conv, eval_nat_eq_conv.
+
+********************************************************************************
+
+eval_mult_conv : term -> thm
+
+This is the evaluation conversion for numeral multiplication.  It takes a term
+of the form `m * m`, where "m" and "n" are both natural number numerals, and
+returns a theorem stating that this equals its numeral value, under no
+assumptions.
+
+         `m * n`
+      ------------
+      |- m * n = z
+
+See also: eval_add_conv, eval_sub_conv, eval_exp_conv.
+
+********************************************************************************
+
+eval_nat_eq_conv : term -> thm
+
+This is the evaluation conversion for numeral equality.  It takes a term of the
+form `m = n`, where "m" and "n" are both natural number numerals, and returns a
+theorem stating that this equals its boolean value, under no assumptions.
+
+          `m = n`
+      --------------
+      |- m = n <=> z
+
+See also: eval_le_conv, eval_lt_conv, eval_ge_conv, eval_gt_conv.
+
+********************************************************************************
+
+eval_odd_conv : term -> thm
+
+This is the evaluation conversion for numeral oddness.  It takes a term of the
+form `ODD n`, where "n" is a natural number numeral, and returns a theorem
+stating its boolean value, under no assumptions.
+
+          `ODD n`
+      --------------
+      |- ODD n <=> z
+
+See also: eval_even_conv.
+
+********************************************************************************
+
+eval_pre_conv : term -> thm
+
+This is the evaluation conversion for numeral predecessor.  It takes a term of
+the form `PRE n`, where "n" is a natural number numeral, and returns a theorem
+stating that this equals its numeral value, under no assumptions.
+
+         `PRE n`
+      ------------
+      |- PRE n = z
+
+See also: eval_suc_conv.
+
+********************************************************************************
+
+eval_sub_conv : term -> thm
+
+This is the evaluation conversion for numeral subtraction.  It takes a term of
+the form `m - n`, where "m" and "n" are both natural number numerals, and
+returns a theorem stating that this equals its numeral value, under no
+assumptions.
+
+         `m - n`
+      ------------
+      |- m - n = z
+
+See also: eval_add_conv, eval_mult_conv, eval_exp_conv.
+
+********************************************************************************
+
+eval_suc_conv : term -> thm
+
+This is the evaluation conversion for numeral successor.  It takes a term of the
+form `SUC n`, where "n" is a natural number numeral, and returns a theorem
+stating that this equals its numeral value, under no assumptions.
+
+         `SUC n`
+      ------------
+      |- SUC n = z
+
+See also: eval_pre_conv.
+
+********************************************************************************
+
+exists_rule : term * term -> thm -> thm
+
+This is the existential introduction rule.  It takes an existential term, a
+witness term and a theorem, where the theorem's conclusion is the body of the
+existential term but with the witness term replacing occurrences of its binding
+variable.  It returns a theorem stating that the supplied existential term
+holds, under the same assumptions as the supplied theorem.
+
+      `?x. p`   `t`   A |- p[t/x]
+      ---------------------------
+              A |- ?x. p
+
+See also: choose_rule, select_rule, mk_exists_rule.
+
+********************************************************************************
+
+gen_rule : term -> thm -> thm
+
+This is the universal introduction rule.  It universally quantifies the supplied
+theorem with the supplied binding variable, under the same assumptions.  The
+binding variable must not occur free in the assumptions.
+
+      `x`   A |- p        [ "x" not free in `A` ]
+      ------------
+       A |- !x. p
+
+See also: list_gen_rule, spec_rule, mk_forall_rule.
+
+********************************************************************************
+
+imp_antisym_rule : thm -> thm -> thm
+
+This is the antisymmetry rule for implication.  It takes two implication theorem
+arguments, where the LHS of each is the same (modulo alpha-equivalence) as the
+RHS of the other.  It returns a theorem stating the equivalence of the two
+sides, under the unioned assumptions.
+
+      A1 |- p ==> q    A2 |- q ==> p
+      ------------------------------
+            A1 u A2 |- p <=> q
+
+See also: eq_imp_rule1, eq_imp_rule2, deduct_antisym_rule, disch_rule,
+          eqt_intro_rule.
+
+********************************************************************************
+
+imp_trans_rule : thm -> thm -> thm
+
+This is the transitivity rule for implication.  It takes two implication theorem
+arguments, where the first theorem's RHS is the same (modulo alpha-equivalence)
+as the second theorem's LHS.  It returns a theorem stating that the first
+theorem's LHS implies the second theorem's RHS, under the unioned assumptions of
+the two theorems.
+
+      A1 |- p ==> q    A2 |- q ==> r
+      ------------------------------
+            A1 u A2 |- p ==> r
+
+See also: list_imp_trans_rule, eq_trans_rule, disch_rule, imp_anitsym_asm_rule.
+
+********************************************************************************
+
+inst_rule : (term * term) list -> thm -> thm                    [ Primitive ]
+
+This is the variable instantiation rule.  It takes a variable instantiation list
+and a theorem, and performs a single parallel instantiation of the free
+variables in the theorem's assumptions and conclusion, according to the
+instantiation list.  All free occurrences of instantiation list domain elements
+in the theorem get replaced.  Each instantiation list domain element must be a
+variable, and each range element must have the same type as its corresponding
+domain element.
+
+Binding variables in the resulting theorem are renamed as necessary to avoid
+variable capture.  Note that instantiation list entries that do not apply are
+simply ignored, as are repeated entries for a given variable (beyond its first
+entry).  If no instantiation list entries apply, then the returned theorem is
+the same as the input.
+
+          [(x1,t1);(x2,t2);..]    A |- p
+      --------------------------------------
+      A[t1/x1,t2/x2,..] |- p[t1/x1,t2/x2,..]
+
+See also: inst_type_rule, subs_rule, subst_rule.
+
+********************************************************************************
+
+inst_type_rule : (hol_type * hol_type) list -> thm -> thm       [ Primitive ]
+
+This is the type variable instantiation rule.  It takes a type variable
+instantiation list and a theorem, and performs a single parallel instantiation
+of the type variables in the theorem's assumptions and conclusion, according to
+the instantiation list.  All occurrences of instantiation list domain elements
+in the theorem get replaced.  Each instantiation list domain element must be a
+type variable.
+
+Binding variables in the resulting theorem are renamed as necessary to avoid
+variable capture.  Note that instantiation list entries that do not apply are
+simply ignored, as are repeated entries for a given type variable (beyond its
+first entry).  If no instantiation list entries apply, then the returned theorem
+is the same as the input.
+
+           [(tv1,ty1);(tv2,ty2);..]    A |- p
+      ----------------------------------------------
+      A[ty1/tv1,ty2/tv2,..] |- p[ty1/tv1,ty2/tv2,..]
+
+See also: inst_rule.
+
+********************************************************************************
+
+list_gen_rule : term list -> thm -> thm
+
+....
+
+See also: gen_rule, list_spec_rule.
+
+********************************************************************************
+
+list_imp_trans_rule : thm list -> thm
+
+....
+
+See also: imp_trans_rule.
+
+********************************************************************************
+
+list_spec_rule : term list -> thm -> thm
+
+This is the compound universal elimination rule.  It strips off an outermost
+universal quantifier from the supplied theorem for each item in the supplied
+term list, replacing each occurrence of a stripped binding variable in the body
+with its corresponding item in the term list.  The type of each term in the term
+list must equal the type of its corresponding binding variable.
+
+      [`t1`;`t2`;..]   A |- !x1 x2 .. . p
+      -----------------------------------
+             A |- p[t1/x1,t2/x2,..]
+
+See also: spec_rule, spec_all_rule, bspec_rule, list_gen_rule.
+
+********************************************************************************
+
+list_eq_trans_rule : thm list -> thm
+
+....
+
+See also: eq_trans_rule.
+
+********************************************************************************
+
+mk_abs_rule : term -> thm -> thm                                [ Primitive ]
+
+This is the equality congruence rule for lambda abstraction.  It takes a
+variable and an equality theorem, and abstracts the variable from both sides of
+the theorem.  The variable must not occur free in the assumptions of the
+supplied theorem.
+
+         `x`   A |- t1 = t2        [ "x" not free in 'A' ]
+      ------------------------
+      A |- (\x. t1) = (\x. t2)
+
+See also: mk_comb_rule.
+
+********************************************************************************
+
+mk_bin_rule : term -> thm -> thm -> thm
+
+This is the equality congruence rule for binary function application.  It takes
+a binary function term and two equality theorems, and applies the function in
+curried form to corresponding sides of each theorem, under their unioned
+assumptions.  The type of the supplied function must be a binary curried
+function type, with first and second domain types equal to the types of each
+side of their corresponding theorems.
+
+      `f`   A1 |- s1 = s2    A2 |- t1 = t2
+      ------------------------------------
+          A1 u A2 |- f s1 t1 = f s2 t2
+
+See also: mk_bin1_rule, mk_bin2_rule, mk_comb_rule, mk_conj_rule, mk_disj_rule,
+          mk_imp_rule, mk_eq_rule, mk_pair_rule.
+
+********************************************************************************
+
+mk_bin1_rule : term -> thm -> term -> thm
+
+This is the equality congruence rule for binary function LHS application.  It
+takes a binary function term, an equality theorem and a RHS argument term, and
+applies the function in curried form to corresponding sides of the theorem as
+its LHS argument and the supplied RHS argument.  The type of the supplied
+function must be a binary curried function type, with first domain type equal to
+the type of each side of the theorem, and second domain type equal to the type
+of the RHS argument term.
+
+      `f`   A |- s1 = s2   `t`
+      ------------------------
+        A |- f s1 t = f s2 t
+
+See also: mk_bin2_rule, mk_bin_rule, mk_comb_rule.
+
+********************************************************************************
+
+mk_bin2_rule : term -> term -> thm -> thm
+
+This is the equality congruence rule for binary function RHS application.  It
+takes a binary function term, a LHS argument term and an equality theorem, and
+applies the function in curried form to the supplied LHS argument and
+corresponding sides of the theorem as its RHS argument.  The type of the
+supplied function must be a binary curried function type, with first domain type
+equal to the type of the LHS argument term, and second domain type equal to the
+type of each side of the theorem.
+
+      `f`   `s`   A |- t1 = t2
+      ------------------------
+        A |- f s t1 = f s t2
+
+See also: mk_bin1_rule, mk_bin_rule, mk_comb_rule.
+
+********************************************************************************
+
+mk_comb_rule : thm -> thm -> thm                                [ Primitive ]
+
+This is the equality congruence rule for function application.  It takes two
+equality theorems, and applies corresponding sides of the first theorem to the
+second, unioning the assumptions.  The first theorem's LHS/RHS must be functions
+with domain type equal to the type of the second theorem's LHS/RHS.
+
+      A1 |- f1 = f2    A2 |- t1 = t2
+      ------------------------------
+         A1 u A2 |- f1 t1 = f2 t2
+
+See also: mk_comb1_rule, mk_comb2_rule, mk_bin_rule, mk_abs_rule.
+
+********************************************************************************
+
+mk_comb1_rule : thm -> term -> thm
+
+This is the equality congruence rule for function application functions.  It
+takes an equality theorem over functions and a term, and supplies the term as
+the argument to each side of the theorem.  The type of the supplied term must be
+the same as the domain type of the functions.
+
+      A |- f1 = f2   `t`
+      ------------------
+       A |- f1 t = f2 t
+
+See also: mk_comb2_rule, mk_comb_rule.
+
+********************************************************************************
+
+mk_comb2_rule : term -> thm -> thm
+
+This is the equality congruence rule for function application arguments.  It
+takes a function term and an equality theorem, and applies the function to each
+side of the theorem.  The domain type of the supplied function must be the same
+as the type of the theorem LHS/RHS.
+
+      `f`   A |- t1 = t2
+      ------------------
+       A |- f t1 = f t2
+
+See also: mk_comb1_rule, mk_comb_rule.
+
+********************************************************************************
+
+mk_conj_rule : thm -> thm -> thm
+
+This is the equality congruence rule for conjunction.  It takes two boolean
+equality theorems, and conjoins corresponding sides of the first theorem with
+the second, unioning the assumptions.
+
+      A1 |- p1 <=> p2    A2 |- q1 <=> q2
+      ----------------------------------
+       A1 u A2 |- p1 /\ q1 <=> p2 /\ q2
+
+See also: mk_conj1_rule, mk_conj2_rule, mk_bin_rule, conj_rule.
+
+********************************************************************************
+
+mk_conj1_rule : thm -> term -> thm
+
+This is the equality congruence rule for conjunction LHS.  It takes a boolean
+equality theorem and a boolean term, and conjoins each side of the theorem with
+the supplied term.
+
+        A |- p1 <=> p2   `q`
+      ------------------------
+      A |- p1 /\ q <=> p2 /\ q
+
+See also: mk_conj2_rule, mk_conj_rule, mk_bin1_rule, conj_rule.
+
+********************************************************************************
+
+mk_conj2_rule : term -> thm -> thm
+
+This is the equality congruence rule for conjunction RHS.  It takes a boolean
+term and a boolean equality theorem, and conjoins the supplied term with each
+side of the theorem.
+
+        `p`   A |- q1 <=> q2
+      ------------------------
+      A |- p /\ q1 <=> p /\ q2
+
+See also: mk_conj1_rule, mk_conj_rule, mk_bin2_rule, conj_rule.
+
+********************************************************************************
+
+mk_disj_rule : thm -> thm -> thm
+
+This is the equality congruence rule for disjunction.  It takes two boolean
+equality theorems, and disjoins corresponding sides of the first theorem with
+the second, unioning the assumptions.
+
+      A1 |- p1 <=> p2    A2 |- q1 <=> q2
+      ----------------------------------
+       A1 u A2 |- p1 \/ q1 <=> p2 \/ q2
+
+See also: mk_disj1_rule, mk_disj2_rule, mk_bin_rule, disj1_rule, disj2_rule.
+
+********************************************************************************
+
+mk_disj1_rule : thm -> term -> thm
+
+This is the equality congruence rule for disjunction LHS.  It takes a boolean
+equality theorem and a boolean term, and disjoins each side of the theorem with
+the supplied term.
+
+        A |- p1 <=> p2   `q`
+      ------------------------
+      A |- p1 \/ q <=> p2 \/ q
+
+See also: mk_disj2_rule, mk_disj_rule, mk_bin1_rule, disj1_rule.
+
+********************************************************************************
+
+mk_disj2_rule : term -> thm -> thm
+
+This is the equality congruence rule for disjunction RHS.  It takes a boolean
+term and a boolean equality theorem, and disjoins the supplied term with each
+side of the theorem.
+
+        `p`   A |- q1 <=> q2
+      ------------------------
+      A |- p \/ q1 <=> p \/ q2
+
+See also: mk_disj1_rule, mk_disj_rule, mk_bin2_rule, disj2_rule.
+
+********************************************************************************
+
+mk_eq_rule : thm -> thm -> thm
+
+This is the equality congruence rule for equality.  It takes two equality
+theorems, and equates corresponding sides of the first theorem with the second,
+unioning the assumptions.  The types of each side of each equation must all be
+equal.
+
+      A1 |- s1 = s2    A2 |- t1 = t2
+      ------------------------------
+      A1 u A2 |- s1 = t1 <=> s2 = t2
+
+See also: mk_eq1_rule, mk_eq2_rule, mk_eq_rule.
+
+********************************************************************************
+
+mk_eq1_rule : thm -> term -> thm
+
+This is the equality congruence rule for equality LHS.  It takes an equality
+theorem and a term, and equates each side of the theorem with the supplied term.
+The type of the supplied term must equal the types of each side of the supplied
+theorem.
+
+        A |- s1 = s2   `t`
+      ----------------------
+      A |- s1 = t <=> s2 = t
+
+See also: mk_eq2_rule, mk_eq_rule, mk_eq1_rule.
+
+********************************************************************************
+
+mk_eq2_rule : term -> thm -> thm
+
+This is the equality congruence rule for equality RHS.  It takes a term and an
+equality theorem, and equates the term with each side of the theorem.  The type
+of the supplied term must equal the types of each side of the supplied theorem.
+
+        `s`   A |- t1 = t2
+      ----------------------
+      A |- s = t1 <=> s = t2
+
+See also: mk_eq1_rule, mk_eq_rule, mk_eq2_rule.
+
+********************************************************************************
+
+mk_exists_rule : term -> thm -> thm
+
+This is the equality congruence rule for existential quantification.  It takes a
+variable and an equality theorem, and existentially quantifies the variable on
+both sides of the theorem.  The variable must not occur free in the assumptions
+of the supplied theorem.
+
+         `x`   A |- p1 <=> p2          [ "x" not free in `A` ]
+      --------------------------
+      A |- (?x. p1) <=> (?x. p2)
+
+See also: mk_uexists_rule, mk_abs_rule, mk_comb_rule, exists_rule.
+
+********************************************************************************
+
+mk_forall_rule : term -> thm -> thm
+
+This is the equality congruence rule for universal quantification.  It takes a
+variable and an equality theorem, and universally quantifies the variable on
+both sides of the theorem.  The variable must not occur free in the assumptions
+of the supplied theorem.
+
+         `x`   A |- p1 <=> p2          [ "x" not free in `A` ]
+      --------------------------
+      A |- (!x. p1) <=> (!x. p2)
+
+See also: mk_abs_rule, mk_comb_rule, gen_rule.
+
+********************************************************************************
+
+mk_imp_rule : thm -> thm -> thm
+
+This is the equality congruence rule for implication.  It takes two boolean
+equality theorems, and creates implications out of corresponding sides of the
+first theorem and the second, unioning the assumptions.
+
+      A1 |- p1 <=> p2    A2 |- q1 <=> q2
+      ----------------------------------
+      A1 u A2 |- p1 ==> q1 <=> p2 ==> q2
+
+See also: mk_imp1_rule, mk_imp2_rule, mk_bin_rule.
+
+********************************************************************************
+
+mk_imp1_rule : thm -> term -> thm
+
+This is the equality congruence rule for implication LHS.  It takes a boolean
+equality theorem and a boolean term, and creates implications out of each side
+of the theorem, with the theorem side as the antecedent and the term as the
+consequent.
+
+         A |- p1 <=> p2   `q`
+      --------------------------
+      A |- p1 ==> q <=> p2 ==> q
+
+See also: mk_imp2_rule, mk_imp_rule, mk_bin1_rule.
+
+********************************************************************************
+
+mk_imp2_rule : term -> thm -> thm
+
+This is the equality congruence rule for implication RHS.  It takes a boolean
+term and a boolean equality theorem, and makes the term an antecedent of each
+side of the theorem.
+
+         `p`   A |- q1 <=> q2
+      --------------------------
+      A |- p ==> q1 <=> p ==> q2
+
+See also: mk_imp1_rule, mk_imp_rule, mk_bin2_rule.
+
+********************************************************************************
+
+mk_not_rule : thm -> thm
+
+This is the equality congruence rule for logical negation.  Its takes a boolean
+equality theorem, and logically negates each side of the theorem.
+
+        A |- p1 <=> p2
+      ------------------
+      A |- ~ p1 <=> ~ p2
+
+See also: mk_comb_rule, eqf_intro_rule, eqf_elim_rule.
+
+********************************************************************************
+
+mk_pair_rule : thm -> thm -> thm
+
+This is the equality congruence rule for pairing.  It takes two equality
+theorems, and pairs corresponding sides of the first theorem with the second,
+unioning the assumptions.
+
+      A1 |- x1 = x2    A2 |- y1 = y2
+      ------------------------------
+       A1 u A2 |- (x1,y1) = (x2,y2)
+
+See also: mk_pair1_rule, mk_pair2_rule, mk_bin_rule.
+
+********************************************************************************
+
+mk_pair1_rule : thm -> term -> thm
+
+This is the equality congruence rule for pair LHS.  It takes an equality theorem
+and a term, and pairs each side of the theorem with the term.
+
+       A |- x1 = x2   `y`
+      --------------------
+      A |- (x1,y) = (x2,y)
+
+See also: mk_pair2_rule, mk_pair_rule, mk_bin1_rule.
+
+********************************************************************************
+
+mk_pair2_rule : term -> thm -> thm
+
+This is the equality congruence rule for pair RHS.  It takes a term and an
+equality theorem, and pairs the term with each side of the theorem.
+
+       `x`   A |- y1 = y2
+      --------------------
+      A |- (x,y1) = (x,y2)
+
+See also: mk_pair1_rule, mk_pair_rule, mk_bin2_rule.
+
+********************************************************************************
+
+mk_select_rule : term -> thm -> thm
+
+This is the equality congruence rule for selection.  It takes a variable and an
+equality theorem, and selects the variable from both sides of the theorem.  The
+variable must not occur free in the assumptions of the supplied theorem.
+
+        `x`   A |- p1 <=> p2          [ "x" not free in `A` ]
+      ------------------------
+      A |- (@x. p1) = (@x. p2)
+
+See also: mk_abs_rule, mk_comb_rule.
+
+********************************************************************************
+
+mk_uexists_rule : term -> thm -> thm
+
+This is the equality congruence rule for unique existential quantification.  It
+takes a variable and an equality theorem, and unique-existentially quantifies
+the variable on both sides of the theorem.  The variable must not occur free in
+the assumptions of the supplied theorem.
+
+         `x`   A |- p1 <=> p2        [ "x" not free in `A` ]
+     ----------------------------
+     A |- (?!x. p1) <=> (?!x. p2)
+
+See also: mk_exists_rule, mk_abs_rule, mk_comb_rule.
+
+********************************************************************************
+
+mp_rule : thm -> thm -> thm                                     [ Primitive ]
+
+This is the modus ponens rule.  It takes an implication theorem and a second
+theorem, where the implication theorem's antecedent is alpha-equivalent to the
+conclusion of the second theorem.  It returns a theorem stating that the
+implication theorem's consequent holds, under the unioned assumptions of the
+supplied theorems.
+
+      A1 |- p ==> q    A2 |- p
+      ------------------------
+            A1 u A2 |- q
+
+See also: eq_mp_rule, disch_rule, undisch_rule, prove_asm_rule.
+
+********************************************************************************
+
+not_elim_rule : thm -> thm
+
+This is the logical negation elimination rule.  It takes a logical negation
+theorem, and returns an implication with the negated term on the LHS and falsity
+on the RHS, under the same assumptions.
+
+          A |- ~ p
+      ----------------
+      A |- p ==> false
+
+See also: not_intro_rule, eqf_intro_rule, eqf_elim_rule.
+
+********************************************************************************
+
+not_intro_rule : thm -> thm
+
+This is the logical negation introduction rule.  It takes an implication theorem
+where the RHS is falsity, and returns the logical negation of the LHS, under the
+same assumptions.
+
+      A |- p ==> false
+      ----------------
+          A |- ~ p
+
+See also: not_elim_rule, eqf_elim_rule, eqf_intro_rule, deduct_contrapos_rule.
+
+********************************************************************************
+
+prove_asm_rule : thm -> thm -> thm
+
+This is the assumption proving rule.  It takes two theorems, and returns the
+second theorem but with the conclusion of the first theorem removed from the
+assumptions (if present) and the assumptions from the first theorem added.  Note
+that the first theorem's conclusion does not have to be in the second's
+assumptions for the rule to succeed.
+
+      A1 |- p    A2 |- q
+      ------------------
+      A1 u (A2\{p}) |- q
+
+See also: mp_rule, undisch_rule.
+
+********************************************************************************
+
+eq_refl_conv : term -> thm                                      [ Primitive ]
+
+This is the reflexivity rule for equality.  It takes a term, and returns a
+theorem stating that this term is equal to itself, under no assumptions.  There
+are no restrictions on the supplied term.
+
+         `t`
+      --------
+      |- t = t
+
+See also: eq_sym_conv, eq_sym_rule, eq_trans_rule.
+
+********************************************************************************
+
+select_rule : thm -> thm
+
+This is the existential selection rule.  It strips off the existential
+quantifier from the supplied theorem, and replaces each occurrence of the
+binding variable in the body with the selection operator applied to the original
+body (with the same binding variable).
+
+         A |- ?x. p
+      ----------------
+      A |- p[(@x.p)/x]
+
+See also: exists_rule.
+
+********************************************************************************
+
+spec_all_rule : thm -> thm
+
+This is the compound default universal elimination rule.  It strips off all the
+outer universal quantifiers from the supplied theorem.  Note that the supplied
+theorem does not have to be a universal quantification for the rule to succeed
+(in which case the resulting theorem is the same as the supplied theorem).
+
+      A |- !x1 x2 .. xn. p
+      --------------------
+             A |- p
+
+See also: spec_rule, list_spec_rule, bspec_rule, list_gen_rule.
+
+********************************************************************************
+
+spec_rule : term -> thm -> thm
+
+This is the universal elimination rule.  It strips off the outermost universal
+quantifier from the supplied theorem, and replaces in the body each occurrence
+of the stripped binding variable with the supplied term.  The type of the
+supplied term must equal the type of the stripped binding variable.
+
+      `t`   A |- !x. p
+      ----------------
+        A |- p[t/x]
+
+See also: list_spec_rule, spec_all_rule, bspec_rule, gen_rule.
+
+********************************************************************************
+
+subs_conv : thm list -> term -> thm
+
+This is the basic substitution conversion.  It takes a list of equality theorems
+and a term, and transforms the term by performing a single parallel substitution
+of its free subterms according to the equality theorems.  All free occurrences
+of equality theorem LHSs in the term get replaced.  The resulting theorem has
+the unioned assumptions of all the supplied theorems (regardless of whether they
+apply to the supplied theorem).
+
+Binding variables in the resulting theorem's RHS are renamed as necessary to
+avoid variable capture.  Note that if one equality theorem's LHS occurs free in
+another's, then the theorem with the larger LHS gets used in preference, and if
+two equality theorems have alpha-equivalent LHSs, then the earlier theorem in
+the list gets used in preference.  If no equality theorems apply, then the
+returned theorem's conclusion's RHS is the same as its LHS.
+
+      A1 |- s1 = t1   A2 |- s2 = t2   ..   `t`
+      ----------------------------------------
+       A1 u A2 u .. |- t = t[t1/s1,t2/s2,..]
+
+See also: subs_rule, subst_conv, inst_rule.
+
+********************************************************************************
+
+subs_rule : thm list -> thm -> thm
+
+This is the basic substitution rule.  It takes a list of equality theorems and a
+theorem, and performs a single parallel substitution of free subterms in the
+theorem's conclusion according to the equality theorems.  All free occurrences
+of equality theorem LHSs in the theorem get replaced.  The resulting theorem has
+the unioned assumptions of all the supplied theorems (regardless of whether they
+apply to the supplied theorem).
+
+Binding variables in the resulting theorem are renamed as necessary to avoid
+variable capture.  Note that if one equality theorem's LHS occurs free in
+another's, then the theorem with the larger LHS gets used in preference, and if
+two equality theorems have alpha-equivalent LHSs, then the earlier theorem in
+the list gets used in preference.  If no equality theorems apply, then the
+returned theorem's conclusion is the same as the input's.
+
+      A1 |- s1 = t1   A2 |- s2 = t2   ..    A |- t
+      --------------------------------------------
+           A1 u A2 u .. |- t[t1/s1,t2/s2,..]
+
+See also: subs_conv, subst_rule, inst_rule.
+
+********************************************************************************
+
+subst_conv : (term * thm) list -> term -> term -> thm
+
+This is the template substitution conversion.  It takes a substitution scheme
+(in the form of an association list and a template term) followed by a main
+term, and transforms the main term by performing a single parallel substitution
+of its free subterms, according to the substitution scheme.  The template term
+determines which free occurrences of equality theorem LHSs in the main term get
+replaced, and reflects the syntactic structure of the term, except having
+template variable atoms in place of subterms due for replacement.  The
+association list maps each template variable to an equality theorem, with
+equality theorem LHS for the main term's original subterm and RHS for the
+subterm that replaces it.  The resulting theorem has the unioned assumptions of
+all the supplied theorems (regardless of whether they apply to the supplied
+template).
+
+Binding variables in the resulting theorem are renamed as necessary to avoid
+variable capture.  Note that if two entries appear in the association list for
+the same template variable, then the earlier entry gets used, and that entries
+for variables that don't appear in the template are ignored.  If no entries
+apply, then the returned theorem's conclusion's RHS is the same as its LHS.
+
+        `v1`            `v2`          ..
+      A1 |- s1 = t1   A2 |- s2 = t2   ..   `t`   `t[s1/v1,s2/v2,..]`
+      --------------------------------------------------------------
+          A1 u A2 u .. |- t[s1/v1,s2/v2,..] = t[t1/v1,t2/v2,..]
+
+See also: subst_rule, subs_conv, inst_rule.
+
+********************************************************************************
+
+subst_rule : (term * thm) list -> term -> thm -> thm
+
+This is the template substitution rule.  It takes a substitution scheme (in the
+form of an association list and a template term) followed by a theorem, and
+performs a single parallel substitution of free subterms in the theorem's
+conclusion, according to the substitution scheme.  The template term determines
+which free occurrences of equality theorem LHSs in the supplied theorem get
+replaced, and reflects the syntactic structure of the theorem's conclusion,
+except having template variable atoms in place of subterms due for replacement.
+The association list maps each template variable to an equality theorem, with
+equality theorem LHS for the supplied theorem's original subterm and RHS for the
+subterm that replaces it.  The resulting theorem has the unioned assumptions of
+all the supplied theorems (regardless of whether they apply to the supplied
+template).
+
+Binding variables in the resulting theorem are renamed as necessary to avoid
+variable capture.  Note that if two entries appear in the association list for
+the same template variable, then the earlier entry gets used, and that entries
+for variables that don't appear in the template are ignored.  If no entries
+apply, then the returned theorem's conclusion is the same as the input's.
+
+        `v1`            `v2`          ..
+      A1 |- s1 = t1   A2 |- s2 = t2   ..   `t`   A |- t[s1/v1,s2/v2,..]
+      -----------------------------------------------------------------
+                     A1 u A2 u .. |- t[t1/v1,t2/v2,..]
+
+See also: subst_conv, subs_rule, inst_rule.
+
+********************************************************************************
+
+eq_sym_conv : term -> thm
+
+This is the symmetry conversion for equality.  It transforms the supplied
+equality term by swapping its LHS with its RHS, under no assumptions.
+
+             `t1 = t2`
+      ----------------------
+      |- t1 = t2 <=> t2 = t1
+
+See also: eq_sym_rule, eq_refl_conv.
+
+********************************************************************************
+
+eq_sym_rule : thm -> thm
+
+This is the symmetry rule for equality.  It swaps the LHS with the RHS in the
+supplied equality theorem.
+
+      A |- t1 = t2
+      ------------
+      A |- t2 = t1
+
+See also: eq_sym_conv, eq_refl_conv, eq_trans_rule.
+
+********************************************************************************
+
+eq_trans_rule : thm -> thm -> thm
+
+This is the transitivity rule for equality.  It takes two equality theorem
+arguments, where the first theorem's RHS is the same (modulo alpha-equivalence)
+as the second theorem's LHS.  It returns a theorem stating that the first
+theorem's LHS equals the second theorem's RHS, under the unioned assumptions of
+the two theorems.
+
+      A1 |- t1 = t2    A2 |- t2 = t3
+      ------------------------------
+            A1 u A2 |- t1 = t3
+
+See also: list_eq_trans_rule, eq_refl_conv, eq_sym_rule, imp_trans_rule.
+
+********************************************************************************
+
+undisch_rule : thm -> thm
+
+This is the undischarge rule.  It takes an implication theorem, and removes the
+antecedent from the conclusion and adds it to the assumptions.
+
+      A |- p ==> q
+      ------------
+      A u {p} |- q
+
+See also: disch_rule, mp_rule, prove_asm_rule.
+
+********************************************************************************
+
+********************************************************************************
+********************************************************************************
+
+conv_rule : (term -> thm) -> thm -> thm
+
+********************************************************************************
+
+list_app_beta_rhs_rule : thm -> term list -> thm
+
+********************************************************************************
+
+app_beta_rule : thm -> term -> thm
+
+********************************************************************************
+
+list_app_beta_rule : thm -> term list -> thm
+

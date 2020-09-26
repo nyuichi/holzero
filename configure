@@ -1,0 +1,293 @@
+#! /bin/bash -e
+
+# configure
+# 
+# by Mark Adams
+# Copyright (c) Proof Techonologies Ltd, 2012-2016
+
+# This is the configuration executable for HOL Zero installation.  It should be
+# run by executing "./configure" from the HOL Zero home directory prior to
+# installing HOL Zero with "make".  It performs various checks, sets the bin
+# directories to be used for OCaml and Camlp5, and sets the build and bin
+# directories to be used for HOL Zero.  The results are written to
+# 'Makefile.config', which gets used during the install by "Makefile".
+# 
+# The following options can be taken:
+#  --bindir <dir>
+#        Put HOL Zero executables into <dir>. Defaults to HOL Zero 'bin'.
+#  --ocaml-bindir <dir>
+#        Use OCaml executables from <dir>. Defaults to 'which ocamlc'.
+#  --camlp5-bindir <dir>
+#        Use Camlp5 executables from <dir>. Defaults to 'which camlp5'.
+#  --help
+#        This summary of options.
+
+
+# UTILITIES
+
+# error_exit
+#
+# Saves on some boilerplate for raising errors.
+
+error_exit(){
+  local msg=$1
+  local extra=$2
+  echo ""
+  echo "ERROR: $msg" 1>&2
+  if [ -n "$2" ]; then
+    echo "$2"
+  fi
+  echo ""
+  exit 1
+}
+
+# is_arg
+#
+# Checks that an option that takes an argument does actually have an argument.
+
+is_arg(){
+  local opt=$1
+  local arg=$2
+  if [ -z "$arg" ] || [ "${arg:0:1}" = "-" ]
+  then
+    error_exit "Need non-empty argument for $opt option."
+  fi
+}
+
+# file_path
+#
+# Finds canonical path for the supplied file path, opening any symbolic links
+# (up to 100).  Does not check that the file actually exists.
+
+file_path(){
+  local file=$1
+  local count=0
+  current=$(pwd)
+  if [ -d "$file" ]; then
+    cd "$file"
+    echo $(pwd -P)
+  else
+    cd $(dirname "$file")
+    file=$(basename "$file")
+    while [ -L "$file" ] && [ $count -lt 100 ]; do
+      count=$(($count+1))
+      file=$(readlink "$file")
+      cd "$(dirname "$file")"
+      file=$(basename "$file")
+    done
+    echo $(pwd -P)/$file
+  fi
+  cd "$current"
+}
+
+# check_dir
+#
+# Gives the canonical path of the supplied directory, raising error if it
+# doesn't exist or is not a directory.
+
+check_dir(){
+  local flag=$1
+  local dir=$2
+  if [ ! -e "$dir" ]; then
+    if [ ! $flag ]; then
+      error_exit "'$dir' does not exist."
+    fi
+  elif [ ! -d "$dir" ]; then
+    error_exit "'$dir' is not a directory."
+  fi
+  dir=$(file_path "$dir")
+  echo $dir
+}
+
+
+################
+# MAIN PROGRAM #
+################
+
+
+echo ""
+echo "HOL ZERO CONFIGURE"
+
+
+BUILD=$(file_path $(pwd))
+
+
+# Check that being called from the right place
+if [ ! "$0" = "./configure" ]; then
+  error_exit "Need to run './configure' from the HOL Zero home directory."
+fi
+
+
+# Read in the arguments
+
+until [ -z "$1" ]; do
+  hd=$(echo "$1" | sed -e 's/\(.\).*/\1/')
+  if [ "$hd" = "-" ]; then
+    case "$1" in
+      "--bindir")
+         is_arg "$1" "$2"
+         BIN=$2
+         shift;;
+      "--ocaml-bindir")
+         is_arg "$1" "$2"
+         OCAML_BIN=$2
+         shift;;
+      "--camlp5-bindir")
+         is_arg "$1" "$2"
+         CAMLP5_BIN=$2
+         shift;;
+      "--help")
+         HELP=1;;
+      *)
+         error_exit "Unexpected option \"$1\"."
+    esac
+  else
+    error_exit "Unexpected argument \"$1\"."
+  fi
+  shift
+done
+
+
+# The help option
+
+if [ "$HELP" = 1 ]; then
+  echo ""
+  echo "The following options are available:"
+  echo " --bindir <dir>"
+  echo "       Put HOL Zero executables into <dir>. Defaults to HOL Zero 'bin'."
+  echo " --ocaml-bindir <dir>"
+  echo "       Use OCaml executables from <dir>. Defaults to 'which ocamlc'."
+  echo " --camlp5-bindir <dir>"
+  echo "       Use Camlp5 executables from <dir>. Defaults to 'which camlp5'."
+  echo " --help"
+  echo "       This summary of options."
+  echo ""
+  exit 0
+fi
+
+
+# Check arguments; ensure BIN, OCAML_BIN & CAMLP5_BIN are filled out
+
+if [ -n "$BIN" ]; then
+  BIN=$(check_dir 0 "$BIN")
+else
+  BIN="$BUILD"/bin
+fi
+
+if [ -n "$OCAML_BIN" ]; then
+  OCAML_BIN=$(check_dir 1 "$OCAML_BIN")
+elif ( which ocamlc &> /dev/null ); then
+  OCAML_BIN=$(dirname $(file_path $(which ocamlc)))
+else
+  error_exit "Cannot find OCaml bin directory." "Use --ocaml-bindir option."
+fi
+
+if [ -n "$CAMLP5_BIN" ]; then
+  CAMLP5_BIN=$(check_dir 1 "$CAMLP5_BIN")
+elif ( which camlp5 &> /dev/null ); then
+  CAMLP5_BIN=$(dirname $(file_path $(which camlp5)))
+elif [ -e "$OCAML_BIN"/camlp5 ]; then
+  CAMLP5_BIN="$OCAML_BIN"
+else
+  error_exit "Cannot find Camlp5 bin directory." "Use --camlp5-bindir option."
+fi
+
+
+# Reality check on HOL Zero home directory
+
+if [ ! -d "$BUILD"/etc ]; then
+  error_exit "Missing HOL Zero etc directory '$BUILD/etc'."
+elif [ ! -w "$BUILD"/etc ]; then
+  error_exit "HOL Zero etc directory '$BUILD/etc' is not writable."
+elif [ -e "$BUILD"/Makefile.config ] &&
+     [ ! -w "$BUILD"/Makefile.config ]; then
+  error_exit "Makefile configuration file '$BUILD/Makefile.config' \
+cannot be overwritten."
+elif [ ! -d "$BUILD"/src ]; then
+  error_exit "Missing HOL Zero src directory '$BUILD/src'."
+elif [ ! -e "$BUILD"/src/holzero.ml ]; then
+  error_exit "Missing HOL Zero build file '$BUILD/src/holzero.ml'."
+fi
+
+
+# Check that required executables and libraries exist
+
+if [ ! -e "$OCAML_BIN"/ocamlc ]; then
+  error_exit "Missing 'ocamlc' from OCaml bin directory '$OCAML_BIN'."
+elif [ ! -e "$OCAML_BIN"/ocamlmktop ]; then
+  error_exit "Missing 'ocamlmktop' from OCaml bin directory '$OCAML_BIN'."
+fi
+
+if [ ! -e "$CAMLP5_BIN"/camlp5r ]; then
+  error_exit "Missing 'camlp5r' from Camlp5 bin directory '$CAMLP5_BIN'."
+fi
+
+
+# Work out Camlp5 lib directory
+
+CAMLP5_LIB=$("$CAMLP5_BIN"/camlp5 -where)
+
+
+# Check that HOL Zero bin and Camlp5 bin & lib dir names don't contain spaces
+# - this is necessary because Make will otherwise fail
+
+if [ ! -z "$(echo $BIN | grep ' ')" ]; then
+  error_exit "HOL Zero bin directory path is not allowed to contain spaces."
+fi
+
+if [ ! -z "$(echo $CAMLP5_BIN | grep ' ')" ]; then
+  error_exit "Camlp5 bin directory path is not allowed to contain spaces."
+fi
+
+if [ ! -z "$(echo $CAMLP5_LIB | grep ' ')" ]; then
+  error_exit "Camlp5 lib directory path is not allowed to contain spaces."
+fi
+
+
+# Extract versions of OCaml and Camlp5, and check consistency
+
+OCAML_VERSION=$("$OCAML_BIN"/ocamlc -version | sed -e 's/^.* version //')
+CAMLP5_VERSIONS=$("$CAMLP5_BIN"/camlp5 -v 2>&1 | \
+                  sed -e 's/^.* version \(.*\) (ocaml \(.*\))$/\1|\2/')
+CAMLP5_VERSION=$(echo $CAMLP5_VERSIONS | sed -e 's/|.*$//')
+OCAML_P5VERSION=$(echo $CAMLP5_VERSIONS | sed -e 's/^.*|//')
+
+if [ ! "$OCAML_P5VERSION" = "$OCAML_VERSION" ]; then
+  error_exit "OCaml is version $OCAML_VERSION, but Camlp5 is for OCaml version \
+$OCAML_P5VERSION."
+fi
+
+
+# Check that OCaml / Camlp5 combination is good for HOL Zero
+
+#....
+
+
+# Write settings to Makefile.config
+
+echo "# HOL Zero Makefile Configuration \
+(automatically generated from 'configure')" > Makefile.config
+echo "# Created $(date)."                   >>Makefile.config
+echo ""                                     >>Makefile.config
+echo "BUILD = \"$BUILD\""                   >>Makefile.config
+echo "BIN = \"$BIN\""                       >>Makefile.config
+echo "OCAML_BIN = \"$OCAML_BIN\""           >>Makefile.config
+echo "OCAML_VERSION = $OCAML_VERSION"       >>Makefile.config
+echo "CAMLP5_BIN = \"$CAMLP5_BIN\""         >>Makefile.config
+echo "CAMLP5_LIB = \"$CAMLP5_LIB\""         >>Makefile.config
+echo "CAMLP5_VERSION = $CAMLP5_VERSION"     >>Makefile.config
+
+
+# Print summary to screen
+
+echo "HOL Zero home:        $BUILD"
+echo "HOL Zero executables: $BIN"
+echo "OCaml executables:    $OCAML_BIN"
+echo "OCaml version:        $OCAML_VERSION"
+echo "Camlp5 executables:   $CAMLP5_BIN"
+echo "Camlp5 libraries:     $CAMLP5_LIB"
+echo "Camlp5 version:       $CAMLP5_VERSION"
+echo ""
+echo "HOL Zero installation successfully configured."
+echo "Now run \"make\" to build HOL Zero executables."
+echo ""

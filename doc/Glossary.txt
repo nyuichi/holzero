@@ -1,0 +1,2459 @@
+================================================================================
+==                       GLOSSARY OF HOL TERMINOLOGY                          ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2009-2016                            ==
+================================================================================
+
+This document gives precise definitions for the HOL-related terminology used
+throughout the HOL Zero documentation and implementation.  Its intended
+readership is HOL Zero users, programmers and proof auditors, and also the wider
+HOL community.
+
+The terms defined here typically have broad usage in the fields of theorem
+proving, programming language theory or mathematical logic.  However, although
+many of these definitions are for general concepts in these subjects, most are
+targetted at the ML programming language, LCF-style theorem provers, the HOL
+logic and, where stated, HOL Zero in particular.  Where not specific to HOL
+Zero, the terminology is meant to reflect consensus usage by the HOL community,
+but with revisions in certain cases.
+
+Special thanks are due to Rob Arthan, Tom Hales, John Harrison and Roger Jones
+for their help on many parts of this glossary.
+
+        *         *         *         *         *         *         *
+
+abstract datatype : (n)  An ML datatype whose structure is only visible inside
+the module implementing it.  Outside its implementation module, its elements can
+only ultimately be created and broken down respectively by ML constructor and
+destructor functions provided in the module interface, which are called the
+"primitive constructors" and "primitive destructors" of the datatype.  The
+implementation of the primitive constructors can thus be used to enforce a
+notion of well-formedness on the elements.  HOL Zero uses abstract datatypes for
+its internal representation of HOL types, terms and theorems.  Abbreviated to
+"ADT" in some texts.  See "LCF approach".
+
+abstract syntax : (n)  1. A syntax (sense 1) for the internal representation of
+expressions of a given programming language or formal language.  In HOL Zero,
+the abstract syntax used for HOL types and terms is the primitive syntax of the
+HOL language.  Compare with "concrete syntax".  See "parser", "pretty printer".
+2. Expressions of a given abstract syntax (sense 1).
+
+abstraction : (n)  An abbreviation used in some texts for "lambda abstraction".
+
+abstraction function : (n)  See "type bijections".
+
+ad-hoc polymorphism : (n)  The ability of a type system to cater for overloaded
+entities with different types, where overloaded entities do not necessarily have
+anything else in common other than their name.  Compare with "parametric
+polymorphism".
+
+ADT : (n)  An abbreviation for "abstract datatype".
+
+alias : (n)  An alternative name of a given HOL theory entity, purely for use in
+quotations.  Aliases are not used in the internal representation of HOL objects.
+HOL Zero does not support aliases except for a fixed alias for logical
+equivalence (namely "<=>") as a type instance of equality.  Other HOL systems
+allow aliases to be declared for constants.  See "overloading".
+
+alpha conversion : (n)  The process of transforming a HOL term by renaming one
+or more of its binding variables, to result in an alpha-equivalent term.
+Compare with "beta reduction", "eta reduction".
+
+alpha-convertible : (adj)  A name used in some texts for "alpha-equivalent".
+
+alpha-equivalent : (adj)  A notion of equivalence between HOL terms, whereby two
+terms are alpha-equivalent iff they are identical modulo the names of their
+binding variables.  This notion is fundamental to the HOL logic, and alpha-
+equivalent terms necessarily denote the same value.  Also called "alpha-
+convertible" in some texts.  See "alpha conversion".
+
+  Example: The HOL term `f (\x. x + 1) y` is alpha-equivalent to
+           `f (\w. w + 1) y`, but not to `f (\w. w + 1) z`.
+
+alphanumeric : (n)  1. A lexical class in HOL Zero, starting with a letter or
+underscore character, and followed by zero or more letters, digits, underscores
+and apostrophes.  (adj)  2. Relating to the lexical class alphanumeric.
+
+alternation : (n)  The choice of either of at least two possible branches to
+follow, for example in the execution of a computer program or in a formal
+grammar.  Compare with "sequence".  See "Backus Naur Form".
+
+antecedent : (n)  The LHS of a HOL implication term.
+
+API : (n)  An abbreviation for "application programming interface".
+
+application : (n)  An abbreviation used in some texts for "function
+application".
+
+application programming interface : (n)  A precisely defined specification of an
+interface provided by a supporting program to an application program.  Use of
+such a specification has two main advantages.  Firstly, it greatly eases the
+reuse of the same supporting program by multiple application programs.
+Secondly, it enables different supporting programs to be substituted for each
+other, so long as they implement the same specification.  See "Common HOL".
+
+argument : (n)  1. A value passed to an ML function.  2. The second subterm of a
+HOL function application term.
+
+arity : (n)  The number of type parameters taken by each instance of a given HOL
+type constant.  The arity may be zero, in which case the type constant is a
+"base type", and otherwise it is a "type operator" (sense 1).  See "type
+constant declaration".
+
+  Example: Type constants "bool" and "nat" have arity 0;
+           type constant "list" has arity 1 (e.g. `:nat list`);
+           type constant "->" has arity 2 (e.g. `:nat -> bool`).
+
+assert : (v)  To make an assertion (sense 1).
+
+assertion : (n)  1. The act of stating as fact, without formal justification,
+that a statement holds in a formal logic, extending the theory with a theorem
+called an "assertion theorem" that asserts the statement.  In HOL, the assertion
+theorem has the asserted statement as its conclusion and has no assumptions.
+There are two fundamental forms of assertion in HOL: axiom and definition.  Note
+that in mathematical logic, the name "axiom" is used for "assertion" and
+"assertion theorem".  Compare with "declaration".  2. An abbreviation for
+"assertion theorem".
+
+assertion theorem : (n)  The theorem resulting from an assertion (sense 1).
+
+association list : (n)  A simple ML representation of a lookup table as an
+unordered list of pairs, with indexes compared under an equivalence relation
+operator.  Entries are added to and looked up from the front of the list, and
+multiple entries under the same index are allowed.  Either the first or the
+second pair component of entries can be used as the index.  Compare with
+"dynamic lookup tree".
+
+  Example: The following is an association list:
+              [ ("red",1), ("green",2), ("blue",3) ];;
+
+associativity : (n)  The way in which the arguments of a given infix function
+syntactically group compounded arguments written without brackets in concrete
+syntax.  See "left-associative", "right-associative", "non-associative".
+
+assumption : (n)  See "sequent".  Also called "hypothesis" in some texts.
+
+atom : (n)  A syntactic category that has no subcomponents.  See "term atom",
+"type atom".
+
+atomic type : (n)  1. A name used in some texts for "base type".  2. A name used
+in some texts for "type atom".
+
+axiom : (n)  1. The unrestricted form of HOL assertion, whereby any statement
+can be asserted (although in HOL Zero the statement must have no free
+variables).  Conservative extension is not enforced with axioms, and they can
+potentially introduce inconsistency to the HOL theory, and so need to be very
+carefully considered.  Compare with "definition" (sense 1).  2. The HOL
+assertion theorem that results from an axiom assertion.  3. The name used in
+mathematical logic for "assertion" and "assertion theorem".
+
+Axiom of Choice : (n)  A crucial axiom of set theory that states that there is a
+"choice operator" that, for any non-empty set, selects an element of the set.
+The Axiom of Choice is an axiom called 'select_ax' in HOL Zero.  See "Hilbert
+choice operator", "Law of the Excluded Middle".
+
+  Below is the Axiom of Choice in HOL Zero.  It loosely defines "@" as a choice
+  function, that selects an element that satisfies given predicate "P":
+      |- !(P:'a->bool) x. P x ==> P ($@ P)
+
+axiomatic type class : (n)  A mechanism available in some formal logics with a
+parametric polymorphic type system, allowing polymorphic theorems to use the
+type system to express conditions about the objects to which they apply.  An
+axiomatic type class is a specification of a type, specifying the existence of
+values of the type that satisfy given properties.  Type variables in theorems
+can be labelled with axiomatic type classes.  Such type variables can then only
+be instantiated to types that satisfy their type class specifications, in a
+process that involves providing expressions with the necessary values and the
+theorems establishing that these expressions satisfy the necessary properties.
+See "Isabelle/HOL".
+
+backtracking : (n)  The process of abandoning the parsing of a given branch of a
+grammar rule, having successfully parsed at least the first grammar symbol of
+the branch but then failed to parse subsequent symbols, in order explore other
+branches.  Backtracking can significantly slow down a parser.  See "left
+factor".
+
+Backus-Naur Form : (n)  A simple notation for expressing formal grammars, with
+just two grammar operators: alternation and sequence.  Alternation is expressed
+by infix grammar operator '|', and sequence is implicitly expressed by
+juxtaposed grammar constructs and binds more tightly than alternation.  Usually
+abbreviated to "BNF".  See "Extended Backus-Naur Form".
+
+base system : (n)  The classic build of a theorem prover system, that acts as
+the starting point for a standard user session.  In LCF-style systems, the base
+system consists of the core system plus various standard extensions.  Compare
+with "core system".
+
+base type : (n)  A HOL type constant with arity of zero.  Also called "type
+constant", "atomic type" or just "type" in some texts.
+
+  Example: "bool" and "nat" are both base types in HOL.
+
+benign redeclaration : (n)  The equivalent of "benign redefinition" for ML
+declaration commands.
+
+benign redefinition : (n)  The situation where an ML assertion command is
+executed for defining a HOL theory entity or axiom that already exists in the
+theory due to an earlier, trivially equivalent assertion.  Benign redefinition
+is supported in HOL Zero, and results in neither failure nor a change to the
+theory, but returns the same ML value as would be returned by the original
+assertion command.  Supporting benign redefinition enables proof scripts to be
+replayed in the same ML session without causing failure.  See "redefinition".
+
+beta conversion : (n)  A name used in some texts for "beta reduction".
+
+beta reduction : (n)  The process of transforming a HOL term that is a function
+application of a lambda abstraction, by replacing the entire term with the
+lambda abstraction body but with all occurrences of the binding variable
+replaced with the argument subterm.  Also called "beta conversion" in some
+texts.  Compare with "alpha conversion", "eta reduction".
+
+  Example: Beta reduction can be peformed on the following term:
+              `(\x. x * 5) (a + 1)`
+           to result in the following term:
+              `(a + 1) * 5`.
+
+binary function : (n)  An ML or HOL function that takes two arguments.  Compare
+with "unary function".
+
+  Example: The HOL constants "=" and "\/" are both binary functions.
+
+bind : (v)  1. To designate a given variable as the binding variable for a given
+binding (sense 1).  2. To syntactically associate with an adjacent subexpression
+within a quotation.  One operator is said to "bind more tightly" than a second
+if, when both operators are adjacent to an operand without surrounding
+parentheses, the first operator (rather than the second operator) associates
+with the operand.  See "precedence".
+
+  Example: In HOL Zero, "*" binds (sense 2) more tightly than "+", and so
+           `2*x+3` is the same as `(2*x)+3` rather than `2*(x+3)`.
+
+binder : (n)  1. An operator, in a formal language, that returns a value for a
+given expression (called the "body") with respect to a given placeholder
+variable in the expression (called the "binding variable").  The binding
+variable is introduced by the binder, and its scope is restricted to the body.
+Examples of binders in mathematical logic include quantifiers, the Hilbert
+choice operator and lambda abstraction.  Exactly what kinds of values
+binding variables can denote is a crucial distinguishing factor between formal
+languages.  See "binding", "first-order", "higher-order".  2. A fixity for HOL
+constant and variable identifiers that refer to binder entities (sense 1), where
+the binder comes immediately before a binding variable, followed by ".",
+followed by a body (as in `Q x. t`).  Binders bind least tightly of all
+fixities.  See "binder expression".  3. A HOL constant or variable whose name
+has binder fixity.  In HOL Zero, the constants "!", "?" and "@" are examples.
+Note that "\" is not a binder in this sense ("\" is not a constant, and lambda
+abstraction is a primitive syntactic category).  (adj)  4. Relating to HOL
+constants or variableswhose name has binder fixity.
+
+binder expression : (n)  A syntactic category of HOL term, denoting a binder
+(sense 3) acting on a body subterm for a given binding variable.  In HOL
+Zero term quotations, this is written like a lambda abstraction, but with the
+binder replacing the lambda symbol "\" (as in `Q x . t` for some binder "Q").
+The internal representation is the application of the binder to a lambda
+abstraction.
+
+  Example: In HOL Zero, the following is a binder expression:
+              `!x. x > x+1`    (meaning "for all x, x > x+1")
+           This has the same internal representation as the following term:
+              `$! (\x. x > x+1)`.
+
+binding : (n)  1. A syntactic category of HOL term, denoting a binder (sense 1)
+acting on a body subterm for a given binding variable.  A binding is either a
+lambda abstraction or a binder expression.  2. The association of an ML name to
+an ML value.
+
+binding variable : (n)  The variable designated for use as a placeholder in a
+given HOL binding term.  Occurrences of a binding variable may only be inside
+the body of the binding, and if there are occurrences, then the binding variable
+is called a "bound variable".  Note that in other HOL systems, the name "bound
+variable" is used for "binding variable".
+
+  Example: In the HOL Zero term `\x. x + y`, the binding variable is "x".
+
+black-box proof auditing : (n)  An approach to proof auditing applicable to LCF-
+style theorem provers, that takes advantage of the confidence that can be put in
+using the LCF approach.  Assuming the theorem prover's core system is correctly
+designed/implemented, the content of the proof script used to create a proof can
+be disregarded, and so too can any other ML source code incorporated into the ML
+session on top of the core system.  This enables the proof auditor to
+concentrate on the resulting state of the ML session after the proof script has
+been processed.  This involves reviewing the theory's assertions and checking
+the statement of the proved theorem.
+
+BNF : (n)  An abbreviation for "Backus-Naur Form".
+
+body : (n)  The subterm of a HOL binding term that is the scope of the binding
+variable.
+
+  Example: The body of the term `!x. x = 2 \/ x = 3` is `x = 2 \/ x = 3`.
+
+boolean : (n)  1. An abbreviation for "boolean type" (senses 1 & 2).  2. A HOL
+term that has HOL boolean type.  (adj)  3. Relating to the two fundamental truth
+values of propositional logic: "true" and "false".  4. Relating to HOL terms
+that have HOL boolean type.
+
+boolean type : (n)  1. The ML datatype called 'bool', with two elements: 'true'
+and 'false'.  2. A HOL base type fundamental to the HOL logic, called "bool" in
+HOL Zero, for the classic boolean values "true" and "false".
+
+bound variable : (n)  1. A HOL binding variable that occurs in the body of its
+binding.  The scope of a bound variable is restricted to the body of the
+binding.  Compare with "free variable".  2. The name used in other HOL systems
+for "binding variable".
+
+  Example: The bound variables in the following term are "x" and "y":
+              `(?x. x + 3 < z) <=> (\y. y + 1 = 5) 3`.
+
+Cambridge HOL : (n)  The prototype first theorem prover for the HOL logic,
+developed in the early/mid 1980s and originally targetted specifically at
+hardware formal verification.  Its design was heavily influenced by the
+Cambridge LCF system, including its LCF-style architecture, and its
+implementation was in Classic ML and reused parts of Cambridge LCF.  It was
+succeeded by HOL88.  See "HOL family".
+
+Cambridge LCF : (n)  A theorem prover for the LCF logic, developed in the early
+1980s as the successor to the Edinburgh LCF system.  It was implemented in
+Classic ML, using the LCF approach.  It heavily influenced the design and
+implementation of the first HOL system, Cambridge HOL.
+
+CAS : (n)  An abbreviation for "computer algebra system".
+
+characteristic function : (n)  See "type constant definition".
+
+choice operator : (n)  An abbreviation for "Hilbert choice operator".
+
+class : (n)  See "sum datatype".
+
+Classic ML : (n)  The original version of the ML programming language, used in
+the implementation of Edinburgh LCF, Cambridge LCF, Cambridge HOL and HOL88.
+Compare with "SML", "OCaml", "F#".
+
+classical : (adj)  Relating to formal logics that encompass propositional logic
+including the Law of the Excluded Middle.  In classical logics there can be no
+boolean values other than "true" and "false".  Compare with "intuitionistic".
+See "HOL logic".
+
+closed : (adj)  Relating to instantiation lists for which domain elements do not
+occur free in range elements.  A closed instantiation list is necessarily not
+cyclic.  A closed instantiation list only needs to be applied to a HOL object
+once in order to eliminate its domain elements from the object.  See
+"instantiation closure".
+
+  Example: The old-to-new instantiation list [(`x`,`z`);(`y`,`z`)] is closed,
+           but [(`x`,`y`);(`y`,`z`)] is not.
+
+closure : (n)  An abbreviation for either "name closure", "variable closure" or
+"instantiation closure".
+
+combinatory logic : (n)  A subject of mathematical logic and computer science,
+concerned with the use of specific functions called "combinators" that can be
+used together to remove the need to explicitly mention parameters in the
+definition of other functions.  Classic studied combinators are, by convention,
+given one-letter uppercase names, such as 'A', 'B', 'C', 'I', 'K', 'S', 'W',
+etc.  Some of these functions have widespread usage in functional programming,
+for example the 'B' function is functional composition, and the 'I' function is
+the identity function.  An important result of combinatory logic is that the 'S'
+and the 'K' functions alone can be used to define all other functions.
+
+Common HOL : (n)  A standard for basic HOL system functionality, aimed at
+facilitating portability of source code and formal proofs between HOL systems.
+It consists of various components, including: an API, adapted versions of
+various HOL systems to support the API, a proof object file format, and a proof
+object importer and exporter for various HOL systems.
+
+complete : (adj)  Relating to a logical system in which every statement that
+holds with respect to its formal semantics is either provable or asserted in its
+formal logic.  The opposite of "incomplete".  Compare with "sound".  See
+"completeness".
+
+completeness : (n)  The quality of a logical system that is complete.  Compare
+with "logical soundness".
+
+compound type : (n)  A primitive syntactic category of HOL type, denoting an
+instance of a type constant.  It has a type constant name and a (possibly empty)
+list of type parameters (any of which may contain type variables).  To be well-
+formed, the name must be the name of a declared type constant and the length of
+the parameter list must equal the declared type constant's arity.  Also called
+"type application", "type construction", "non-variable type" or just "type" in
+some texts.
+
+  Example: In the compound type `:'a -> 'a list`, the type constant is "->",
+           and its type parameters are `:'a` and `:'a list`.
+           In the compound type `:bool`, the type constant is "bool", and it
+           has no type parameters.
+
+computer algebra system : (n)  A computer program for performing automated
+mathematical operations on symbolic mathematical expressions, but not
+necessarily in a manner that coherently adheres to a given formal logic.
+Typical operations supported include factorising arithmetic expressions,
+differentiation, integration, solving systems of equations, etc.  Abbreviated to
+"CAS".  Compare with "theorem prover".
+
+concatenation : (n)  The joining together of two items end-to-end.
+
+conclusion : (n)  See "sequent".
+
+concrete syntax : (n)  1. A syntax (sense 1) for the input and/or display
+representation of expressions of a given programming language or formal
+language.  Compare with "abstract syntax".  See "parser", "pretty printer".
+2. Expressions of a given concrete syntax (sense 1).
+
+condition : (n)  See "conditional expression".
+
+conditional : (n)  An abbreviation for "conditional expression".
+
+conditional expression : (n)  A syntactic category of HOL term, denoting the
+selection of one of two supplied subterms (called the "branches") depending on
+the boolean value of an additional subterm (called the "condition").  The first
+branch (called the "then-branch") is chosen if the condition has value "true",
+and the second (called the "else-branch") if the condition has value "false".
+In HOL Zero term quotations, the reserved words "if", "then" and "else"
+respectively precede the condition, the then-branch and the else-branch subterms
+to separate them out (as in `if c then t1 else t2`).  The internal
+representation in HOL Zero involves a curried application of the "COND"
+operator.  Also called "if-expression".
+
+  Example: In HOL Zero, the following term is a conditional expression:
+              `if x < 2 then x + y else x - y`
+           which has the same internal representation as the following term:
+              `COND (x < 2) (x + y) (x - y)`.
+           The condition is `x < 2`, the then-branch is `x + y` and the else-
+           branch is `x - y`.
+
+conjunction : (n)  A syntactic category of HOL term, for an application of the
+conjunction operator to two arguments.
+
+  Example:  In HOL Zero, the following is a conjunction:
+               `x = 2 /\ y > 3`
+            which means "both `x = 2` and `y > 3` are true".
+
+conjunction operator : (n)  A binary operator of propositional logic, denoting
+"true" iff both of its arguments have value "true".  In HOL Zero, the
+conjunction operator has name "/\", which has infix fixity.  Also called "and".
+Compare with "disjunction operator", "implication operator".  See "conjunction".
+
+consequent : (n)  The RHS of a HOL implication term.
+
+conservative extension : (n)  A restricted form of theory extension in which new
+theory entities and assertions are added to a theory whereby the new assertions
+do not affect the provability of statements that do not involve the new theory
+entities.  This can be achieved, for example, with an assertion that states that
+a new entity is equivalent to an expression involving only existing theory
+entities, as in HOL constant definition.  Since the provability of existing
+statements in the logic is not altered, conservative extension cannot make a
+logic inconsistent.
+
+constant : (n)  1. A HOL entity for referring to a fixed (but not necessarily
+determined) value, with scope across the entire HOL theory.  A constant has a
+name and a generic type, and cannot be overloaded with other constants in the
+theory.  Once declared, instances of a constant can be constructed, and the
+possible values it denotes can be constrained by assertions.  See "constant
+declaration", "constant definition".  Compare with "variable" (sense 1).  2. A
+primitive syntactic category of HOL term, denoting an occurrence of a declared
+constant.  It has a name and a type, where the type may contain type variables.
+To be well-formed, the name must be the name of a declared constant and the type
+must match the constant's generic type.
+
+  Example: "true" and "=" are both constants in HOL Zero.
+
+constant declaration : (n)  A form of declaration for introducing new HOL
+constants to the HOL language and theory.  A constant is declared by supplying a
+name and a generic type.  The name uniquely identifies the constant, and cannot
+be overloaded with other constants in the theory.  The generic type may contain
+type variables, in which case the constant is polymorphic.
+
+  Example: In HOL Zero, the following ML command application:
+              new_const ("=", `:'a->'a->bool`);;
+           declares the equality operator, giving it generic type
+           `:'a->'a->bool`.
+
+constant definition : (n)  A form of assertion for defining HOL constants by
+conservative extension, whereby a new constant is asserted as being equal to a
+given term, thus determining its value in terms of existing values.  The term is
+not allowed to contain free variables, and may only involve type variables that
+occur in its top-level type.  In HOL Zero primitive constant definition, this
+term is the command's definition term, whereas in derived constant definition,
+this term is the RHS of the command's definition term.  Compare with "constant
+specification".
+
+  Example: In HOL Zero, the following ML primitive definition command:
+              prim_new_const_definition ("true", `(\(x:bool). x) = (\x. x)`);;
+           defines the constant "true", resulting in the definition theorem:
+              |- true <=> (\(x:bool). x) = (\x. x).
+
+constant specification : (n)  A form of assertion for defining HOL constants by
+conservative extension, whereby a set of new constants is asserted to have a
+given property, provided a theorem stating that such constants exist.  The
+supplied existential theorem is not allowed to have assumptions or free
+variables, and may only involve type variables that occur in the generic types
+of the new constants.  Compare with "constant definition".
+
+  Exammple: In HOL Zero, when supplied with the following existential theorem:
+               val thm1 : thm = |- ?x y. x < 3 /\ y > 1
+            the following ML primitive definition command:
+               prim_new_const_specification (["X";"Y"], thm1);;
+            will result in the following specification theorem:
+               |- X < 3 /\ Y > 1
+
+constrain : (v)  To extend a theory by adding assertions.  This limits the
+possible values that are denoted by the theory's theory entities.  Note that if
+a logic has been constrained so far as to have no assignment of denotable values
+for its theory entities that satisfies all its assertions, then the logic has
+become inconsistent.  Compare with "extend" (sense 2).
+
+constructivist : (adj)  Another name for "intuitionistic".
+
+constructor : (n)  1. An ML function for creating elements of a given datatype
+from their component parts.  2. An ML syntax function for creating a particular
+syntactic category of HOL object from component parts.
+
+  Example: In HOL Zero, 'mk_eq' is the constructor (sense 2) for HOL equality
+           terms:
+              mk_eq (`x + 3`, `5`);;      returns   `x + 3 = 5`
+
+conventional type variable : (n)  Another name for HOL "type variable", used in
+the context of type analysis on pretypes, to distinguish from "generated type
+variable".
+
+conversion : (n)  An ML inference rule that takes a HOL term argument and
+returns an equality theorem with the term argument as its LHS and a transformed
+version of the term argument as its RHS.
+
+  Example: The ML function 'beta_conv' is a conversion:
+              beta_conv `(\x. x + 1) (2 * y)`;;
+           returns the theorem   |- (\x. x + 1) (2 * y) = 2 * y + 1
+
+core system : (n)  The self-contained initial part of the build for an LCF-style
+system, that implements all the trusted components of the system and little
+more.  The core system sets up the fundamental mechanisms for constructing
+language, organising and introducing theory, performing deduction and reading
+in/displaying quotations.  This is implemented by the logical core, the parser
+and pretty printer and typically a handful of basic utilities.  Compare with
+"base system".
+
+core theory : (n)  The self-contained initial theory of an LCF-style system that
+introduces all theory entities referred to in its language and inference
+kernels, and any assertions that constrain these entities.  All subsequent
+theory is built on the core theory.  See "logical core", "core system".
+
+curried : (adj)  Relating to ML or HOL functions that take multiple arguments in
+series, and for each argument return a function for taking the next argument.
+Compare with "tupled".
+
+  Example: The function "f" in the following term is a curried function,
+           taking arguments "a" and "b":
+              `f a b`
+           This is in fact another way of writing the following term:
+              `(f a) b`
+
+cyclic : (adj)  Relating to any substitution scheme that can be repeatedly
+applied to certain expressions without terminating.  An instantiation list is
+cyclic iff there is some domain element which occurs free in its own range
+element, after some number of applications (zero or more) of the instantiation
+list to its own range elements.  A cyclic instantiation list is necessarily not
+closed.  See "instantiation closure".
+
+  Example: The following old-to-new instantiation list is cyclic:
+             [ (`x:nat`,`2+y`); (`y:nat`,`1+x`); (`z:nat`,`x:nat`) ]
+           because, for example, it will repeatedly apply to `f x = 0` without
+           terminating:
+              `f x = 0`
+              `f (2+y) = 0`
+              `f (2+(1+x)) = 0`
+              `f (2+(1+(2+y))) = 0`
+              ...
+
+datatype : (n)  A type in a typed programming language.  Also called "data
+type".  See "abstract datatype", "product datatype", "sum datatype".
+
+De Bruijn criterion : (n)  The quality of a theorem prover that, for any theorem
+proved in the system, is able to create a proof object that can be exported and
+independently checked by a proof checker, thus boosting the trust that can be
+put in the theorem.  Compare with "LCF approach".
+
+declaration : (n)  The process of introducing a new theory entity to the HOL
+theory, thus extending the theory and the language.  Compare with "assertion".
+See "constant declaration", "type constant declaration".
+
+declare : (v)  To make a declaration.
+
+deductive system : (n)  The mechanisms for performing formal proof in a given
+formal logic.  It consists of a theory and a set of primitive inference rules,
+which are used in combination to deduce derived theorems.  Deduction is
+ultimately based purely on the syntactic form of expressions, rather than on the
+values they denote.  Also called "proof system".  Compare with "formal
+semantics".  See "formal proof", "formal logic", "logical deduction", "logical
+soundness", "completeness".
+
+define : (v)  To make a definition (sense 1).
+
+definition : (n)  1. Any restricted form of HOL assertion that enforces
+conservative extension.  There are three fundamental forms of HOL definition:
+constant definition, constant specification and type constant definition.
+Compare with "axiom" (sense 1).  2. The HOL assertion theorem resulting from a
+definition.
+
+definition term : (n)  The main term input supplied to a HOL constant definition
+command, used to specify the value of the constant.  See "constant definition".
+
+defix : (v)  To give an identifier nonfix status in a HOL quotation regardless
+of the fixity of the entity name referred to by the identifier.  In HOL Zero
+quotations, this is done by prefixing the name with "$", without any white space
+separating.
+
+  Example: The following term refers to entity name "=" defixed from its normal
+           infix setting:
+              `$= a b`  which gives the same internal term as  `a = b`.
+
+dependently-typed : (adj)  1. Relating to type systems that impose type
+correctness conditions on expressions not only according to the types of
+subexpressions, but also according to the values of subexpressions.  Determining
+type correctness of expressions in dependently-typed languages can be an
+undecidable process.  2. Relating to formal languages or logics that have a
+dependently-typed type system.
+
+derived : (adj)  1. Relating to components of a formal language or logic that
+have been defined in terms of other components.  Compare with "primitive"
+(sense 1).  2. Relating to ML functions defined for an abstract datatype, but
+defined outside the datatype's implementation module, and thus ultimately
+defined in terms of the datatype's primitive functions.  Compare with
+"primitive" (sense 2).
+
+destructor : (n)  1. An ML function that breaks down elements of a given
+datatype into their component parts.  2. An ML syntax function for breaking down
+a particular syntactic category of HOL object into component parts.
+
+  Example: In HOL Zero, 'dest_eq' is the destructor (sense 2) for HOL equality
+           terms:
+              dest_eq `x + 3 = 5`;;     returns   (`x + 3`, `5`)
+
+detype : (v)  To remove from a HOL preterm all contextual type information held
+in its term atoms, leaving just type information explicitly provided in type
+annotations.  Detyping is done during HOL Zero type analysis.  Each variable
+atom is given a unique generated type variable, and each constant atom is given
+the constant's generic type with any conventional type variables replaced with
+unique generated type variables.
+
+discriminator : (n)  An ML syntax function that is a test function for a HOL
+object being of a particular syntactic category.
+
+  Example: In HOL Zero, 'is_eq' is the discriminator for HOL equality terms:
+              is_eq `x + 3 = 5`;;     returns   true
+              is_eq `x + 25`;;        returns   false
+
+disjunction : (n)  A syntactic category of HOL term, for an application of the
+disjunction operator to two arguments.
+
+  Example:  In HOL Zero, the following is a disjunction:
+               `x = 2 \/ y > 3`
+            which means "either or both `x = 2` and `y > 3` are true".
+
+disjunction operator : (n)  A binary operator of propositional logic, denoting
+"true" iff at least one of its arguments have value "true".  In HOL Zero, the
+disjunction operator has name "\/", which has infix fixity.  Also called "or".
+Compare with "conjunction operator", "implication operator".  See "disjunction".
+
+domain : (n)  The elements that a given function maps from.  Compare with
+"range".
+
+domain type : (n)  The first type parameter of a HOL function type.  Compare
+with "range type".
+
+  Example: The domain type of the HOL type `:'a#'b->bool` is `:'a#'b`.
+
+dynamic lookup tree : (n)  An ML representation of a lookup table in a tree data
+structure that is dynamically optimised for lookup time efficiency, with indexes
+compared under a total order relation.  Multiple entries under the same index
+are not allowed.  Compare with "association list".
+
+EBNF : (n)  An abbreviation for "Extended Backus-Naur Form".
+
+Edinburgh LCF : (n)  A theorem prover for the LCF logic, developed in the mid
+1970s.  It is most notable for two key innovations.  The first is its robust and
+extendible software architecture (now known as the "LCF approach"), which
+represented a major advancement in theorem prover design, and has been
+replicated in many subsequent theorem provers.  The second is its implementation
+language, ML, which was developed specially as the implementation language for
+Edinburgh LCF, incorporated various innovations, and became a major influence on
+numerous subsequent programming languages.  It was succeeded by Cambridge LCF.
+See "ML", "LCF approach".
+
+else-branch : (n)  See "conditional expression".
+
+entity : (n)  A fundamental atomic component of the primitive syntax of a formal
+language.  In HOL there are four kinds of entity: variable, constant, type
+variable and type constant.  See "theory entity".
+
+enumeration : (n)  An abbreviation for "enumeration expression".
+
+enumeration expression : (n)  A syntactic category of HOL term in HOL Zero,
+denoting the formation of a uniform structure (such as a list) from a serial
+listing of its items.  In term quotations, enumerations are written with
+delimiters at the start and end, indicating the form of the structure, and items
+in the listing are separated by commas (as in `[t1,t2,t3]`).  The internal
+representation involves repeated application of an insertion operator, inserting
+each item of the listing into an empty structure.  The delimiters used in the
+quotation representation associate with the specific insertion operator and
+empty structure constant used in the internal representation, and are declared
+by the user and then become reserved words of the language.
+
+  Example: Lists could defined in HOL Zero with a list insertion operator
+           "CONS" and empty list constant "NIL".  A 3-item list enumeration
+           could be written as:
+              `[ a, b, c ]`
+           which would have the same internal representation as:
+              `CONS a (CONS b (CONS c NIL))`.
+
+epsilon : (n)  Another name for "Hilbert choice operator".
+
+equality expression : (n)  A syntactic category of HOL term, for an application
+of the equality operator.
+
+  Example: In HOL Zero, the term `x + 1 = y + 5` is an equality expression,
+           meaning "`x + 1` has the same value as `y + 5`".
+
+equality operator : (n)  A relation fundamental to many formal logics, including
+the HOL logic, denoting "true" iff its two arguments have the same value.  In
+HOL Zero, the equality operator has name "=", which has infix fixity.  Also
+called "equals".  See "logical equivalence operator", "equality expresion".
+
+equality theorem : (n)  A HOL theorem where the conclusion is an equality
+expression.
+
+  Example: In HOL Zero  a < 1 |- a = 0  is an equality theorem.
+
+eta conversion : (n)  A name used in some texts for "eta reduction".
+
+eta reduction : (n)  The process of transforming a HOL term that is a lambda
+expression with a body that is a function application, with the binding variable
+as the argument subterm and with no free occurrences of the binding variable in
+the function subterm, by replacing the entire term with the function subterm.
+Also caled "eta conversion".  Compare with "alpha conversion", "beta reduction".
+
+  Example: Eta reduction can be performed on the following term:
+              `\x. (\y. y + 2) x`
+           to result in the following term:
+              `(\y. y + 2)`.
+
+Excluded Middle : (n)  See "Law of the Excluded Middle".
+
+existential quantifier : (n)  A quantifier of predicate logic, denoting "true"
+iff its body has value "true" for at least one value of its placeholder
+variable.  In HOL Zero, the existential quantifier is a polymorphic constant
+with name "?", which has binder fixity.  Also called "exists".  Compare with
+"unique existential quantifier", "universal quantifier".
+
+  Example: In HOL Zero, the following is an existential quantification:
+              `?x. y + x < y + 2`
+           which means "there exists an x such that `y + x < y + 2`", which
+           has value "true" (for natural numbers).
+
+extend : (v)  1. To add to the constructs allowed in a formal language.  2. To
+introduce new theory entities or assertions to a theory.  Introducing new theory
+entities also extends (sense 1) the formal language of the logic, and is done by
+declaration.  Introducing new assertions "constrains" the theory.  See "theory
+extension".  3. To add to the source code of a theorem prover, thus expanding
+its functionality.
+
+Extended Backus-Naur Form : (n)  Any one of various variants of the Backus-Naur
+Form notation that incorporate additional grammar operators to the classic two
+of Backus-Naur Form.  Such additional operators typically include postfix
+operator '*' for zero or more occurrences of a given construct, and postfix
+operator '+' for one or more occurrences of a given construct.  Usually
+abbreviated to "Extended BNF" or "EBNF".
+
+Extended BNF : (n)  An abbreviation for "Extended Backus-Naur Form".
+
+first-order : (adj)  Relating to formal languages or logics that cater for
+binders such as quantifiers, but in which functions are fundamentally distinct
+from basic values and cannot be denoted by binding variables (whereas basic
+values can).  Compare with "higher-order".  See "FOL".
+
+fixity : (n)  1. The syntactic status of an identifier, purely with respect to
+how it is allowed to occur in concrete syntax, and thus how it is treated by the
+parser and pretty printer.  In HOL Zero, there are five fixities: nonfix,
+prefix, infix, postfix and binder.  See "defix".  2. In HOL systems, the
+syntactic status of an entity name, used to determine the fixity (sense 1) of
+identifiers for entities with that name.  Names have both term fixity and type
+fixity, which can be assigned independently of each other.  Note that the fixity
+of a name does not affect the internal representation of entities with the name.
+
+  Example: In HOL Zero, the name "=" has infix term fixity, the name "!" has
+           binder term fixity, and the name "true" has nonfix term fixity.
+           The name "->" has infix type fixity and the name "bool" has nonfix
+           type fixity.
+
+Flyspeck Project : (n)  An international collaborative effort to formalise Tom
+Hales' proof of the Kepler Conjecture, using the HOL Light theorem prover.
+
+FOL : (n)  An abbreviation sometimes used in mathematical logic for "first-order
+logic", referring to one or more of various first-order formal logics.  Compare
+with "HOL" (sense 2).
+
+formal grammar : (n)  A precise description of all the syntax-correct
+expressions of a given programming language or formal language, consisting of a
+set of grammar rules and a start symbol.  See "recursive descent parser", "BNF",
+"left recursion", "left factor".
+
+formal language : (n)  A precisely defined mathematical language, consisting of
+a set of well-formed expressions that adhere to a strict syntax and, in typed
+formal languages, to a type system.  The syntax of a formal language is
+typically captured by a formal grammar.  See "formal logic", "formal semantics",
+"HOL language", "first-order", "higher-order".
+
+formal logic : (n)  A formal language together with a deductive system for
+deriving theorems as statements in the formal language.  Some formal logics,
+such as the HOL logic, also include mechanisms for theory extension.  Also
+called "formal system" in some texts. See "formal proof", "theorem prover",
+"predicate logic", "HOL logic", "classical", "intuitionistic", "inconsistent",
+"logical system", "logical framework".
+
+formal proof : (n)  1. A proof performed with respect to a given formal logic,
+where the statement proved is expressed in the logic's formal language, and its
+justification is expressed using the logic's deductive system.  See "provable".
+2. The elaboration of a formal proof (sense 1) in a given theorem prover,
+resulting in the production of an internal theorem.  Compare with "proof
+script".
+
+  Example: Evaluating the following ML expression gives a formal proof (sense 2)
+           in HOL Zero that the logical negation of "true" is "false":
+              deduct_antisym_rule
+                (spec_rule `~ true` (undisch_rule (eq_imp_rule1 false_def)))
+                (eq_mp_rule (eqf_intro_rule (assume_rule `~ true`))
+                            truth_thm);;
+           This results in the following theorem:
+              |- ~ true <=> false
+
+formal semantics : (n)  A system for interpreting a formal language, that
+attributes values to the well-formed expressions of the language.  A formal
+semantics will also define which statements in its formal language hold.  See
+"complete", "sound", "logical system".  Compare with "deductive system".
+
+formal system : (n)  A name used in some texts for "formal logic".
+
+formal verification : (n)  The usage of techniques based on mathematics to
+verify the correctness of computer software and hardware.  In practice, this
+will typically involve the use of theorem provers.
+
+formalise : (v)  To convert a traditional mathematical proof to a formal proof.
+See "Flyspeck Project".
+
+free occurrence : (n)  An occurrence of a HOL term as a subterm within an
+encompassing HOL term or theorem object, whereby all variables that are free in
+the subterm are also free in the encompassing object.
+
+  Example: The term `x + y` occurs free in the term `P (x + y) \/ true`,
+           but does not occur free in the term `(\x. x + y) x`.
+
+free variable : (n)  A HOL variable that occurs within a given HOL term or
+theorem object and is not bound in that object.  The scope of a free variable
+includes the top level of its term/theorem.  Compare with "bound variable".
+
+  Example: In the term `x + x + (\u v. u + y + v) x 5`, there are two free
+           variables: "x" and "y".
+
+function : (n)  1. An ML function value.  2. A mathematical object that maps
+elements from one set (called the "domain") to another (called the "range").  In
+HOL, a function is a term that has a function type, denoting a mapping from
+elements of its domain type to elements of its range type.  All functions in HOL
+are total, i.e. they map every element of their domain type to some element of
+their range type.  3. The first subterm of a HOL function application term.
+
+function application : (n)  A primitive syntactic category of HOL term, denoting
+the value that a given function maps a given argument to.  It consists of a
+"function" subterm and an "argument" subterm.  To be well-formed, the function's
+type must be a function type with domain type equal to the argument's type.  The
+HOL type of the function application term is the function type's range type.  In
+HOL Zero term quotations, a function application is written with a space
+separating the function and its argument (as in `f x`).  The argument is only
+displayed with surrounding parentheses if it is a compound expression.
+
+  Example: The term `sqrt (x + 2)` is an application of function subterm `sqrt`
+           to argument subterm `x + 2`.
+
+function space : (n)  A name used in some texts for "function type operator".
+
+function type : (n)  A HOL compound type of the function type constant, with two
+type parameters: the "domain type" and the "range type".
+
+  Example: The type `:'a->bool` is a function type, with domain type `:'a` and
+           range type `:bool`.
+           The type `:bool->bool->bool` is a function type, with domain type
+           `:bool` and range type `:bool->bool`.
+
+function type operator : (n)  A HOL binary type operator, called "->" in HOL
+Zero, that is fundamental to the HOL language, for the type of HOL functions.
+Also called "function space" in some texts.
+
+functional programming language : (n)  A programming language with a heavy
+emphasis on expression evaluation rather than operations upon state, and where
+functions are values that can be passed as arguments to, and returned as results
+from, other functions.  Functional programming languages typically have a rich
+expression syntax and advanced type system.  The first functional programming
+languages were Lisp and ML.
+
+F# : (n)  A recent dialect of ML, implemented as part of the Microsoft .NET
+Framework.  It is strongly based on OCaml.
+
+generated type variable : (n)  A temporary placeholder within a HOL pretype,
+used during HOL Zero type analysis, for an as-yet-undetermined HOL type.
+Compare with "conventional type variable".
+
+generic theorem prover : (n)  A theorem prover that supports a logical
+framework, so that it can be configured with a given formal logic.  See
+"Isabelle".
+
+generic type : (n)  A HOL type that expresses the most general type that
+instances of a given HOL constant can have.  The generic type may contain type
+variables, in which case the constant is polymorphic.  Any instance of the
+constant must have a type that matches the constant's generic type.  Also called
+just "type" in some texts.  See "constant declaration".
+
+  Example: Constant "true" has generic type `:bool`,
+           and constant "=" has generic type `:'a->'a->bool`.
+
+Gentzen-style rule description : (n)  A schematic notation for describing a
+given inference rule by showing the generic form of the rule's output theorem(s)
+in terms of the syntactic components of the most general form of the rule's
+inputs.  It involves a horizonal line, with rule inputs written above the line
+and rule outputs written below the line, with letters denoting arbitrary
+expressions (subject to well-formedness restrictions of the formal language).
+Any restrictions on the rule inputs are written to the right of the line, in
+square brackets.
+
+  Example: The HOL Zero equality congruence inference rule for lambda
+           abstraction, called 'mk_abs_rule', is described using the following
+           Gentzen-style description:
+
+                     `x`   A |- t1 = t2        [ "x" not free in 'A' ]
+                  ------------------------
+                  A |- (\x. t1) = (\x. t2)
+
+grammar : (n)  An abbreviation for "formal grammar".
+
+grammar operator : (n)  An operator used in the RHS of a grammar rule, for
+expressing how subconstructs can combine to form constructs.  See "BNF".
+
+grammar rule : (n)  A component of a formal grammar, for expressing the possible
+forms of a particular language construct in terms of sub-constructs.  It
+consists of a LHS, which is the nonterminal symbol for the language construct,
+and a RHS, which uses a combination of terminal symbols, nonterminal symbols and
+grammar operators to show the possible forms of the construct.  Also called
+"production rule" in some texts.
+
+grammar symbol : (n)  A symbol used in a formal grammar, corresponding to a
+language construct at some level of the syntax being described.  See "terminal
+symbol", "nonterminal symbol", "start symbol".
+
+higher-order : (adj)  Relating to formal languages or logics that cater for
+binders such as quantifiers, and in which there is no fundamental distinction
+between functions and other values, thus allowing binding variables to denote
+functions.  Compare with "first-order".  See "HOL" (sense 2), "HOL logic".
+
+Hilbert choice operator : (n)  An operator that selects an arbitrary element
+satisfying a given predicate, if there is at least one such element.  The
+existence of such an operator is asserted by the Axiom of Choice.  In HOL Zero,
+the operator is a binder (sense 3) called "@".  Also called "choice operator",
+"select", "epsilon".
+
+  Example: In HOL Zero, the following term:
+              `@x. x > 2 /\ x < 5`
+           has value `3` or `4`, and this is provable, although it is not
+           possible to prove which of these two values it has.
+
+HOL : (n)  1. An abbreviation used in theorem proving for either the HOL
+language or the HOL logic.  See "HOL family".  2. An abbreviation sometimes used
+in mathematical logic for "higher-order logic", referring to one or more of
+various higher-order formal logics.  The HOL logic is one such example.  Compare
+with "FOL".  (adj)  3. Relating to the HOL language, the HOL logic or the HOL
+family.
+
+HOL family : (n)  The family of theorem provers that implement the HOL logic or
+a logic closely based on the HOL logic.  The HOL family started in the 1980s
+with the prototype Cambridge HOL system.  It has since expanded to include
+HOL88, HOL90, HOL98, HOL4, ProofPower HOL, GTT, HOL Light, Isabelle/HOL, HOL-
+Omega and HOL Zero.  All of these systems are implemented in ML and all use the
+LCF approach.  They all implement the HOL logic, except Isabelle/HOL and HOL-
+Omega which implement their own variants of the HOL logic.  They each have their
+own (but equivalent) primitive deductive system and mechanisms for theory
+extension.  And they each have their own variant of HOL language concrete
+syntax.  There is considerable variation in their support for interactive and
+automated theorem proving.
+
+HOL language : (n)  The formal language used in the HOL logic.  It is captured
+by its notions of well-formed types and terms and its theory entities.  The set
+of theory entities in HOL is extendible, by a process called declaration.  See
+"term" (sense 1), "type" (sense 1).
+
+HOL Light : (n)  A contemporary HOL theorem prover, that evolved from the
+embryonic GTT system in the mid 1990s.  It has a simple core system, and yet has
+an extensive library of mathematical theory, and is the main theorem prover used
+in the Flyspeck Project.  It is implemented in OCaml, using the LCF approach.
+See "HOL family".
+
+HOL logic : (n)  The formal logic implemented by the Cambridge HOL system, its
+successors and various other members of the HOL family of theorem provers.  It
+is a classical, higher-order predicate logic based on Church's typed lambda
+calculus.  Its type system supports a simple form of parametric polymorphism
+that does not cater for type quantifiers or axiomatic type classes, and is non-
+dependently typed.  Its deductive system has different-but-equivalent
+formulations, depending on the theorem prover, but was originally formulated
+with 5 axioms and 8 primitive inference rules.  It also supports theory
+extension through its mechanisms for primitive declaration and primitive
+assertion.  It was originally designed in the early 1980s as the logic for the
+Cambridge HOL system, and was heavily influenced by the LCF logic but has types
+interpreted as sets.  HOL is an abbreviation for "Higher Order Logic".  See "HOL
+language", "HOL-Omega", "Isabelle/HOL".
+
+HOL-Omega : (n)  A variant of the HOL4 theorem prover that supports its own
+variant of the HOL logic.  This variant logic has a type system that caters for
+type quantifiers, enabling a larger proportion of mathematical theory to be
+expressed.  See "HOL family".
+
+HOL Zero : (n)  A contemporary HOL theorem prover, implemented from scratch in
+the late 2000s and early 2010s, primarily for use as a proof checker in black-
+box proof auditing.  It is a basic system that concentrates on simplicity,
+trustworthiness and clarity of implementation.  It is implemented in OCaml,
+using the LCF approach.  See "HOL family".
+
+HOL4 : (n)  A contemporary HOL theorem prover, and the latest in the direct
+lineage tracing back to the Cambridge HOL system.  It was first produced in the
+2000s as a development of the HOL98 system.  It has an extensive theory library
+and has been used in various formal verification projects.  It is implemented in
+SML, using the LCF approach.  See "HOL family".
+
+HOL88 : (n)  A HOL theorem prover developed in the late 1980s from the Cambridge
+HOL system, and the first public release of a HOL system.  It is implemented in
+Classic ML, using the LCF approach.  It was succeeded by HOL90.  See "HOL
+family".
+
+HOL90 : (n)  A HOL theorem prover, developed in the early/mid 1990s as the
+successor to the HOL88 system, reimplemented in SML.  Its original release
+retained HOL88's functionality and LCF-style architecture, but with various
+aspects of the implementation rationalised.  It was succeeded by HOL98.  See
+"HOL family".
+
+HOL98 : (n)  A HOL theorem prover, developed in the late 1990s as the successor
+to HOL90.  Its core system represented a major architectural redesign, making it
+more suitable for large-scale applications.  It is implemented in SML, using the
+LCF approach.  It was succeeded by HOL4.  See "HOL family".
+
+hypothesis : (n)  A name used in some texts for "assumption".
+
+identifier : (n)  A lexical token for referring to an entity by its name.  In
+HOL Zero, constant, variable and type constant identifiers have fixity, and this
+is determined by the fixity of the corresponding entity name (unless the
+identifier carries a defixing mark).  HOL Zero caters for identifier quoting and
+variable marking, to enable type and term quotations unambiguously refer to
+entities.  Compare with "reserved word".
+
+identifier quoting : (n)  A mechanism used in HOL Zero identifiers, whereby an
+identifier may have outer double-quote characters around the entity name it is
+referring to, enabling irregular names and names that clash with reserved words
+to be clearly expressed.
+
+if-expression : (n)  Another name for "conditional expression".
+
+iff : (n)  Shorthand used in mathematics for "if and only if".
+
+ill-formed : (adj)  The opposite of "well-formed".
+
+image : (n)  A name used in some texts for "range".
+
+implication : (n)  A syntactic category of HOL term, for an application of the
+implication operator to two arguments.
+
+  Example:  In HOL Zero, the following is an implication:
+               `x = 2 ==> y > 3`
+            which means "`x = 2` is true implies that `y > 3` is true".  The
+            antecedent is `x = 2` and the consequent is `y > 3`.
+
+implication operator : (n)  A binary operator of propositional logic, denoting
+"false" iff its LHS argument has value "true" and its RHS argument has value
+"false".  The LHS argument is called the "antecedent", and the RHS argument is
+called the "consequent".  In HOL Zero, the implication operator has name "==>",
+which has infix fixity.  Also called "implies".  Compare with "conjunction
+operator", "disjunction operator".  See "implication".
+
+incomplete : (adj)  The opposite of "complete", i.e. relating to a logical
+system where there exist statements that hold according to its formal semantics
+but that cannot be proved in its formal logic.  Godel's First Incompleteness
+Theorem states that any logical system that encompases natural number theory is
+incomplete.  Compare with "unsound".
+
+inconsistent : (adj)  The undesirable quality of a formal logic for which any
+statement can be proved.  An inconsistent logic is useless.  In logics based on
+propositional logic, falsity can be used to prove any statement, and thus it is
+sufficient to prove falsity within any such logic to establish that the logic is
+inconsistent.  Adding axioms to a theory can potentially introduce inconsistency
+to the logic if not done carefully, but not if conservative extension is used.
+See "unsound".
+
+inference kernel : (n)  The part of an LCF-style system that implements the
+deductive system of its formal logic, and relied upon by all subsequent
+deductive functionality for its soundness.  It defines the datatype for internal
+theorems as an abstract datatype, with the primitive inference rules and the
+primitive assertion commands as its only primitive constructors.  The inference
+kernel is a crucial trusted component of its system.  See "language kernel",
+"logical core", "core system".
+
+inference rule : (n)  1. A mechanism for performing a deductive step in a formal
+logic.  An inference rule takes a number of theorem and/or expression inputs,
+and returns one or more theorems, ultimately based on some syntactic
+transformation of the inputs.  See "Gentzen-sytle rule description".  2. An ML
+function in a theorem prover that implements an inference rule (sense 1) of its
+formal logic.  In LCF-style systems, inference rules return internal theorems,
+and are ultimately implemented in terms of primitive inference rules.
+
+  Example: The Modus Ponens inference rule, implemented as 'mp_rule' in HOL
+           Zero, takes a first theorem that has an implication as its
+           conclusion, and a second theorem with a conclusion that is alpha-
+           equivalent to the antecedent of the first theorem.  It returns a
+           theorem with the first theorem's consequent as its conclusion, and
+           with the unioned assumptions of the two theorems.  This is captured
+           by the following Gentzen-style rule description:
+
+                 A1 |- p ==> q    A2 |- p
+                 ------------------------  mp_rule
+                       A1 u A2 |- q
+
+infix : (n)  1. A fixity for HOL constant, variable and type constant
+identifiers, for binary functions, where the function identifier is written in
+between its two arguments (as in `t1 op t2`).  In HOL Zero, infix operators bind
+less tightly than prefix but more tightly than binder, and have a precedence to
+determine which of two infix operators binds more tightly.  (adj)  2. Relating
+to HOL constants, variables or type constants whose name has infix fixity.  See
+"infix expression".
+
+  Example: In HOL Zero, the following names have infix term fixity:
+              "=", "/\", "\/", "==>", "+", "-", "*", "<", etc.
+
+infix expression : (n)  A syntactic category of HOL term, denoting the
+application of an infix operator to two arguments.  In term quotations, this is
+written with the operator between the arguments (as in `t1 op t2`).  The
+internal representation is a curried function application of the operator
+applied to its first argument followed by its second argument.
+
+  Example: In HOL Zero, the following term is an infix expression:
+              `~ p /\ q`        (meaning "the conjunction of `~ p` and `q`")
+           This is an application of the conjunction operator "/\" to the
+           arguments `~ p` and `q`.
+
+instantiation : (n)  A restricted form of HOL substitution according to an
+instantiation list, for replacing free variables or type variables in a given
+HOL object.  All free occurrences of the instantiation list's domain elements in
+the HOL object get replaced with their corresponding range elements.  See "type
+instantiation", "variable instantiation".
+
+  Example: Using old-to-new instantation list [(`x:nat`,`3+z`);(`y:nat`,`5`)]
+           to instantiate the following term:
+              `x + y + x + z`
+           results in the following term:
+              `(3+z) + 5 + (3+z) + z`.
+
+instantiation closure : (n)  The process of making an instantiation list closed,
+ensuring that none of its domain elements occur free in its range elements, and
+raising an error if any cyclic instantiations exist.
+
+  Example: The instantiation closure of the old-to-new instantiation list
+              [(`x:nat`,`y + w`);(`y:nat`,`z:nat`)]
+           results in the instantiation list:
+              [(`x:nat`,`z + w`);(`y:nat`,`z:nat`)].
+
+instantiation list : (n)  An ML list for use as a substitution scheme in HOL
+instantiation, that is used as a function for mapping given HOL variables or
+type variables to given new values.  Instantiation lists in HOL Zero take the
+form of an old-to-new association list.  See "closed", "cyclic", "instantiation
+closure".
+
+  Example: The old-to-new instantiation list
+              [(`x:nat`,`3 + z`);(`y:nat`,`5`)]
+           maps variable "x" to `3 + z` and variable "y" to `5`.
+
+internal representation : (n)  The primary representation of data used in a
+computer program, that core operations are ultimately performed on, as opposed
+to other representations suitable for other purposes such as input, display or
+transmission of data.  HOL Zero uses ML abstract datatypes to enforce a notion
+of well-formedness on its internal representation of HOL objects.  See "abstract
+syntax", "internal type", "internal term", "internal theorem".
+
+internal term : (n)  The ML internal representation of a HOL term, and element
+of the ML abstract datatype for such, called 'term' in HOL Zero.  In HOL Zero,
+the internal term datatype is an ML sum datatype, with classes that directly
+correspond to the primitive syntactic categories of HOL term.  The primitive
+constructors for internal terms ensure that only well-formed terms can be
+constructed.  Compare with "term quotation", "preterm".  See "language kernel".
+
+internal theorem : (n)  The ML internal representation of a HOL theorem, and
+element of the ML abstract datatype for such, called 'thm' in HOL Zero.  In HOL
+Zero, an internal theorem is an ML pair consisting of a list of assumption terms
+and a conclusion term.  The primitive constructors for internal theorems are the
+system's primitive inference rules and the primitive assertion commands, thus
+ensuring that all deduction and assertion must ultimately be carried out in
+terms of these commands.  Compare with "theorem quotation".  See "inference
+kernel".
+
+internal type : (n)  The ML internal representation of a HOL type, and element
+of the ML abstract datatype for such, called 'hol_type' in HOL Zero.  In HOL
+Zero, the internal type datatype is a sum datatype, with classes that directly
+correspond to the primitive syntactic categories of HOL type.  The primitive
+constructors for internal types ensure that only well-formed types can be
+constructed.  Compare with "type quotation", "pretype".  See "language kernel".
+
+intuitionistic : (adj)  Relating to formal logics that encompass propositional
+logic but not the Law of the Excluded Middle, thus precluding proof by
+contradiction and the Axiom of Choice.  Also called "constructivist" in some
+texts.  Compare with "classical".
+
+irregular : (adj)  The opposite of "regular", i.e. relating to entity names in
+HOL Zero that do not conform to one of the three basic lexical classes for
+entity names (alphanumeric, numeric and symbolic).
+
+Isabelle : (n)  A contemporary generic theorem prover, developed from the mid
+1980s onwards.  Its main development focus has been on its configuration for the
+HOL logic, called Isabelle/HOL.  It is implemented in SML, using the LCF
+approach.
+
+Isabelle/HOL : (n)  The Isabelle generic theorem prover configured with its own
+variant of the HOL logic.  This variant differs from the HOL logic in that it
+caters for axiomatic type classes.  Isabelle/HOL is the main configuration of
+Isabelle, and has become the predominant HOL theorem prover.  It has an
+extensive theory library and relatively-advanced user interface facilities, and
+has been used on a variety of formal verification projects, as well as playing a
+role in the Flyspeck Project.  See "HOL family".
+
+Kepler Conjecture : (n)  A 400-year-old mathematical conjecture of geometry,
+about optimal sphere packing.  It was unsolved until 1998, when Tom Hales
+completed a proof involving 300 pages of mathematical text and three large
+computer programs.  The proof was controversial due to its complex detail and
+difficulty in assessing its correctness.  See "Flyspeck Project".
+
+kernel : (n)  An abbreviation for "inference kernel".
+
+lambda abstraction : (n)  A primitive syntactic category of HOL term, denoting
+an anonymous function that maps its argument to a value according to a given
+expression.  It takes the form of a binding, consisting of a "binding variable"
+subterm and a "body" subterm, where the binding variable acts as a placeholder
+for the function's argument, and the body is an expression that constructs the
+value the argument maps to, expressed in terms of the binding variable.  A
+lambda abstraction bounds the scope of its binding variable to the body.  There
+is no requirement that the binding variable has to occur in the body.  In HOL,
+lambda abstraction is the only primitive means of bounding variable scope, and
+all binder expressions are ultimately expressed in terms of lambda abstraction.
+The HOL type of a lambda abstraction is a function type, with the binding
+variable's type as its domain type and the body's type as its range type.  In
+HOL Zero term quotations, a lambda abstraction is written starting with the
+reserved word "\", followed by the binding variable, followed by the reserved
+word ".", followed by the body (as in `\x. y`).  Also called "lambda expression"
+in some texts.  See "lambda calculus".
+
+  Example: `\x. x + 1` is a lambda abstraction, and has binding variable "x"
+           and body `x + 1`.  It denotes a function that takes a natural
+           number argument and returns the argument plus 1.
+
+lambda calculus : (n)  A formal logic for functions.  Its language includes the
+notion of lambda abstraction, for constructing anonymous functions.  Lambda
+calculus was first developed by Alonzo Church in the 1930s.  The HOL logic is
+based on a typed variant of lambda calculus.
+
+lambda expression : (n)  Another name for "lambda abstraction".
+
+language kernel : (n)  The part of an LCF-style system that implements the
+internal representation of its formal language, and that enforces a notion of
+well-formedness on the language.  In HOL systems, the language kernel defines
+the datatypes for internal types and terms, together with the mechanisms for
+declaring HOL constants and type constants.  The language kernel is a trusted
+component of its system.  See "inference kernel", "logical core", "core system".
+
+Law of the Excluded Middle : (n)  A crucial theorem of classical logics,
+distinguishing them from intuitionistic logics.  It states that, for any
+statement, either the statement or its logical negation holds.  This precludes
+the possibility of a third boolean value (other than "true" and "false").  The
+Law of the Excluded Middle can be derived from the Axiom of Choice, and is a
+derived theorem called 'excluded_middle_thm' in HOL Zero.
+
+  This is the Law of the Excluded Middle in HOL Zero:
+      |- !p. p \/ ~ p
+
+LCF approach : (n)  A software architecture for building theorem provers that
+can be used with any strongly-typed programming language that supports abstract
+datatypes (such as ML).  It has two key characteristics.  This first is taking
+advantage of strong datatyping to enforce a robust inference kernel, by having
+an abstract datatype for the internal representation of theorems, with primitive
+inference rules and primitive assertion commands as its only primitive
+constructors.  The second is allowing the user or programmer to arbitrarily
+extend the source code of the system, to implement their own derived (senses 1 &
+2) inference rules, assertion commands or any other functionality.  This
+architecture guarantees that any such source code extensions cannot make the
+system logically unsound, thus boosting the trustworthiness of the system.  In
+classic interaction with such systems, proof scripts are written in the
+implementaton language of the system, and are effectively source code extensions
+of the system.  This architecture was invented for the Edinburgh LCF system, but
+has since been used in various other systems, including the entire HOL family.
+Compare with "De Bruijn criterion".  See "black-box proof auditing".
+
+LCF logic : (n)  A higher-order logic based on typed lambda calculus, with types
+interpreted as Scott domains, for the purposes of reasoning about recursively-
+defined functions.  It was developed in the early 1970s, and used as the logic
+for a family of theorem provers called the "LCF family".  It heavily influenced
+the design of the HOL logic.  LCF is an abbreviation for "Logic for Computable
+Functions".  See "Edinburgh LCF", "Cambridge LCF".
+
+LCF-style : (adj)  Relating to theorem provers implemented using the LCF
+approach.
+
+left-associative : (adj)  Relating to infix functions that syntactically group
+compounded LHS arguments when written without brackets in concrete syntax.
+Compare with "right-associative", "non-associative".  See "associativity".
+
+  Example: In HOL Zero, the "+" function is left-associative, so:
+              `a + b + c + d + e`
+           is the same term as:
+              `(((a + b) + c) + d) + e`
+
+left factor : (n)  A common initial sequence of grammar symbols in two or more
+branches in the expansion of a grammar rule RHS.  Recursive descent parsers that
+transparently implement a grammar with left factors may require more
+backtracking than if the grammar were transformed to have no left factors.
+Compare with "left recursion".
+
+left recursion : (n)  The existence of a grammar rule's LHS symbol as the first
+symbol in at least one branch of its RHS.  Grammars with left recursion are
+problematic for recursive descent parsers that transparently implement their
+grammar, because the parser can get stuck in a non-terminating loop that does
+not advance beyond the first item in its source.  It is possible to transform a
+formal grammar with left recursion into one that is equivalent but without left
+recursion.  Compare with "left factor".  See "left-recursive".
+
+  Example: The following formal grammar for simple arithmetic expressions has
+           left recursion:
+              expr0 = Numeral | "(" expr ")"
+              expr  = expr0 | expr "+" expr | expr "*" expr
+           because "expr" is a possible first symbol for itself.  This can be
+           transformed to an equivalent grammar withou left recursion:
+              expr0 = Numeral | "(" expr ")"
+              expr  = expr0 | expr0 "+" expr | expr0 "*" expr
+
+left-recursive : (adj)  Relating to formal grammars that have left recursion.
+
+let-binding : (n)  See "let-expression".
+
+let-body : (n)  See "let-expression".
+
+let-expression : (n)  A syntactic category of HOL term, denoting the
+introduction of local placeholder variables with assigned values to a subterm.
+Each placeholder variable assignment is called a "let-binding", and the subterm
+to which these apply is called the "let-body".  In HOL Zero term quotations, it
+is written with the reserved word "let", followed by a non-empty series of "and"
+-separated let-bindings, followed by "in", followed by the let-body (as in
+`let x = t1 and y = t2 in t3`).  The internal representation in HOL Zero
+involves a series of applications of the "LET" operator.
+
+  Example: In HOL Zero, the following term is a let-expression:
+              `let x = 5 and y = 4 in x + y`
+           which has the same internal representation as the following term:
+              `LET (LET (\x y. x + y) 5) 4`.
+
+lexer : (n)  A parser (sense 2) for performing lexical analysis.  Also called
+"lexical analyser" in some texts.
+
+lexical analyser : (n)  Another name for "lexer".
+
+lexical analysis : (n)  An early stage of parsing, performed before syntax
+analysis, for breaking a string down into a list of lexical tokens, according to
+a formal language's lexical syntax.  See "lexer".
+
+lexical class : (n)  A category of lexical token.  See "alphanumeric",
+"numeric", "symbolic".
+
+lexical syntax : (n)  The structure of well-formed lexical tokens in a
+programming language or formal language.  See "lexical analysis".
+
+lexical token : (n)  A grouping of adjacent text characters in a string, that
+acts as a unit for the purposes of syntax analysis.  Often abbreviated to
+"token".  See "lexical analysis", "lexical class", "identifier", "reserved
+word".
+
+LHS : (n)  Left-hand side (of a binary function application).  Compare with
+"RHS".
+
+logic : (n)  An abbreviation for "formal logic".
+
+logical : (adj)  1. Relating to a formal logic or logical system.  2. Relating
+specifically to aspects of propositional logic, for example "logical
+equivalence", "logical negation".
+
+logical core : (n)  The minimal encapsulation of a formal logic in a theorem
+prover, capturing its formal language, deductive system and mechanisms for
+assertion.  In LCF-style systems, this is implemented by the system's language
+kernel, inference kernel and core theory.  See "core system".
+
+logical deduction : (n)  The process of performing formal proof according to a
+given deductive system, using the inference rules of the deductive system.
+
+logical equivalence : (n)  A syntactic category of HOL term, for an application
+of the equality operator to boolean arguments.
+
+  Example: In HOL Zero, the term `a < b <=> b > 5` is a logical equivalence
+           term, meaning "`a < b` if and only if `b > 5`".
+
+logical equivalence operator : (n)  A binary operator of propositional logic,
+denoting "true" iff both its arguments have the same boolean value.  In HOL,
+there is no specific logical equivalence operator as such - a type instance of
+the equality operator for boolean arguments is used instead.  HOL Zero uses
+"<=>" as an alias for this type instance.  See "logical equivalence".
+
+logical framework : (n)  A framework to defining formal logics, consisting of a
+meta-language for expressing inference rules, and a deductive system for
+deriving inference rules as statements of the meta-language.  See "generic
+theorem prover".
+
+logical negation : (n)  A syntactic category of HOL term, for an application of
+the logical negation operator.
+
+  Example: In HOL Zero, the term `~ (x = 5)` is a logical negation term,
+           meaning "it is not true that `x = 5`".
+
+logical negation operator : (n)  A unary operator of propositional logic,
+denoting the opposite boolean value of its argument.  In HOL Zero, the logical
+negation operator has name "~", which has prefix fixity.  Also called "not".
+See "logical negation".
+
+logical soundness : (n)  The quality of a logical system, or an implementation
+of its formal logic in a theorem prover, that is sound.  Often abbreviated to
+"soundness".  Compare with "parser soundness", "printer soundness",
+"completeness".  See "system soundness".
+
+logical system : (n)  A formal logic together with a formal semantics for
+interpreting its formal language.  See "sound", "complete".
+
+logical unsoundness : (n)  A flaw in a logical system, or in the implementation
+of its formal logic in a theorem prover, that causes it to be unsound.  Often
+abbreviated to "unsoundness".  Compare with "parser unsoundness", "printer
+unsoundness".
+
+lookup table : (n)  A store of data as a collection of entries that can be
+looked up under an index.  See "association list", "dynamic lookup tree".
+
+match : (n)  1. See "matching".  (v)  2. See "matching".
+
+matching : (n)  The process of determining whether the variables or type
+variables in one HOL object (called the "pattern") can be instantiated to make
+it equal to a second object (called the "match"), and if so then resulting in an
+instantiation list for doing this.  If such an instantiation is possible, then
+the match object is said to "match" the pattern object.  The match object may
+itself involve variables or type variables.
+
+  Example: Matching the pattern `y * (x + 3)` to the match `5 * (2*a + 3)`
+           results in the following old-to-new instantiation list:
+              [(`y:nat`,`5`);(`x:nat`,`2*a`)].
+
+mathematical logic : (n)  A subject at the intersection of mathematics and
+philosophy, concerned with the study of valid deduction.  Mathematical logic
+underpins the subject of theorem proving as well as helping to provide a
+foundation for mathematics and reasoned argument.
+
+ML : (n)  A functional programming language with a strongly-typed type system
+that supports parametric polymorphism and abstract datatypes.  ML was originally
+created as the implementation language for the Edinburgh LCF theorem prover, and
+was subsequently used in many LCF-style theorem provers, including all existing
+members of the HOL family.  It was the first programming language to cater for
+parametric polymorphism.  The classic way to program and to use ML programs is
+in an ML session with an ML toplevel.  The name "ML" is an abbreviation for
+"Meta Language".  See "Classic ML", "SML", "OCaml", "F#".
+
+ML session : (n)  A sequence of interaction between an ML user (be it an ML
+programmer or an end-user) and an ML toplevel.  This is the classic means of
+both writing ML programs and of using programs written in ML.  In LCF-style
+theorem provers implemented in ML, this is also the classic way of constructing
+a proof script.
+
+ML toplevel : (n)  A program that implements the ML programming language by
+maintaining an ML session.  From a given session state, it awaits user input in
+the form of an ML phrase.  Once inputted, this phrase is then interpreted and
+executed by the toplevel, potentially updating the session state, and resulting
+in output that gets displayed to the user.  The toplevel is then ready for
+further ML phrase input from the user.  An ML phrase input can be either an ML
+definition, an ML expression or an ML directive.  Definitions add to the ML
+program accumulated in the session.  Expressions are evaluated, which involves
+executing parts of the accumulated ML program to result in an output value and,
+potentially, updated values in the ML program state.  Directives make other
+changes to the ML session, such loading pretty printers, disabling warnings etc.
+Also called "read-eval-print loop".
+
+name closure : (n)  A notion used in HOL Zero term quotations, that enables
+variable overloading to be expressed.  For a given variable name in a given HOL
+term, a point of name closure is any subterm of the term at which any variable
+with the given name becomes bound, plus the top level of the term if any
+variable with the given name is free in the term.  Compare with "variable
+closure".
+
+  Example: The following term has 4 variables named "x", and there are 3 points
+           of name closure for name "x" (as shown):
+             `(x:'c)=x /\ (x:'d)=x /\ (!(x:'b). ?(x:'a). (x:'b)=x /\ (x:'a)=x)`
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+new-for-old : (adj)  Relating to substitution schemes in the form of an ML
+association list mapping old HOL subtypes/subterms to new, whereby the first
+component of each pair in the list is the new subtype/subterm, and the second
+component is the old one it replaces.  Compare with "old-to-new".
+
+non-associative : (adj)  Relating to infix functions that do not syntactically
+group compounded arguments when written without brackets in concrete syntax.
+Compare with "left-associative", "right-associative".  See "associativity".
+
+  Example: In HOL Zero, the "<=>" function is non-associative, so:
+              `a <=> b <=> c <=> d <=> e`
+           is not a syntax-correct term, because brackets are needed to group
+           arguments.
+
+non-variable type : (n)  A name used in other HOL systems for "compound type".
+
+nonfix : (n)  1. A fixity for HOL constant, variable and type constant
+identifiers with no special syntactic status, for no-argument entities and
+classic (potentially curried) function application.  Nonfix is the default
+fixity for names that have not been explicitly assigned a fixity.  In HOL Zero,
+nonfix operators bind more tightly than operators with any other fixiy.  See
+"defix".  (adj)  2. Relating to HOL constants, variables or type constants whose
+name has nonfix fixity.
+
+  Example: In HOL Zero, "bool" has nonfix type fixity and so is written
+           `:bool`; and "TYPE_DEFINITION" has nonfix term fixity, and so is
+           written `TYPE_DEFINITION P rep`.
+
+nonterminal symbol : (n)  A grammar symbol for representing a given language
+construct that can be expanded to a sequence of grammar symbols, as described by
+a given grammar rule.  Also called "syntactic variable" in some texts.  Compare
+with "terminal symbol".  See "start symbol".
+
+numeric : (n)  1. A lexical class in HOL Zero, starting with a digit character,
+and followed by zero or more digits or underscores.  (adj)  2. Relating to the
+lexical class numeric.
+
+object : (n)  A HOL type, term or theorem.  Not to be confused with "proof
+object".
+
+OCaml : (n)  A dialect of the ML programming language that has become the
+predominant ML dialect.  OCaml heavily influenced the development of the .NET
+language F#.  It is the programming language used to implement HOL Zero and HOL
+Light.  Compare with "SML".
+
+occur in : (v)  To have at least one occurrence in a given HOL object.
+
+occur free in : (v)  To have at least one free occurrence in a given HOL object.
+
+occurrence : (n)  The appearance of a given HOL entity or expression as a
+subexpression of a given HOL object.  See "free occurrence".
+
+old-to-new : (adj)  Relating to substitution schemes in the form of an ML
+association list mapping old HOL subtypes/subterms to new, whereby the first
+component of each pair in the list is the old subtype/subterm being replaced,
+and the second component is the new one replacing it.  HOL Zero uses old-to-new
+substitution schemes.  Compare with "new-for-old".
+
+overloading : (n)  The existence of two entities that have the same name but
+different other attributes and that are visible in the same context.  Different
+kinds of entity are allowed to be overloaded in HOL, for example a constant can
+be overloaded with a variable.  Also, variables are allowed to be overloaded
+with other variables (so long as they have different types).  Other HOL systems
+allow aliases for constants to be overloaded, but this is not permitted in HOL
+Zero.
+
+  Example: The two variables called "x" in the following term are overloaded:
+              `x <=> (x = (x:'a))`
+           (the first "x" has type `:bool` and the second "x" has type `:'a`).
+
+pair : (n)  1. An ML two-component tuple.  2. A HOL term that has a product
+type.  3. An abbreviation for "pair expression".
+
+  Example: In the following term, both sides of the equality are pairs:
+              `x = (a,b)`
+
+pair expression : (n)  A syntactic category of HOL term, denoting the
+construction a pair (sense 2) from its two components.  In HOL Zero term
+quotations, it is written with components separated by commas and surrounded by
+parentheses (as in `(t1,t2)`).  The internal representation involves an
+application of the pairing function, which in HOL Zero is called "PAIR".
+
+  Example: In HOL Zero, the following term is a pair expression:
+              `(x + y, true)`,
+           which has the same internal representation as the following:
+              `PAIR (x+y) true`.
+
+parametric polymorphism : (n)  The ability of a type system to cater for
+entities that can be used for a family of types, by the use of type variables.
+Such entities are given a polymorphic type (i.e. one that involves type
+variables) and a generic definition, and instances of the entity (i.e. where the
+type variables are instantiated) all necessarily behave in the same way
+according to the generic definition, thus saving on giving definitions for each
+instance.  Furthermore, in formal logics with such a type system, any theorems
+that can be proved about a polymorphic theory entity can be instantiated to be
+about any instance of the theory entity, thus saving on re-proving these
+theorems for each instance.  The HOL logic's type system supports a simple form
+of parametric polymorphism that does not cater for type quantifiers or axiomatic
+type classes, although HOL-Omega's and Isabelle/HOL's variants of the logic
+respectively do.  Called simply "polymorphism" in mathematical logic.  Compare
+with "ad-hoc polymorphism".  See "HOL logic", "ML".
+
+parser : (n)  1. A component of a program, for taking concrete syntax input in a
+given programming language or formal language, checking it for well-formedness
+and converting it into abstract syntax.  In HOL systems, there are parsers for
+converting HOL type and term quotations into internal types and terms
+respectively.  In HOL Zero, parsing uses pretypes and preterms as intermediate
+representations, and breaks down into four main stages: lexical analysis, syntax
+analysis, type analysis and pretype/preterm conversion.  Compare with "pretty
+printer".  See "core system".  2. A component of a parser (sense 1), for
+processing input from a source, according to a grammar.  Lexers and syntax
+parsers are both examples of such.  See "recursive descent parser".  3. A name
+used in some texts for "syntax parser".  4. A name used in some texts for
+"reader function".
+
+parser combinator : (n)  A name used in some texts for "reader combinator".
+
+parser completeness : (n)  The quality of a parser (sense 1) for which every
+well-formed expression has a quotation representation that gets successfully
+parsed to an internal representation.  Compare with "printer completeness",
+"printer-parser completeness", "parser soundness".
+
+parser soundness : (n)  The quality of a parser (sense 1) that only accepts
+well-formed quotations as input, and that only parses to a faithful internal
+representation.  Compare with "printer soundness", "parser completeness".
+
+parser unsoundness : (n)  A flaw in the design or implementation of a parser
+(sense 1) that enables an ill-formed quotation to be accepted as input, or a
+well-formed quotation to be parsed to an internal representation that is not
+faithful.  Compare with "printer unsoundness", "logical unsoundness".
+
+pattern : (n)  See "matching".
+
+polymorphic : (adj)  1. Relating to type systems that cater for some kind of
+polymorphism.  2. Relating to programming languages, formal languages or formal
+logics that have a polymorphic type system.  3. In mathematical logic, relating
+specifically to parametric polymorphism.  4. Relating to entities or objects in
+a typed programming language or formal language that involve type variables, for
+the purposes of parametric polymorphism.
+
+polymorphism : (n)  1. A general concept in programming language theory, whereby
+a given identifier may be associated with more than one type.  Two different
+kinds of this are parametric polymorphism and ad-hoc polymorphism.  2. The name
+used in mathematical logic for "parametric polymorphism".
+
+postfix : (n)  1. A fixity for HOL constant and variable identifiers, for unary
+functions, where the function identifier is written immediately after its
+argument.  In HOL Zero, postfix operators bind more tightly than those with any
+other fixity other than nonfix.  (adj)  2. Relating to HOL constants or
+variables whose name has postfix fixity.
+
+  Example: If "**" is a unary function with postfix fixity, then `f x **` means
+           "**" applied to "f x" (for some nonfix function "f" and argument
+           "x").
+
+precedence : (n)  A number associated with identifiers of some fixities, for
+determining how tightly a given identifier binds in concrete syntax.
+Identifiers with higher precedences bind more tightly.  See "infix".
+
+predicate : (n)  A function, in a formal language, that returns boolean values.
+
+predicate logic : (n)  Any formal logic that encompasses propositional logic and
+also caters for predicates and quantification over values.
+
+prefix : (n)  1. A fixity for HOL constant and variable identifiers, for unary
+functions, where the function identifier is written immediately before the
+argument (as in `f t`).  In HOL Zero, prefix operators bind less tightly than
+postfix but more tightly than infix.  A prefix expression is similar to a nonfix
+function application, except in that it cannot be curried, it binds less tightly
+and compound applications do not require brackets (as in `f f t`).
+(adj)  2. Relating to a HOL constant or variable whose name has prefix fixity.
+
+  Example: In HOL Zero, the name of the logical negation operator, "~", has
+           prefix fixity, and so `~ P x` means the application of "~" to `P x`
+           (if "P" is nonfix).
+
+preterm : (n)  An ML intermediate representation of a HOL term between its
+quotation and internal representations, and element of the ML datatype for such,
+called 'preterm' in HOL Zero.  Preterms have similar well-formedness
+restrictions as the internal terms they map onto, but, unlike for internal
+terms, these restrictions are not enforced by their constructors.  This makes
+preterms ideally suited to the processing required during parsing and pretty
+printing, where types and constants are resolved.  In HOL Zero, preterms have an
+extra class for type annotations, as well as the four classes from internal
+terms.  Compare with "term quotation", "internal term".  See "syntax analysis",
+"type analysis".
+
+preterm conversion : (n)  The process of converting a HOL preterm into an
+internal term.  For this to be successful, the preterm must be well-formed.  See
+"parser" (sense 1).
+
+pretty printer : (n)  A component of a program for taking abstract syntax and
+converting it into concrete syntax suitable for display.  In HOL systems, there
+is a pretty printer for each of internal HOL types, terms and theorems,
+respectively displaying them as type, term and theorem quotations.  The theorem
+pretty printer is a trusted component of its system, since the user will
+normally rely on it to determine what has been proved and what has been
+asserted.  Compare with "parser" (sense 1).  See "core system".
+
+pretype : (n)  An ML intermediate representation of a HOL type between its
+quotation and internal representations, and element of the ML datatype for such,
+called 'pretype' in HOL Zero.  Pretypes are also used in preterms.  Like
+preterms, pretypes do not have well-formedness restrictions enforced, and are
+ideally suited to the processing required during parsing and pretty printing.
+In HOL Zero, pretypes have an extra class for generated type variables (in
+addition to the two classes from internal types), that acts as a temporary
+placeholder for types that are yet to be worked out.  Compare with "type
+quotation", "internal type".  See "syntax analysis", "type analysis".
+
+pretype conversion : (n)  The process of converting a HOL pretype into an
+internal type.  For this to be successful, the pretype must be well-formed.  See
+"parser" (sense 1).
+
+primitive : (adj)  1. Relating to fundamental components of a formal language or
+logic, that have not been defined in terms of other components.  Compare with
+"derived" (sense 1).  2. Relating to ML functions defined for an abstract
+datatype, and defined within the datatype's implementation module, and thus with
+full access to the datatype's raw structure and without any well-formedness
+restrictions enforced.  Compare with "derived" (sense 2).
+
+primitive assertion command : (n)  An ML command for performing assertion in an
+LCF-style system, that acts as a primitive constructor for the system's internal
+theorem datatype.  See "inference kernel".  Compare with "primitive inference
+rule" (sense 2).
+
+primitive constructor : (n)  See "abstract datatype".
+
+primitive destructor : (n)  See "abstract datatype".
+
+primitive inference rule : (n)  1. An inference rule in a given formal logic,
+that is primitive to the logic.  2. An ML inference rule in an LCF-style system,
+that acts as a primitive constructor for the system's internal theorem datatype.
+Note that the primitive inference rules (sense 2) of an LCF-style system at
+least include all the primitive inference rules (sense 1) of its logic, but, for
+efficiency reasons, may also include some derivable inference rules of the logic
+(but there are no such derivable primitive inference rules in HOL Zero).  See
+"inference kernel".  Compare with "primitive assertion command".
+
+primitive syntax : (n)  1. The syntax (sense 1) of a given formal language
+represented in terms of fundamental abstract constructs.  See "abstract syntax",
+"concrete syntax", "term" (sense 1), "type" (sense 1).  2. Expressions of a
+given primitive syntax (sense 1).
+
+printer : (n)  An abbreviation for "pretty printer".
+
+printer completeness : (n)  The quality of a pretty printer that always
+successfully outputs a quotation representation for any well-formed expression.
+Compare with "printer-parser completeness", "parser completeness", "printer
+soundness".
+
+printer-parser completeness : (n)  The quality of a parser (sense 1) in
+combination with a given pretty printer, whereby the parser successfully parses
+any quotations outputted by the pretty printer.  Compare with "parser
+completeness", "printer completeness".
+
+printer soundness : (n)  The quality of a pretty printer that only outputs an
+unambiguous and faithful quotation representation of a given well-formed
+expression.  Compare with "parser soundness", "printer completeness".  See
+"system soundness".
+
+printer unsoundness : (n)  A flaw in the design or implementation of a pretty
+printer that allows an outputted quotation representation of some well-formed
+expression to be ambiguous or not faithful.  Compare with "parser unsoundness",
+"logical unsoundness".
+
+product datatype : (n)  An ML composite datatype whose elements each break down
+into a fixed number of subcomponents.  Tuple and record datatypes are product
+datatypes.  Compare with "sum datatype".
+
+product type : (n)  A HOL compound type of the product type operator (called "#"
+in HOL Zero), with two type parameters.  This denotes the cartesian product of
+the type parameters.  Pair expressions have a product type.
+
+production rule : (n)  A name used in some texts for "grammar rule".
+
+programming language theory : (n)  A subject of computer science, concerned with
+the study of computer programming languages.
+
+proof : (n)  1. A rigorous justification that a mathematical statement holds.
+See "theorem" (sense 3).  2. An abbreviation for "formal proof" (senses 1 & 2).
+
+proof assistant : (n)  A name used in some texts for "theorem prover".
+
+proof auditing : (n)  The human process of checking that a given proof script
+correctly proves what is intended to be proved.  This can be aided by the use of
+a proof checker, to mitigate against doubts about the logical soundness or the
+printer soundness of the original system used to create the proof.  For LCF-
+style systems, a simplified form of proof auditing called "black-box proof
+auditing" may be used.
+
+proof auditor : (n)  A person who carries out proof audits.
+
+proof checker : (n)  A computer program for checking that proofs performed in a
+given formal logic (typically produced by using another computer program, such
+as a theorem prover) correctly adhere to the logic.  Such software may be used
+as part of the process of proof auditing.  Note that a theorem prover is itself
+necessarily a proof checker (although its level of user interaction may not be
+suitable for checking a given proof).  Also note that a proof checker is not
+necessarily a theorem prover, because it need only check that the logic is being
+adhered to rather than actually perform deduction within the logic.  See "proof
+auditing".
+
+proof object : (n)  A concrete representation of the operations performed in a
+given formal proof, declaration or assertion.  See "proof object exporter",
+"proof object importer", "De Bruijn criterion", "Common HOL".  Compare with
+"proof script".
+
+proof object exporter : (n)  An extension to a theorem prover for recording
+proof objects and exporting them to files.  See "Common HOL".  Compare with
+"proof object importer".
+
+proof object importer : (n)  An extension to a theorem prover for importing
+proof objects from files and replaying them.  See "Common HOL".  Compare with
+"proof object exporter".
+
+proof script : (n)  A sequence of user-level commands for input into a theorem
+prover, for building theory and performing proof.  Note that a proof script need
+not closely resemble the formal proof actually performed by the theorem prover;
+it just needs to somehow instruct the theorem prover to perform the proof, and
+this may be done using a few short high-level commands which get unravelled by
+the theorem prover into a long formal proof.  See "ML session".  Compare with
+"proof object".
+
+proof system : (n)  A name used in some texts for "deductive system".
+
+ProofPower : (n)  A contemporary HOL theorem prover, implemented from scratch in
+the 1990s and enhanced in the 2000s.  It supports the Z specification language,
+which it defines in terms of HOL language, and is designed specially for use in
+formal verification.  It has been used on various industrial formal verification
+projects.  It is implemented in SML and has an LCF-style architecture.  See "HOL
+family".
+
+propositional logic : (n)  Any simple formal logic for boolean values ("true"
+and "false") and certain classic operators over these values (logical negation,
+conjunction, disjunction, implication and logical equivalence).  Propositional
+logic is used as the basis for many other formal logics.  See "predicate logic".
+
+provable : (adj)  Relating to statements in a formal logic for which a formal
+proof can be constructed.  See "theorem" (sense 4), "complete", "sound",
+"conservative extension".
+
+quantifier : (n)  A binder, in a formal language, that returns a boolean value
+for a given boolean-valued body with respect to a given binding variable, based
+on the quantity of values for which the binding variable satisfies the body.
+Classic examples of quantifiers in mathematical logic are the universal
+quantifier and the existential quantifier.  See "type quantifier".
+
+quotation : (n)  The ML concrete-syntax-level representation of a HOL object.
+HOL type and term quotations are used for both input and display, whereas HOL
+theorem quotations are used just for display.  In a HOL system session,
+inputting a type or term quotation will automatically invoke the relevant parser
+(sense 1), which converts it into an internal HOL object, and evaluating a HOL-
+object-valued expression in the ML session will automatically invoke the
+relevant pretty printer, which displays it as a quotation.  See "term
+quotation", "type quotation", "theorem quotation".
+
+range : (n)  The elements that a given function maps to.  Also called "image" in
+mathematical texts.  Compare with "domain".
+
+range type : (n)  The second type parameter of a HOL function type.  Compare
+with "domain type".
+
+  Example: The range type of the HOL type `:'a#'b->bool` is `:bool`.
+
+read-eval-print loop : (n)  A name used in some texts for "ML toplevel".
+Sometimes abbreviated to "REPL".
+
+REPL : (n)  An abbreviation for "read-eval-print loop".
+
+reader : (n)  An abbreviation for "reader function".
+
+reader combinator : (n)  An operator on reader functions, performing an
+operation such as alternation or sequential composition of two reader functions,
+or repeatedly applying a reader function until it fails.  Recursive descent
+parsers can be implemented using a combinator for each kind of grammar operator
+used in the formal grammar, enabling the parser to transparently implement the
+formal grammar.  Also called "parser combinator" in some texts.
+
+reader function : (n)  A function used in the implementation of a parser (sense
+2), that processes data from a given source, returning a read item and the
+source correspondingly advanced.  Recursive descent parsers are typically
+implemented with reader functions that each correspond to a grammar symbol of
+the formal grammar.  Also called "parser" (sense 4) in some texts.  See "reader
+combinator".
+
+recursive descent parser : (n)  A parser (sense 2) that is implemented in a
+top-down style using mutual recursion.  Such parsers can be written using reader
+functions and reader combinators in such a way that the source code
+transparently reflects the formal grammar being implemented.  See "left
+recursion".
+
+redefinition : (n)  The situation where an ML assertion command is executed for
+defining a HOL theory entity or axiom that already exists in the theory.
+Redefinition results in failure of the command, except in the case of benign
+redefinition (for systems that support benign redefinition).
+
+regular : (adj)  Relating to entity names in HOL Zero that conform to one of the
+three basic lexical classes for entity names: alphanumeric, numeric and
+symbolic.
+
+relation : (n)  A binary operator that returns a boolean value.
+
+  Example: In HOL Zero, the following are relations: "=", "==>", "<", "<=".
+
+representation function : (n)  See "type bijections".
+
+representation type : (n)  See "type constant definition".
+
+reserved word : (n)  A HOL quotation lexical token used to help give quotations
+syntactic structure.  Compare with "identifier".
+
+RHS : (n)  Right-hand side (of a binary function application).  Compare with
+"LHS".
+
+right-associative : (adj)  Relating to infix functions that syntactically group
+compounded RHS arguments when written without brackets in concrete syntax.
+Compare with "left-associative", "non-associative".  See "associativity".
+
+  Example: In HOL Zero, the "==>" function is left-associative, so:
+              `a ==> b ==> c ==> d ==> e`
+           is the same term as:
+              `a ==> (b ==> (c ==> (d ==> e)))`
+
+rule : (n)  An abbreviation for "inference rule" (senses 1 & 2).
+
+satisfy : (v)  To be an argument that causes a given test function or predicate
+to return "true".
+
+  Example: In HOL Zero, the numeral `4` satisfies the `EVEN` predicate:
+              |- EVEN 4 <=> true
+
+scope : (n)  The extent of visibility of a given HOL entity in a given HOL term
+object, theorem object or theory.  The scope of HOL constants and type constants
+is the entire HOL theory, whereas the scope of HOL variables and type variables
+is restricted to a given HOL term or theorem object.  The scope of HOL variables
+may be further restricted by lambda abstractions: if it is a bound variable,
+then to the lambda abstraction for which it is the binding variable, and if it
+has the same name and type as the binding variable for any lambda abstraction
+subexpressions, then to the exclusion of those subexpressions.
+
+  Example: There are 4 variables in the following term, with scopes as shown:
+              `z = 2 /\ (\y. y + z) = (\x. x + 3) /\ z = y`
+                                           ^^^^^            scope of bound "x"
+                             ^^^^^                          scope of bound "y"
+               ^^^^^^^^^           ^^^^^^^^^^^^^^^^^^^^^^^  scope of free "y"
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  scope of free "z"
+
+select : (n)  Another name for "Hilbert choice operator".
+
+semantics : (n)  An abbreviation for "formal semantics".
+
+sequence : (n)  A series of items or events that occur strictly one after the
+other, for example in the execution of a computer program or in a formal
+grammar.  Compare with "alternation".  See "Backus Naur Form".
+
+sequent : (n)  A statement in a formal logic, consisting of a set of
+"assumptions" and a "conclusion", all of which are boolean terms.  A sequent is
+said to hold with respect to a given theory if its conclusion necessarily holds
+when its assumptions all hold (with respect to the theory).  See "theorem"
+(sense 1).
+
+session : (n)  See "ML session".
+
+simply-typed : (adj)  Relating to type systems that are relatively simple and
+are not, for example, dependently-typed.  There is considerable variation in the
+precise intended meaning of "simply-typed" in contemporary usage: in some usages
+parametric polymorphism is not a disqualifying factor, in other usages
+parametric polymorphism is only a disqualifying factor if it caters for type
+quantifiers, and in other usages still any form of polymorphism is a
+disqualifying factor.  To avoid confusion, the usage of this term is avoided in
+HOL Zero, its documentation and elsewhere in this glossary.
+
+SML : (n)  An abbreviation for "Standard ML".
+
+Standard ML : (n)  A dialect of the ML programming language with a standardised
+syntax and semantics.  It is the programming language used to implement HOL90,
+HOL98, HOL4, HOL-Omega, Isabelle/HOL and ProofPower HOL.  Abbreviated to "SML".
+Compare with "OCaml", "F#".
+
+sound : (adj)  Relating to a logical system, or an implementation of its formal
+logic in a theorem prover, in which every statement that is either provable or
+asserted in its formal logic also holds with respect to its formal semantics.
+The opposite of "unsound".  Compare with "complete".  See "logical soundness".
+
+soundness : (n)  An abbreviation for "logical soundness".
+
+source : (n)  1. An abbreviation for "source code".  2. The input to a parser
+(sense 2) or a reader function.
+
+start symbol : (n)  The top-level nonterminal symbol in a formal grammar, for
+top-level expressions of the syntax being described.
+
+statement : (n)  An expression of a formal language that has boolean value.
+
+strongly-typed : (adj)  1. Relating to programming language type systems in
+which entities have a fixed type (modulo any parametric polymorphism) throughout
+their scope and cannot be implicitly converted to have another type.
+2. Relating to programming languages with a strongly-typed type system.  See
+"type-unsafe".
+
+substitution : (n)  The process of transforming a HOL object by replacing freely
+occurring subterms or subtypes in the object with new subterms/subtypes,
+according to a substitution scheme.  Note that substitution should be performed
+in a way that avoids variable capture.  See "instantiation".
+
+substitution scheme : (n)  An ML expression for use in HOL substitution that
+determines which particular freely occurring subtypes/subterms within a HOL
+object should be substituted, and which new values to substitute them with.  See
+"instantiation list", "old-to-new", "new-for-old".
+
+subterm : (n)  1. Either an entire given HOL term or a subcomponent that occurs
+somewhere within the term.  A subterm is itself a term.  2. A direct
+subcomponent of a HOL function application or a lambda abstraction term.
+
+  Example: The subterms (sense 1) of `f (x + 5)` are:
+              `f`, `x`, `5`, `$+`, `$+ x`, `x + 5` and `f (x + 5)`.
+           The subterms (sense 2) of `f (x + 5)` are:
+              `f` and `x + 5`.
+
+subtype : (n)  Either an entire given HOL type or a subcomponent that occurs
+somewhere within the type.  A subtype is itself a type.
+
+  Example: The subtypes of `:'a#'b->bool` are:
+              `:'a`, `:'b`, `:'a#'b`, `:bool` and `:'a#'b->bool`.
+
+sum datatype : (n)  An ML composite datatype whose elements partition into sets,
+called the "classes" of the datatype.  Each class combines a fixed (and possibly
+empty) list of datatypes and has its own ML operator, called a "type
+constructor", for creating elements of the sum datatype from elements of the
+class's datatypes.  Compare with "product datatype".
+
+symbolic : (n)  1. A lexical class in HOL Zero, consisting of one or more symbol
+characters.  (adj)  2. Relating to the lexical class symbolic.
+
+syntactic category : (n)  A classification for decomposing expressions, based
+purely on the top-level syntactic form of an expression, rather than on the
+value that it denotes.  See "atom", "syntax function".
+
+syntactic variable : (n)  A name used in some texts for "nonterminal symbol".
+
+syntax : (n)  1. The structural form of well-formed expressions of a given
+programming language or formal language in some representation.  See "primitive
+syntax", "concrete syntax", "abstract syntax", "formal grammar".  2. The
+concrete syntax of a given programming language or formal language, normally in
+terms of lexical tokens as atoms.  Compare with "lexical syntax".  See "syntax
+analysis".
+
+syntax analyser: (n)  Another name for "syntax parser".
+
+syntax analysis : (n)  A stage of parsing, performed after lexical analysis, for
+checking that a sequence of lexical tokens adheres to a formal language's
+concrete syntax, and for turning the tokens into an equivalent structural
+representation.  In HOL Zero type expression parsing, this structural
+representation is a HOL pretype, and in term expression parsing it is a HOL
+preterm.  See "syntax parser".
+
+syntax-correct : (adj)  Well-formed with respect to the syntax of a given
+programming language or formal language.  Note that in typed languages, a
+syntax-correct expression is not necessarily a well-formed expression, since it
+might not be type-correct.
+
+syntax function : (n)  An ML utility function dedicated to a particular
+syntactic category of HOL object, that is either a constructor, destructor or
+discriminator for that syntactic category.
+
+syntax parser : (n)  A parser (sense 2) for performing syntax analysis.  Also
+called "syntax analyser" in some texts.
+
+system : (n)  1. The implementation of a theorem prover.  2. The programming
+language or operating system environment in which a theorem prover is run.
+3. A mechanism or structure of study in mathematical logic, for example "type
+system", "deductive system".
+
+system soundness : (n)  The quality of a theorem prover that has both logical
+soundness and printer soundness.  System soundness is the pertinent concept in
+theorem prover trustworthiness, because the user will, in practice, rely on the
+pretty printer to display what has been proved and what has been asserted, as
+well as relying on the logical soundness of the system.
+
+term : (n)  1. A well-formed expression in the HOL language.  There are four
+primitive syntactic categories of term: variables, constants, function
+applications and lambda abstractions.  Every term has a HOL type (which may
+contain type variables), and this type can be calculated from the term's
+component parts.  Well-formedness restrictions exist for constants and function
+applications.  See "internal term", "term quotation", "preterm".  2. An
+abbreviation for "internal term".
+
+term atom : (n)  An occurrence of a HOL variable or constant in a HOL term or
+theorem.  Compare with "type atom".
+
+term fixity : (n)  The fixity of a HOL constant or variable name.  See "fixity"
+(sense 2).
+
+term quotation : (n)  A quotation for a HOL term object, used for input and
+display.  In HOL Zero, term quotations start and finish with a backquote (`)
+delimiter.
+
+  Example: `!x. P x \/ Q x`  is a term quotation.
+
+terminal symbol : (n)  A grammar symbol for representing an actual atomic
+syntactic component of a given grammar's language.  Compare with "nonterminal
+symbol".
+
+test function : (n)  An ML function that returns an ML boolean value.
+
+then-branch : (n)  See "conditional expression".
+
+theorem : (n)  1. A statement that has been established to hold in a formal
+logic, either by proof or by assertion.  In HOL, the statement is in the form of
+a HOL sequent.  See "internal theorem", "theorem quotation".  2. An abbreviation
+for "internal theorem".  3. A name used in mathematical logic for statements
+that have been established to hold by proof (rather than by assertion).  4. A
+name used in mathematical logic for statements that are provable.
+
+theorem prover : (n)  A computer program for performing mechanised formal proof,
+rigidly adhering to a given formal logic.  A theorem prover will typically also
+provide support for the management of formal proofs, the input and display of
+formal language expressions, and the development of theory that extends the
+formal logic.  Also called "proof assistant", "theorem proving system" or
+"mechanised proof system" in some texts.  Compare with "computer algegra
+system", "proof checker".  See "generic theorem prover", "HOL family", "LCF
+approach", "De Bruijn criterion".
+
+theorem proving : (n)  A subject of computer science, concerned with the study
+of theorem provers and their application.
+
+theorem quotation : (n)  A quotation for a HOL theorem object, used for display.
+In HOL Zero, a theorem quotation is written starting with a list of the
+theorem's assumptions separated by commas, followed by a turnstile, followed by
+the theorem's conclusion.  Note that, in LCF-style systems, theorem quotations
+cannot be used as a form of input for creating arbitrary internal theorems -
+ultimately, theorems can only be created by using inference rules and assertion
+commands.
+
+  Example: In HOL Zero, the following is a theorem quotation:
+              x > 2, y > 0 |- x * y > 2
+
+theory : (n)  1. The accumulation of all declared theory entities and assertions
+that have been made within a given logic.  The theory is "extended" when extra
+theory entities or assertions are added.  2. A modularised subdivision of the
+theory (sense 1) created within a given logic, that typically brings together
+related theory entities and assertions.  Such a subdivision exists in the
+context of a hierarchy of subdivisions, and inherits visibilty of ancestor
+subdivisions.  Some HOL systems (but not HOL Zero) support the maintenance of
+such theory hierarchies.  See "extend", "constrain".
+
+theory command : (n)  An ML function for either changing or querying the state
+of the HOL theory.
+
+theory entity : (n)  An entity that denotes a specific non-arbitrary value or
+type in a theory.  In HOL, constants and type constants are theory entities.
+Once declared, a theory entity becomes part of the formal language and can be
+constrained by adding assertions to the theory.
+
+theory extension : (n)  The process of extending (sense 2) a theory.  This is
+done by declaration and/or assertion.  See "conservative extension".
+
+token : (n)  An abbreviation for "lexical token".
+
+toplevel : (n)  An abbreviation for "ML toplevel".
+
+trusted : (adj)  1. Relating to systems that are relied upon to have system
+soundness.  2. Relating to those parts of the implementation of a theorem prover
+that are ultimately relied upon to be correctly designed and implemented in
+order to ensure system soundness.  In an LCF-style system, the trusted parts are
+limited to the core system.
+
+tuple : (n)  An ML data structure grouping two or more values together, written
+with parentheses surrounding a series of comma-separated components, as in
+'(a,b,c)' (although the parentheses are optional in OCaml).  See "product
+datatype".
+
+tupled : (adj)  Relating to ML or HOL functions that take multiple arguments
+altogether in a tuple argument.  Compare with "curried".
+
+  Example: The function "f" in the following term is a tupled function:
+              `f (a,b)`
+
+turnstile : (n)  The symbol used in the concrete syntax for theorems in formal
+logics where theorems take the form of sequents, used to separate a theorem's
+assumptions from its conclusion.  In HOL Zero, turnstile is written as "|-".
+
+type : (n)  1. Denotation in a typed programming language or formal language for
+a set of values, for the purposes of the language's type system.  Every value in
+such a language belongs to just one type, and every expression has a specific
+type, with its possible values necessarily being elements of its type.  In HOL,
+all types are non-empty.  Types in HOL may be polymorphic, and terms may have
+polymorphic types.  There are two primitive syntactic categories of HOL type:
+type variables and compound types.  Well-formedness restrictions exist for
+compound types.  See "internal type", "type quotation", "pretype".  2. An
+abbreviation for "internal type".  3. A name used in some texts for "type
+constant" (sense 1).  4. A name used in some texts for "base type".  5. A name
+used in some texts for "compound type".  6. A name used in some texts for
+"generic type".
+
+  Example: In HOL Zero, the type `:nat#nat` denotes the set of all possible
+           pairs of natural numbers, and the expression `(3,x+1)` has this
+           type, and all possible values of this expression (e.g. `(3,1)`,
+           `(3,2)`, etc) have this type.
+
+type analysis : (n)  A stage of parsing, performed after syntax analysis, for
+deducing types within a syntax-correct expression and/or checking that the
+expression is type-correct.  In HOL Zero type expression parsing, type analysis
+involves checking the arity of type constants in the supplied pretype, and in
+term expression parsing it involves performing type inference on the supplied
+preterm and instantiating its pretypes accordingly.
+
+type annotation : (n)  An annotation that is embedded in a HOL term quotation or
+preterm, that prescribes the HOL type of its juxtaposed subterm.  In HOL Zero, a
+type annotation is written as the subterm followed by a colon (:) and then the
+type (as in `x:bool`), and this must be surrounded by parentheses unless for a
+component of a pair or enumeration or for the top-level of a term.  Also called
+"type constraint" in some texts.
+
+  Example: In the term `(f:'a->'b) x`, function `f` has type `:'a->'b`.
+           In the term `x:bool`, variable "x" has type `:bool`.
+
+type application : (n)  A name used in some texts for "compound type".
+
+type atom : (n)  An occurrence of a HOL type variable or base type in a HOL
+type.  Compare with "term atom".
+
+type bijections : (n)  The two mutually-inverse HOL functions that are defined
+to bijectively map between a given defined type and the subset of its
+representation type prescribed by its characteristic function.  One is the
+"abstraction function", which maps from the representation type to the defined
+type.  The other is the "representation function", which maps from the defined
+type to the representation type.  See "type constant definition".
+
+type constant : (n)  1. A HOL entity for giving fundamental structure to HOL
+types, with scope across the entire HOL theory.  A type constant has a name and
+an arity, and cannot be overloaded with other type constants in the theory.
+Once declared, compound types can be constructed as instances of the type
+constant, and the cardinality of such types can be constrained by assertions.
+Also called "type operator", "type constructor" or just "type" in some texts.
+See "type constant declaration", "type constant definition", "base type", "type
+operator" (sense 1), "axiomantic type class".  Compare with "type variable"
+(sense 1).  2. A name used in some texts for "base type".
+
+  Example: "->", "#", "bool" and "nat" are all type constants in HOL Zero.
+
+type constant declaration : (n)  A form of declaration for introducing new HOL
+type constants to the HOL language and theory.  A type constant is declared by
+supplying a name and an arity.  The name uniquely identifies the type constant,
+and cannot be overloaded with other type constants in the HOL theory.  The arity
+fixes the number of type parameters that the type constant takes.
+
+  Example: In HOL Zero, the following ML command application:
+              new_tyconst ("X", 2);;
+           delcares type constant "X", giving it arity 2.
+
+type constant definition : (n)  A form of assertion for defining HOL type
+constants by conservative extension, whereby a general instance of the new type
+constant (i.e. with unique type variables for type parameters) is ultimately
+defined as being in bijection with a prescribed non-empty subset of an existing
+type (called the new type constant's "representation type"), thus determining
+the cardinality of compound types formed by the new type constant in terms of
+those of its type parameters and that of an existing type.  This subset of the
+representation type is prescribed by a predicate (called the "characteristic
+function") on elements of the representation type, and its non-emptiness is
+established by supplying a theorem stating that there exists an element
+satisfying this predicate.
+
+type constraint : (n)  A name used in some texts for "type annotation".
+
+type construction : (n)  A name used in some texts for HOL "compound type".
+
+type constructor : (n)  1. An ML operator for creating elements of a sum
+datatype.  2. A name used in some texts for HOL "type constant" (sense 1).
+
+type-correct : (adj)  Well-formed according to the type system of a given
+programming language or formal language.  Also called "well-typed" in some
+texts.
+
+type declaration : (n)  A name used in some texts for "type constant
+declaration".
+
+type definition : (n)  A name used in some texts for "type constant definition".
+
+type fixity : (n)  The fixity of a HOL type constant name.  See "fixity" (sense
+2).
+
+type inference : (n)  The process of determining the most general HOL type for
+every term atom of a given HOL term quotation or preterm such that the resulting
+representation of the term is type-correct.  See "type analysis".
+
+  Example: Type inference deduces that in the following term:
+              `!(x:'a). f (3,x)`
+           that "f" has type `:nat#'a->bool`.
+
+type instance : (n)  A HOL object is a type instance of second HOL object iff
+there is some instantiation of type variables in the second object that makes it
+equal the first.
+
+  Example: The term `IsSymmetric (R:nat->nat->bool)` is a type instance of the
+           term `IsSymmetric (R:'a->'a->bool)`.
+
+type instantiation : (n)  Instantiation of the type variables in a HOL type,
+term or theorem object.  Compare with "variable instantiation".
+
+type operator : (n)  1. A HOL type constant with arity greater than zero.
+2. A name used in some texts for "type constant" (sense 1).
+
+type parameter : (n)  A HOL type supplied to a HOL type operator to form a
+compound type.
+
+type quantifier : (n)  An operator available in some parametric polymorphic type
+systems, that acts as a quantifier for type variables, enabling a formal
+language to express a wider range of mathematics.  See "HOL-Omega".
+
+type quotation : (n)  A quotation for a HOL type object, used for input and
+display.  In HOL Zero, type quotations start and finish with a backquote
+delimiter (like term quotations), but also have a colon (:) as the first token
+inside the delimiters.
+
+  Example: `: 'a -> 'b -> 'a#'b`  is a type quotation.
+
+type system : (n)  A mechanism for attributing types to the entities and
+expressions of a given programming language or formal language, for the purposes
+of strengthening the notion of well-formedness in the language further than the
+constraints imposed by the language's syntax.  Under a type system, values in
+the language are partitioned according to their types.  See "typed", "type-
+correct", "type-unsafe", "polymorphic", "dependently-typed", "strongly-typed",
+"simply-typed".
+
+type unification : (n)  The process of finding a closed instantiation for type
+variables in two separate HOL types or pretypes, for making these types equal.
+
+  Example: Unifying the following types:
+              `:'a#nat -> 'b`   and   `:'c#'d -> 'a -> 'd`
+           results in the following old-to-new instantiation list:
+              [ (`:'b`, `:'a->nat`); (`:'c`, `:'a`); (`:'d`, `:nat`) ]
+
+type-unsafe : (adj)  1. The quality of a program that circumvents the type
+system of its programming language.  2. The quality of a programming language
+that permits type-unsafe programs to be written.  OCaml is type-unsafe because
+its libraries contain functions such as 'Obj.magic', that converts a value to an
+arbitrary datatype, thus enabling values of an abstract datatype to be created
+without using the datatype's constructors.
+
+type variable : (n)  1. A entity for referring to an arbitrary type, for the
+purposes of parametric polymorphism.  In HOL, type variables have just a name
+attribute, and have scope throughout a given HOL object and cannot be overloaded
+with other type variables in the same object.  Compare with "type constant"
+(sense 1).  2. A primitive syntactic category of HOL type, denoting an
+occurrence of a type variable (sense 1).  It has just a name attribute.  In HOL
+Zero quotations, occurrences of type variables are pretty printed with an
+apostrophe (') prefix by default.
+
+  Example: The type `:'a#'b -> 'a -> bool` has two type variables: "a" and "b".
+           There are two occurrences of "a" and one of "b".
+
+typed : (adj)  Relating to programming languages, formal languages and formal
+logics that have a type system.  See "polymorphic", "dependently-typed".
+
+unary function : (n)  An ML or HOL function that takes just one argument.
+Compare with "binary function".
+
+unique existential quantifier : (n)  A quantifier of predicate logic, denoting
+"true" iff its body has value "true" for precisely one value of its binding
+variable.  In HOL Zero, the unique existential quantifier is a polymorphic
+constant with name "?!", which has binder fixity.  Also called "unique exists".
+Compare with "existential quantifier", "universal quantifier".
+
+  Example: In HOL Zero, the following is a unique existential quantification:
+              `?!x. y + x = y`
+           which means "there exists a unique x such that `y + x = y`" (which
+           has value "true" for natural numbers).
+
+universal quantifier : (n)  A quantifier of predicate logic, denoting "true" iff
+its body has value "true" for all values of its binding variable.  In HOL Zero,
+the universal quantifier is a polymorphic constant with name "!", which has
+binder fixity.  Also called "for all".  Compare with "existential quantifier".
+
+  Example: In HOL Zero, the following is a universal quantification:
+              `!x. x = 0 \/ x > 0`
+           which means "for all x, x = 0 or x > 0" (which has value "true" for
+           natural numbers).
+
+unsound : (adj)  The opposite of "sound", i.e. relating to a logical system, or
+the implementation of its formal logic in a theorem prover, for which there are
+statements that can be proved in its formal logic but that do not hold in its
+formal semantics.  An inconsistent logic is certainly unsound with respect to
+any meaningful semantics.  See "logical unsoundness".
+
+utility function : (n)  An ML function on HOL objects that is not an inference
+rule or a theory command.
+
+variable : (n)  1. A HOL entity for referring to an arbitrary value (of given
+type) within a given HOL term or theorem object.  Variables have a name and a
+type, and are allowed in HOL to be overloaded with other variables within their
+scope.  The scope of a variable is restriced by any lambda abstractions in its
+object that have a binding variable with the same name and type.  Compare with
+"constant" (sense 1).  2. A primitive syntactic category of HOL term, denoting
+an occurrence of a variable (sense 1).  It has name and type attributes, where
+the type may contain type variables.  Any two occurrences of variables in the
+same object refer the same entity iff they have the same name, type and scope.
+3. An ML binding that does not have a function value.
+
+  Example: The term `x + y > y - 2` has two variables (sense 1): "x" and "y",
+           both with type `:nat`.  There is one occurrence of the variable "x"
+           and two of "y".
+
+variable capture : (n)  A potential cause for error in the implementation of ML
+functions that perform type or term substitution on a HOL term or theorem
+object.  Specifically, it is the situation where variables that are free in the
+resulting object's new subterms are bound (or "captured") in the overall
+resulting object, thus potentially altering the object's syntactic structure
+beyond the subtypes/subterms that have been substituted.  This happens due to
+name clashes with the object's binding variables, and can be avoided by suitably
+renaming any offending binding variables.  Variable capture during substitution
+on a theorem object can result in logical unsoundness.
+
+  Example: Simplistically substituting `x+1` for `a` in the following theorem:
+              |- ?x. !y. (a - x) * y = 0
+           would result in:
+              |- ?x. !y. ((x+1) - x) * y = 0 ,
+           which is clearly not a valid deduction (and is not allowed in HOL
+           Zero!).  The resulting theorem's new subterm, `x+1`, would have free
+           variable "x", which would be bound in the overall theorem, thus
+           causing variable capture.  This can be avoided by suitably renaming
+           the theorem's binding variable "x" (to, say, "x'"):
+              |- ?x'. !y. ((x+1) - x') * y = 0.
+
+variable closure : (n)  For a given variable in a given HOL term, its point of
+variable closure is the subterm at which the variable becomes bound, or the top
+level of the term if the variable is free in the term.  Compare with "name
+closure".
+
+variable instantiation : (n)  Instantiation of the variables in a HOL term or
+theorem object.  Compare with "type instantiation".
+
+variable marking : (n)  A mechanism used in HOL Zero identifiers, whereby an
+identifier that refers to a variable or type variable entity may be prepended
+by a special character to make clear that the identifier is not referring to a
+constant of type constant with the same name.
+
+variable structure : (n)  A HOL term that is either a variable or a (possibly
+compound) pair of variables.
+
+visible : (adj)  Relating to a given HOL entity that, for a given context, can
+be referred to in that context.  See "scope".
+
+  Example: In the following term:
+              `?x. !y. (a - x) * y = 0`
+                       ^^^^^^^^^^^^^^^  Context A
+                   ^^^^^^^^^^^^^^^^^^^  Context B
+               ^^^^^^^^^^^^^^^^^^^^^^^  Context C
+           the variable "x" is visible in contexts A and B, but not C;
+           the variable "y" is visible in context A, but not B or C;
+           the variable "a" is visible in contexts A, B and C;
+           the constants "-", "*", "=" and "0" are visible in all contexts.
+
+well-formed : (adj)  A precise notion used in a formal language for capturing
+the minimal standards required for an expression to be meaningful in the
+language.  Well-formed typically means syntax-correct or, in typed languages,
+both syntax-correct and type-correct.  The opposite of "ill-formed".
+
+well-typed : (adj)  A name used in some texts for "type-correct".
+
+wrt : (n)  Shorthand used in mathematics for "with respect to".

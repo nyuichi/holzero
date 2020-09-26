@@ -1,0 +1,172 @@
+
+
+# Util for printing an entry from file $f, starting at line $m for the next $n
+# lines
+
+function print_entry {
+  echo "[$f]"                                     # print doc file name
+  printf "%80s\n" | tr ' ' '*'                    # print line of '*'s
+  tail -n +$[m] $f | head -n $[n-1]               # print entry
+  printf "%80s\n" | tr ' ' '*'                    # print line of '*'s
+}
+
+
+# Initialisation and argument validation
+
+# Bring all arguments together
+args=$*
+
+# Create escaped version of command name suitable as a grep pattern
+eargs=`echo $args | sed -e 's/\([[*.^$]\)/\\\\\1/g'`
+
+# Error if no argument
+if [ "$args" = "" ]; then
+  echo "hzhelp: Missing argument." >&2
+  exit 1
+fi
+
+# Check that the documentation files exist
+if [ ! -d "$BUILD" ]; then
+  echo "hzhelp: Missing HOL Zero home directory '$BUILD'."
+  exit 2
+elif [ ! -d "$BUILD/doc" ]; then
+  echo "hzhelp: Missing HOL Zero 'doc' directory." >&2
+  exit 3
+elif [ ! -d "$BUILD/doc/User_Manual" ]; then
+  echo "hzhelp: Missing HOL Zero 'doc/User_Manual' directory." >&2
+  exit 4
+elif [ `ls "$BUILD/doc" | grep -c 'Glossary.txt'` = 0 ]; then
+  echo "hzhelp: Missing 'Glossary.txt' in 'doc' directory." >&2
+  exit 5
+fi
+
+
+# Perform the help
+
+cd $BUILD/doc
+
+# Branch for the different types of query
+if [ `grep "^$eargs : " User_Manual/A[0-9]* | wc -l` -gt 0 ]; then
+
+  # Print the appendix entry for the supplied command
+
+  cd User_Manual
+
+  # Create list of appendix files
+  files=`ls A[0-9]*`
+
+  # Find the file containing the command
+  f=`grep -l "^$eargs : " $files`
+
+  # Error if more than one entry
+  if [ `echo $f | grep -c ' '` -gt 0 -o `grep -c "^$eargs : " $f` -gt 1 ]
+  then
+    echo "hzhelp: More than one A-appendix entry found for command." >&2
+    exit 7
+  fi
+
+  # Print command entry
+  m=`grep -n "^$eargs : " $f | sed -e 's/:.*$//'`  # line number of start
+  n=`tail -n +$m $f | grep -n "\*\{40\}" | head -n 1 | sed -e 's/:.*$//'`
+                                                  # relative line number of end
+  if [ "$n" = "" ]; then n=2; fi
+
+  n=$n-1
+  print_entry
+
+elif [ `echo $args | grep -c '^A[0-9]\+\( \+A[0-9]\+\)* *$'` = 1 ]; then
+
+  # List the signatures of all entries in specified A-appendices
+
+  cd User_Manual
+
+  # Create list of appendix files
+  files=`ls A[0-9]*`
+
+  # Create a list of A-appendix numbers
+  ns=`echo " " $files |
+      sed -e 's/ A\([0-9]*\)_[^ ]*/ A\1/g'`
+
+  # Error if a supplied appendix number doesn't exist
+  for i in $args
+  do
+    if [ `echo $ns | grep -c "\b$i\b"` = 0 ]
+    then
+      echo "hzhelp: Missing supplied A-appendix file number." >&2
+      exit 6
+    fi
+  done
+
+  # Create list of appendix files from arg numbers
+  if [ `echo $args | grep -c "\b0\b"` = 1 ]
+  then
+    fs=$files
+  else
+    fs=`echo $args | sed -e "s/A\([0-9]\{1,\}\)/A\1*/g"`
+  fi
+
+  # Print signatures
+  grep -h "^[^ ]* : " $fs | sort
+
+elif [ "$1" = "all-commands" ]; then
+
+  # List the signatures of all entries in the A-appendices
+
+  # Print signatures
+  grep -h "^[^ ]* : " User_Manual/A* | sort
+
+elif [ `grep "^$eargs$" User_Manual/B[12]_*.txt | wc -l` -gt 0 ]; then
+
+  # Print the theorem with the supplied name from the B-appendices
+
+  cd User_Manual
+
+  if [ `grep "^$eargs$" B1_*.txt | wc -l` = 1 ]; then
+    f="B1_Theory.txt"
+  else
+    f="B2_Theorems.txt"
+  fi
+
+  # Print command entry
+  m=`grep -n "^$eargs$" $f | sed -e 's/:.*$//'`   # line number of start
+  n=`tail -n +$[m+1] $f | grep -n "^\([a-z0-9_]\+\|\*\+\)$" | head -n 1 |
+     sed -e 's/:.*$//'`                          # relative line number of end
+  if [ "$n" = "" ]; then n=2; fi
+
+  print_entry
+
+elif [ "$1" = "all-theorems" ]; then
+
+  # List the names of all theorems in B-appendices
+
+  cd User_Manual
+
+  grep '^[a-z_]\+$' B[12]_*.txt | sed -e 's/^.*://' | sort | uniq
+
+elif [ `grep "^$eargs : " Glossary.txt | wc -l` = 1 ]; then
+
+  # Print the glossary entry for the supplied word
+
+  f="Glossary.txt"
+
+  # Print glossary entry
+  m=`grep -n "^$eargs : " $f | sed -e 's/:.*$//'`  # line number of start
+  n=`tail -n +$[m+1] $f | grep -n " : " | head -n 1 | sed -e 's/:.*$//'`
+                                                  # relative line number of end
+  if [ "$n" = "" ]; then n=2; fi
+
+  print_entry
+
+elif [ "$1" = "all-words" ]; then
+
+  # List the names of all entries in the glossary
+
+  grep ' : ' Glossary.txt | sed -e 's/ : .*//'
+
+else
+
+  echo "hzhelp: Cannot find appendix or glossary entry for supplied argument." \
+     >&2
+  exit 8
+
+fi

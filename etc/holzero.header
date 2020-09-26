@@ -1,0 +1,20 @@
+#! /bin/bash -e
+
+# holzero <file-list>
+# - Starts a HOL Zero session, incorporating any supplied files
+# 
+# by Mark Adams
+# Copyright (c) Proof Technologies, 2012-2016
+
+# This script is for starting a HOL Zero session.  This is done by building on
+# top of an OCaml session, using the HOL Zero source code files (found in the
+# 'src' directory) starting with 'holzero.ml'.  The OCaml toplevel used needs to
+# be 'hzocaml' (found in the 'bin' directory), which is a simple adaption of a
+# classic OCaml session that has been tailored for HOL Zero.  It then
+# incorporates any additional files supplied as arguments.  It finishes by
+# returning OCaml to the directory from which the command was called.
+# 
+# Configured variable BUILD sets the HOL Zero home directory, and BIN sets the
+# directory to find 'hzocaml' in.
+
+

@@ -1,0 +1,96 @@
+================================================================================
+==                          HOL ZERO ETC DIRECTORY                            ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2012-2016                            ==
+================================================================================
+
+This is the HOL Zero 'etc' directory, for supporting files used in the HOL Zero
+installation (specifically, by 'Makefile' in the HOL Zero home directory).  This
+directory contains parts used to create the 'holzero' and 'hzhelp' scripts, and
+inputs to Camlp5 used to adjust the OCaml lexical syntax (see Section 2 below).
+It is also used to hold any temporary files created in the installation process.
+
+        *         *         *         *         *         *         *
+
+                           1. DIRECTORY CONTENTS
+
+PERMANENT CONTENTS
+
+  README            This file.
+
+  holzero.header    Header for 'holzero' script.
+  holzero.main      Main body for 'holzero' script.
+  hzhelp.header     Header for 'hzhelp' script.
+  hzhelp.main       Main body for 'hzhelp' script.
+  pa_o_hz.5.ml      HOL Zero adaption of 'pa_o.ml' for Camlp5 version 5.x.
+  pa_o_hz.6.ml      HOL Zero adaption of 'pa_o.ml' for Camlp5 version 6.x.
+  plexer_hz.5.ml    HOL Zero adaption of 'plexer.ml' for Camlp5 version 5.x.
+  plexer_hz.6.ml    HOL Zero adaption of 'plexer.ml' for Camlp5 version 6.x.
+
+TEMPORARY CONTENTS
+
+  holzero           Script ready to be copied to executables directory.
+  hzhelp            Script ready to be copied to executables directory.
+  hzocaml           Executable ready to be copied to executables directory.
+  pa_o_hz.cmi       Intermediate file generated from 'pa_o_hz.ml'.
+  pa_o_hz.cmo       Intermediate file generated from 'pa_o_hz.ml'.
+  pa_o_hz.log       Output from 'ocamlc' when generating 'pa_o_hz.cmo'.
+  pa_o_hz.ml        Intermediate copy of 'pa_o_hz.x.ml' for Camlp5 version.
+  plexer_hz.cmi     Intermediate file generated from 'plexer_hz.ml'.
+  plexer_hz.cmo     Intermediate file generated from 'plexer_hz.ml'.
+  plexer_hz.log     Output from 'ocamlc' when generating 'plexer_hz.cmo'.
+  plexer_hz.ml      Intermediate copy of 'plexer_hz.x.ml' for Camlp5 version.
+
+        *         *         *         *         *         *         *
+
+                   2. ADJUSTING THE OCAML LEXICAL SYNTAX
+
+HOL Zero uses the backquote character (`) as the start and end delimiter for HOL
+type and term quotations.  These HOL quotations are single lexical OCaml tokens
+that get passed on as a string to HOL Zero for parsing.  To achieve this, it is
+necessary to adjust the OCaml lexical syntax to recognise backquoted quotations
+as single lexical tokens.  This is done by 'Makefile' during HOL Zero
+installation, in a three-stage process that uses programs that come bundled with
+OCaml and Camlp5 acting on adaptions for HOL Zero of the Camlp5 source code
+files for an OCaml lexer and syntax analyser.  We explain the Makefile stages
+here in terms of how they would be done manually.
+
+In the first stage, we choose appropriate versions of the adapted lexer and
+syntax analyser source code files for the version of Camlp5 being used.  The
+original Camlp5 files are 'lib/plexer.ml' and 'etc/pa_o.ml', and their adaptions
+for HOL Zero are called 'plexer_hz.X.ml' and 'pa_o_hz.X.ml', where 'X' is "5" or
+"6", for versions 5.x and 6.x of Camlp5 respectively.
+
+    cp plexer_hz.X.ml plexer_hz.ml
+    cp pa_o_hz.X.ml pa_o_hz.ml
+
+In the second stage, we use 'ocamlc' in conjunction with 'camlp5r' to compile
+the adapted lexer and syntax analyser into byte code files, called
+'plexer_hz.cmo' and 'pa_o_hz.cmo' respectively.
+
+    ocamlc -c
+           -pp "camlp5r pa_lexer.cmo"
+           -I +camlp5
+           plexer_hz.ml
+
+    ocamlc -c
+           -pp "camlp5r pa_lexer.cmo pa_extend.cmo q_MLast.cmo"
+           -I +camlp5
+           pa_o_hz.ml
+
+In the third stage, we use 'ocamlmktop' to incorporate these byte code files
+into a new OCaml toplevel called 'hzocaml' (which gets put in the HOL Zero
+executables directory later).  This new toplevel has the adjusted lexical
+syntax, and is used as the basis for building HOL Zero.  Note that the command
+for doing this in 'Makefile' also incorporates the 'nums' library for arbitrary
+precision arithmetic, which is also necessary for building HOL Zero.
+
+    ocamlmktop
+          -o etc/hzocaml
+          camlp5/camlp5o.cma etc/plexer_hz.cmo etc/pa_o_hz.cmo
+
+Note that it is possible to incorporate the byte code files in a normal OCaml
+toplevel session, using the '#load' directive.  However, OCaml does not support
+'#load' for the Windows operating system, so to be consistent across operating
+systems, we use the above approach of creating a separate 'hzocaml' toplevel.

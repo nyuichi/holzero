@@ -1,0 +1,939 @@
+================================================================================
+== CHAPTER 2: PROGRAMMING LIBRARY (HOL Zero User Manual)                      ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2013-2016                            ==
+================================================================================
+
+
+HOL Zero provides a library of basic ML utilities on top of what is provided by
+OCaml.  These are useful for performing processing on the arguments or results
+of HOL Zero commands, or if extending HOL Zero with new commands.  This chapter
+gives an overview of each functional area of the library, with brief
+descriptions of each utility.  See Appendix A1 for more detailed descriptions.
+
+Note that readers of this chapter require knowledge of basic aspects of OCaml.
+Also note that it is not necessary for basic HOL Zero users, who generally have
+no need to perform pre- or post-command processing or to implement their own HOL
+Zero commands, to read this chapter.
+
+
+2.1 EXCEPTIONS
+
+The library provides three general purpose exceptions: HolFail, HolError and
+LocalFail.
+
+2.1.1 HOLFAIL
+
+The HolFail exception is for indicating failure in the usage of a function, such
+as an invalid argument or the function failing to find a result.  In general,
+these sorts of events are not catastrophic, and may even occur as part of the
+normal execution of a user-level function that calls the function and recovers
+from the error.
+
+    HolFail ("hd", "Empty list")
+
+A HolFail exception carries two strings.  The first is for the name of the
+function being executed, and the second is the error message.  It is pretty
+printed as follows:
+
+    [HZ] FAIL: <function> - <error-message>
+
+The function 'hol_fail' is used for raising HolFail exceptions.
+
+    # hol_fail ("foo", "Wrong input");;
+    Exception: [HZ] FAIL: foo - Wrong input.
+
+Since HolFail exceptions may be intended as part of normal program execution,
+various utilities are provided to support their trapping and/or reraising (see
+Section 2.15).
+
+2.1.2 HOLERROR
+
+The HolError exception is for indicating a profound error, such as an ill-formed
+HOL term quotation or an unexpected program error revealed by an internal
+assertion check.  Such events are generally not intended to occur as part of the
+normal execution of a function, and HolError exceptions are meant to bubble up
+to the top level of execution.
+
+    HolError ("SYNTAX ERROR", "Missing type parameter")
+
+A HolError exception carries two strings.  The first string is for the general
+classification of the error (by convention written in uppercase), and the second
+is the error message.  It is pretty printed as follows:
+
+    [HZ] <ERROR-CLASS>: <error-message>
+
+The function 'hol_err' is used for raising HolError exceptions:
+
+    # hol_err ("DISASTER", "False has been proved");;
+    Exception: [HZ] DISASTER: False has been proved.
+
+2.1.3 LOCALFAIL
+
+The LocalFail exception is for local short-circuit control flow in the execution
+of a function.  It is carries no extra information, and is meant to get trapped
+internally by the same function that raises it.
+
+    LocalFail
+
+
+2.2 INTEGERS
+
+OCaml's 'int' datatype is the normal datatype for integers used in OCaml
+programs, including in HOL Zero's user-level commands.  Some extra 'int'
+utilities are provided by the library.
+
+Note that OCaml's 'int' datatype does not support arbitrarily large integers,
+and silently overflows when exceeding the maximum/minimum values.  However, HOL
+Zero ensures that this does not affect system soundness by using OCaml's
+arbitrarily large 'big_int' datatype in the core system.
+
+2.2.1 ARITHMETIC OPERATIONS
+
+The decrement function subtracts '1' from the supplied integer if it is a
+positive number, and otherwise returns '0'.
+
+    # decrement 43;;
+    - : int = 42
+
+2.2.2 INTEGER RANGE
+
+The 'up_to' function returns the increasing integer range for the supplied
+inclusive lower and upper bounds.
+
+    # up_to 3 10;;
+    - : int list = [3; 4; 5; 6; 7; 8; 9; 10]
+
+
+2.3 STRINGS
+
+Strings are used for the names of HOL entities, as well as for user feedback.
+The library provides some string operations useful for these roles.
+
+Note that OCaml's 'string' datatype is mutable, i.e. creating a new binding
+consisting of a string value from another binding will not create a new copy of
+that string value, and so subsequent updating of the value in either binding
+will also update it the other binding.  However, HOL Zero ensurses that this
+does not affect system soundness by making copies of all string values passed in
+the interface to the core system.
+
+2.3.1 EXPLODING AND IMPLODING
+
+The 'explode' function turns a string into a list of one-character strings,
+whereas 'implode' turns a list of strings (not necessarily of size one
+character) into a single string.
+
+    # explode "ABCD";;
+    - : string list = ["A"; "B"; "C"; "D"]
+
+    # implode ["AB";"C";"";"D"];;
+    - : string = "ABCD"
+
+The 'char_explode' and 'char_implode' functions do the same but for a list of
+characters instead of a list of strings.
+
+    # char_explode "ABCD";;
+    - : char list = ['A'; 'B'; 'C'; 'D']
+
+    # char_implode ['A';'B';'C';'D'];;
+    - : string = "ABCD"
+
+2.3.2 CONVERTING BETWEEN STRING AND INTEGER
+
+The 'string_of_int' function takes an integer and returns its decimal string
+representation.  The 'int_of_string' function does the reverse, turning a string
+into an integer so long as the string represents a decimal integer.
+
+    # string_of_int 42;;
+    - : string = "42";;
+
+    # int_of_string "-5";;
+    - : int = -5
+
+2.3.3 VARIANT STRINGS
+
+The 'string_variant' function uses the supplied string to create a name that
+doesn't clash with any name in the supplied avoidance list, by appending
+apostrophes to the end of the name if necessary.
+
+    # string_variant ["A"; "B"; "C"] "A";;
+    - : string = "A'"
+
+2.3.4 QUOTING
+
+The 'quote0' function simply surrounds the supplied string with single-quote
+marks.
+
+    # print_string (quote0 "ABC");;
+    'ABC'
+    - : unit = ()
+
+The 'quote' function surrounds the supplied string with double-quote marks, and
+backslash-escapes any backslash, double-quote, backquote or unprintable
+characters.  This character escaping is useful when printing HOL entity names,
+to ensure that irregular names do not cause problems.
+
+    # print_string (quote "A\n\"B`C");;
+    "A\010\"B\096C"
+    - : unit = ()
+
+
+2.4 TUPLES
+
+Tuples are a basic structure for packaging data together.  Some utilities are
+provided for pairs, the most commonly used tuples.
+
+2.4.1 TUPLE CONSTRUCTORS AND DESTRUCTORS
+
+The 'pair' function creates a pair from its two curried arguments.
+
+    # pair 2 "fish";;
+    - : int * string = (2, "fish")
+
+The 'fst' and 'snd' functions respectively return the first and second component
+of a pair.
+
+    # fst ("green","yellow");;
+    - : string = "green"
+
+    # snd ("green","yellow");;
+    - : string = "yellow"
+
+2.4.2 OTHER TUPLE OPERATIONS
+
+The 'switch' function takes a pair and switches its two components around.
+
+    # switch (1,2);;
+    - : int * int = (2, 1)
+
+
+2.5 BASIC LIST OPERATIONS
+
+Lists are widely used in functional programming, and are well supported in the
+library.  This section covers basic operations on lists.  Other operations are
+covered in Sections 2.7 to 2.12.
+
+2.5.1 LIST CONSTRUCTORS AND DESTRUCTORS
+
+The 'cons' and 'append' functions are for creating a list from their arguments.
+They are the nonfix curried equivalents of OCaml's '::' and '@' respectively.
+
+    # cons 'A' ['B';'C';'D'];;
+    - : char list = ['A'; 'B'; 'C'; 'D']
+
+    # append ['A'] ['B';'C';'D'];;
+    - : char list = ['A'; 'B'; 'C'; 'D']
+
+The 'hd' and 'tl' functions respectively return the first item and all but the
+first item of a list, and 'hd_tl' returns the result of both as a pair.
+
+    # hd ['A';'B';'C';'D'];;
+    - : char = 'A'
+
+    # tl ['A';'B';'C';'D'];;
+    - : char list = ['B'; 'C'; 'D']
+
+    # hd_tl ['A';'B';'C';'D'];;
+    - : char * char list = ('A', ['B'; 'C'; 'D'])
+
+The 'front', 'last' and 'front_last' functions are the corresponding operations
+for the last item of a list.  Note that, due to the representation of lists in
+OCaml, these are fundamentally less efficient than 'hd' and 'tl'.
+
+    # last ['A';'B';'C';'D'];;
+    - : char = 'D'
+
+    # front ['A';'B';'C';'D'];;
+    - : char list = ['A';'B';'C']
+
+    # front_last ['A';'B';'C';'D'];;
+    - : char list * char = (['A'; 'B'; 'C'], 'D')
+
+The 'cut' function cuts the supplied list into two, and takes an OCaml 'int'
+integer for determining the point at which to make the cut.  The 'cut_big_int'
+function does the same but takes an OCaml 'big_int' integer.
+
+    # cut 2 ['A';'B';'C';'D'];;
+    - : char list * char list = (['A'; 'B'], ['C'; 'D']);;
+
+    # cut_big_int big_int_2 ['A';'B';'C';'D'];;
+    - : char list * char list = (['A'; 'B'], ['C'; 'D']);;
+
+The 'cut_while' function cuts the supplied list into two at a point determined
+by a supplied test function, where the cut is immediately before the first item
+not satisfying the test.
+
+    # cut_while is_uppercase ['A';'B';'c';'D'];;
+    - : char list * char list = (['A'; 'B'], ['c'; 'D']);;
+
+The 'el' function is for selecting the nth item of a list, using 1-based
+indexing (i.e. using 1 for the first item, 2 for the second, etc).  The 'el0'
+function does the same but using 0-based indexing.
+
+    # el 2 ['A';'B';'C';'D'];;
+    - : char = 'B'
+
+    # el0 1 ['A';'B';'C';'D'];;
+    - : char = 'B'
+
+2.5.2 LIST SIZE
+
+The 'length' function returns the length of a list as an OCaml 'int' integer,
+whereas 'length_big_int' does the same but returning an OCaml 'big_int' integer.
+
+    # length ['A';'B';'C';'D'];;
+    - : int = 4
+
+    # length_big_int ['A';'B';'C';'D'];;
+    - : big_int = 4
+
+The 'is_empty' function tests for the supplied list being empty, whereas
+'is_nonempty' tests that it is non-empty.  Note that these are fundamentally
+faster than using 'length'.
+
+    # is_empty [];;
+    - : bool = true
+
+    # is_nonempty ['A';'B';'C';'D'];;
+    - : bool = true
+
+2.5.3 LIST COMPARISON
+
+The 'list_eq' function uses a supplied equivalence relation on corresponding
+list items to do a list-level equivalence test.  Note that it always returns
+'false' if the lists are of unequal length.
+
+    # list_eq (fun n1 n2 -> n1 mod 10 = n2 mod 10) [1;22;333] [11;2;3];;
+    - : bool = true
+
+2.5.4 OTHER BASIC LIST OPERATIONS
+
+The 'rev' function reverses the elements of a list.
+
+    # rev ['A';'B';'C';'D'];;
+    - : char list = ['D'; 'C'; 'B'; 'A']
+
+The 'flatten' function flattens out a list of lists into a single list.
+
+    # flatten [ [1;2]; [3]; []; [4;5;6] ];;
+    - : int list = [1; 2; 3; 4; 5; 6]
+
+
+2.6 COMBINATORY LOGIC
+
+Various functions are provided to support combinatory logic style functional
+programming.
+
+2.6.1 CURRYING
+
+The 'curry' function turns a tupled binary function into its curried equivalent,
+whereas 'uncurry' does the reverse, turning a curried binary function into its
+tupled equivalent.
+
+    # curry switch 'A' 5;;
+    - : int * char = (5, 'A');;
+
+    # uncurry ( + ) (3,4);;
+    - : int = 7
+
+2.6.2 FUNCTION COMPOSITION
+
+The infix '<*' function is for composing two functions, i.e. creates a function
+for applying its LHS function to the result of applying its RHS function.  This
+is the 'B' operation in combinatory logic.
+
+    # (square <* decrement) 4;;
+    - : int = 9
+
+The 'funpow' function is for creating the nth power of a function, i.e. recurses
+the function n times, feeding the result back into the input.
+
+    # funpow 3 double 1;;
+    - : int = 8
+
+2.6.3 C, I, K and W
+
+The classic 'C', 'I', 'K' and 'W' operators of combinatory logic are provided,
+but with different names.
+
+The 'id_fn' function performs the 'I' operation, i.e. simply returns its
+argument.  The 'con_fn' function performs the 'K' operation, i.e. takes two
+arguments and returns the first, otherwise known as the constant function.
+
+    # id_fn 43;;
+    - : int = 43
+
+    # con_fn 3 5;;
+    - : char 3
+
+The 'swap_arg' function performs the 'C' operation, i.e. takes a binary
+function, and returns an equivalent function that takes its arguments in reverse
+order.  The 'dbl_arg' function performs the 'W' operation, i.e. takes a binary
+function, and returns a unary function that supplies its argument as both
+arguments of the binary function.
+
+    # swap_arg (-) 7 10;;
+    - : int = 3
+
+    # dbl_arg ( * ) 4;;
+    - : int = 16
+
+
+2.7 UNIT-VALUED FUNCTIONS
+
+Unit-valued functions are used to update program state or for display.
+
+2.7.1 UNIT MAP
+
+The 'do_map' function applies the supplied unit-valued function to each item of
+the supplied list in turn, starting at the first.
+
+    # do_map print_string ["ABC"; " "; "DE"; " "; "FGH"; "\n"];;
+    ABC DE FGH
+    - : unit = ()
+
+
+2.8 TEST FUNCTIONS
+
+Test functions are functions that return a boolean value.  Various utilities are
+provided for using test functions.
+
+2.8.1 FINDING
+
+The 'find' function returns the first item in the supplied list that satisfies
+the supplied test function.
+
+    # find is_even [1;3;4;5;2;6];;
+    - : int = 4
+
+2.8.2 FILTERING
+
+The 'filter' function returns a list of those items in the supplied list that
+satisfy the supplied test function, whereas 'partition' returns a list of those
+that do and a list of those that don't.
+
+    # filter is_even [1;3;4;5;2;6];;
+    - : int list = [4; 2; 6]
+
+    # partition is_even [1;3;4;5;2;6];;
+    - : int list * int list = ([4; 2; 6], [1; 3; 5])
+
+2.8.3 QUANTIFIERS
+
+The 'forall' function returns whether all items in the supplied list satisfy the
+supplied test function, whereas 'exists' returns whether at least one item
+satisfies the test function.
+
+    # forall is_even [1;3;4;5;2;6];;
+    - : bool = false
+
+    # exists is_even [1;3;4;5;2;6];;
+    - : bool = true
+
+
+2.9 META FUNCTIONS
+
+Meta functions take generic function arguments and apply them over data
+structures.
+
+2.9.1 MAP FUNCTIONS
+
+Map functions apply their given functions to each element of a data structure,
+returning a corresponding structure holding the results.
+
+The 'map' function applies the same function to each item of a list, whereas
+'bimap' applies the same binary function to corresponding items of two supplied
+lists.
+
+    # map Char.chr [65;66;67];;
+    - : char list = ['A'; 'B'; 'C']
+
+    # bimap (+) [5;4;3] [1;5;7];;
+    - : int list = [6; 9; 10]
+
+The 'pair_apply' function applies its given pair of functions to corresponding
+elements of a given pair.
+
+    # pair_apply (square,cube) (3,2);;
+    - : int * int = (9, 8)
+
+2.9.2 FOLD FUNCTIONS
+
+Fold functions apply their given binary function over a supplied data structure,
+applying the binary function to each list item, with the result of the previous
+element's application carried over in the other argument, to construct an
+overall result for the list.  Which binary function argument (i.e. LHS or RHS)
+gets used to carry the previous application's result, and the order in which the
+data structure is traversed, are determined by the particular fold function
+being used (with both factors potentially affecting the overall result).
+
+The 'foldl' function uses a given curried binary function to traverse a supplied
+list from the left, with each application's LHS argument carrying the result of
+the previous application.  An extra argument is also supplied to 'foldl', to the
+left of its list argument, for the LHS to be used in the first application.
+Similarly, the 'foldr' function uses a given curried binary function to traverse
+the supplied list from the right, with each application's RHS argument carrying
+the previous result, and an extra argument to the right of 'foldr's list
+argument for the RHS to be used in the first application.
+
+    # foldl (fun x y -> "("^x^y^")") "X" ["A";"B";"C";"D"];;
+    - : string = "((((XA)B)C)D)"
+
+    # foldr (fun x y -> "("^x^y^")") ["A";"B";"C";"D"] "X";;
+    - : string = "(A(B(C(DX))))"
+
+The 'foldl1' function, like 'foldl', also uses a given curried binary function
+to traverse a list from the left, with each application's LHS argument carrying
+the result of the previous application.  However, the LHS argument for the first
+application is the first item of the list being traversed (and the RHS is the
+second item), rather than something supplied as an extra argument.  Similarly,
+the 'foldr1' function traverses a list from the right, with each application's
+RHS argument carrying the previous result, and the RHS argument for the first
+application being the last item of the list (as the LHS argument being the
+second last item).
+
+    # foldl1 (+) [1;3;5];;
+    - : int = 9
+
+    # foldr1 min [9;2;6;5;3;5];;
+    - : int = 2
+
+Variants of the above four functions are provided for using tupled binary
+functions instead of curried binary functions.  These have the same names as
+their curried equivalents, except that they have an apostrophe suffix.
+
+    # foldl1' mk_add [`1`;`3`;`5`];;
+    - : term = `1 + 3 + 5`
+
+2.9.3 UNFOLD FUNCTIONS
+
+Unfold functions can be thought of as the inverse of fold operations.  They take
+a "destructor" function that returns a pair, and an initial argument, and
+repeatedly apply this function, first to the initial argument and subsequently
+to either the LHS or the RHS element of the previous result until a HolFail
+exception is raised.  The other element of each result is retained to form an
+overall list.
+
+The 'unfoldl' function repeatedly applies its given destructor to the LHS of the
+previous result, returning the argument that fails the destructor paired with
+the overall list of RHS results.  Likewise, 'unfoldr' repeatedly applies its
+given destructor to the RHS of the previous result, returning the overall list
+of LHS results paired with the argument that fails the destructor.
+
+    # unfoldl dest_exp `2 EXP 3 EXP 4 EXP 5`;;
+    - : term * term list = (`2`, [`3`; `4`; `5`])
+
+    # unfoldr dest_imp `A ==> B ==> C`;;
+    - : term list * term = ([`A:bool`; `B:bool`], `C:bool`)
+
+The 'unfoldl1' and 'unfoldr1' functions are similar to 'unfoldl' and 'unfoldr',
+respectively, except that the argument failing the destructor is appended to the
+overall list instead of appearing as a separate pair element.
+
+    # unfoldl1 dest_add `2 + 3 + 4 + 5`;;
+    - : term list = [`2`; `3`; `4`; `5`])
+
+    # unfoldr1 dest_conj `A /\ B /\ C`;;
+    - : term list = [`A:bool`; `B:bool`; `C:bool`]
+
+
+2.10 SORTING
+
+Support is provided for sorting lists under a supplied total order relation.
+This is implemented according to the time-efficient merge-sort algorithm.
+
+2.10.1 SORTING A LIST
+
+The 'mergesort' function sorts the supplied list according to the supplied total
+order relation.
+
+    # mergesort (<) [3;1;4;1;5];;
+    - : int list = [1; 1; 3; 4; 5]
+
+2.10.2 MERGING SORTED LISTS
+
+The 'merge' function merges the two supplied lists into a single sorted list,
+according to the supplied total order relation, assuming that the supplied lists
+are already sorted with respect to the same relation.
+
+    # merge (<) [2;4;8] [1;7];;
+    - : int list = [1; 2; 4; 7; 8]
+
+
+2.11 UNORDERED SETS
+
+The library supports a simple representation of sets as an unordered list, with
+list items compared under an equivalence relation operator.  Two versions of
+each set function are provided: one where the equivalence relation is the OCaml
+'=' equality operator (see Sections 2.11.1 to 2.11.3), and one where the
+equivalence relation is supplied as an argument (see Section 2.11.4).
+
+2.11.1 SET REPRESENTATION AND CONSTRUCTION
+
+Although any list is a set under this simple representation, it is more
+efficient to work with lists with no duplicate items.  The 'setify' function
+creates such a list.  Subsequent set operations of setified lists will always
+result in lists with no duplicates.
+
+    # setify [1;2;3;2;1];;
+    - : int list = [1; 2; 3]
+
+The 'no_dups' function tests that the supplied set has no duplicates.
+
+    # no_dups [1; 2; 3; 2; 1];;
+    - : bool = false
+
+The 'insert' function inserts the supplied element into a set (if it is not
+already in the set).
+
+    # insert 2 [1;3];;
+    - : int list = [2; 1; 3]
+
+2.11.2 SET COMPARISON AND MEMBERSHIP
+
+The 'set_eq' function tests that two sets are equal, whereas 'subset' tests that
+the first set is a subset of the second.
+
+    # set_eq [1;2;3] [3;2;1];;
+    - : bool = true
+
+    # subset [1;2;3] [1;3];;
+    - : bool = false
+
+The 'disjoint' function tests that two sets have no common members.
+
+    # disjoint [1;3] [1;2];;
+    - : bool = false
+
+The 'mem' function tests that a given element is a member of a set.
+
+    # mem 2 [1;2;3];;
+    - : bool = true
+
+2.11.3 SET OPERATIONS
+
+The set union, intersection and difference operations are provided by 'union',
+'intersect' and 'subtract' respectively.
+
+    # union [1;3;4] [3;2;1];;
+    - : int list = [4; 3; 2; 1]
+
+    # intersect [1;3;4] [3;2;1];;
+    - : int list = [1;3]
+
+    # subtract [1;3;4] [3;2;1];;
+    - : int list = [4]
+
+The 'unions' function performs set union on a list of sets.
+
+    # unions [ [1;4]; [3;2;1]; [4;5] ];;
+    - : int list = [3; 2; 1; 4; 5]
+
+2.11.4 GENERALISED SET OPERATIONS
+
+The above functions also have alternatives that take an equivalence-relation
+argument for comparing set elements, instead of using OCaml '=' equality
+operator.  These functions all have the same name as their OCaml equality
+equivalent, but with an apostrophe suffix.
+
+    # setify' (fun x y -> x mod 10 = y mod 10) [11;2;3;2;1];;
+    - : int list = [11; 2; 3]
+
+    # union' (fun x y -> x mod 10 = y mod 10) [11;33;44] [3;2;1];;
+    - : int list = [44; 3; 2; 1]
+
+
+2.12 ASSOCIATION LISTS
+
+An association list is a simple representation of a lookup table as an unordered
+list of pairs, with the left component in each pair typically acting as the
+lookup index.  Equality comparison under the OCaml '=' operator is used for
+comparing indexes.  Multiple entries under the same index are allowed, in which
+case the first entry in the list is presumed to hold the right value.
+
+General list operations can be used with association lists.  For example, in
+typical usage, new entries are added to and removed from the front of an
+association list using '::' and 'tl' respectively.  However, some specialised
+functions are also provided just for association lists.
+
+See Section 2.13 for an alternative representation of lookup tables.
+
+2.12.1 ASSOCIATION LIST CONSTRUCTORS AND DESTRUCTORS
+
+The 'enumerate' function creates an association list out of a list, with each
+item indexed by its 1-based position in the list.
+
+    # enumerate ["Ryan";"Disley";"Windsor"];;
+    - : (int * string) list = [(1, "Ryan"); (2, "Disley"); (3, "Windsor")]
+
+The 'zip' functions creates an association list by combining items in
+corresponding positions of the two lists, whereas 'unzip' does the inverse
+operation, returning lists of the first and second components of each
+association list entry.
+
+    # let alist1 = zip ["Ryan";"Windsor";"Disley";"Evans"] [73;75;65;77];;
+    val alist1 : (string * int) list =
+      [("Ryan", 73); ("Windsor", 75); ("Disley", 65); ("Evans", 77)]
+
+    # unzip alist1;;
+    - : string list * int list =
+      (["Ryan"; "Windsor"; "Disley"; "Evans"], [73; 75; 65; 77])
+
+2.12.2 ASSOCIATION LIST LOOKUP
+
+The 'assoc' function finds the first value in the supplied association list
+under the supplied index, using left-component indexing, whereas 'inv_assoc'
+does the same but using right-component indexing.
+
+    # assoc "Disley" alist1;;
+    - : int = 65
+
+    # inv_assoc 75 alist1;;
+    - : string = "Windsor"
+
+2.12.3 ASSOCIATION LIST MAPPING
+
+The 'fst_map' and 'snd_map' functions are for applying a function to each left
+component and right component, respectively, of the supplied association list.
+
+    # fst_map (hd <* char_explode) alist1;;
+    - : (char * int) list = [('R', 73); ('W', 75); ('D', 65); ('E', 77)]
+
+    # snd_map decrement alist1;;
+    - : (string * int) list =
+      [("Ryan", 72); ("Windsor", 74); ("Disley", 64); ("Evans", 76)]
+
+2.12.4 ASSOCIATION LIST FILTERING
+
+The 'fst_filter' and 'snd_filter' functions are for filtering on the left
+components and the right components, respectively, of the supplied association
+list.
+
+    # fst_filter (fun x -> String.length x > 5) alist1;;
+    - : (string * int) list = [("Windsor", 75); ("Disley", 65)]
+
+    # snd_filter (fun x -> x < 69) alist1;;
+    - : (string * int) list = [("Disley", 65)]
+
+
+2.13 DYNAMIC LOOKUP TREES
+
+A dynamic lookup tree is a representation of a lookup table for time-efficient
+lookup, insertion and deletion.  Total order comparison under the OCaml '<'
+operator is used for comparing indexes.  Multiple entries under the same index
+are not allowed.
+
+Basic support for dynamic lookup trees are provided by the 'DLTree' module,
+which is not opened by default.
+
+See Section 2.12 for an alternative representation of lookup tables.
+
+2.13.1 THE EMPTY TREE
+
+An empty tree is provided by the 'dltree_empty' constant.
+
+    # let tree1 = (dltree_empty : (string,int) dltree);;
+    val tree1 : (string,int) dltree = <abstr>
+
+2.13.2 TREE LISTING
+
+The 'dltree_elems' function returns a list of the entries in the tree, ordered
+according to index.
+
+    # dltree_elems tree1;;
+    - : (string * int) list =
+      [("Disley", 65); ("Evans", 77); ("Ryan", 73); ("Windsor", 75)]
+
+2.13.3 TREE ELEMENT INSERTION AND DELETION
+
+Entries are added by using the 'dltree_insert' function.
+
+    # let tree1 = dltree_insert ("Ryan",73) tree1;;
+      let tree1 = dltree_insert ("Windsor",75) tree1;;
+      let tree1 = dltree_insert ("Disley",65) tree1;;
+      let tree1 = dltree_insert ("Evans",77) tree1;;
+    val tree1 : (string, int) DLTree.dltree = <abstr>
+
+The 'dltree_delete' function deletes the entry at a given index from a tree.
+
+    # dltree_elems (dltree_delete "Ryan" tree1);;
+    - : (string * int) list = [("Disley", 65); ("Evans", 77); ("Windsor", 75)]
+
+2.13.4 TREE LOOKUP
+
+The 'dltree_mem' function returns whether the given index occurs in the tree.
+
+    # dltree_mem "Ryan" tree1;;
+    - : bool = true
+
+The 'dltree_lookup' function returns the data held at the given index, whereas
+'dltree_elem' returns the whole entry.
+
+    # dltree_lookup "Evans" tree1;;
+    - : int = 77
+
+    # dltree_elem "Evans" tree1;;
+    - : string * int = ("Evans", 77)
+
+
+2.14 READER COMBINATORS
+
+Reader combinators are utilities for use in the implementation of recursive
+descent parsers.  They act on reader functions, that read data from a source
+and, if the data fits a given form, advance the source and return the data,
+otherwise keeping the source as it is and raising a reader exception.  Using
+these, the source code of a parser can transparently reflect the formal grammar
+it is implementing, with reader functions dedicated to reading specific grammar
+symbols, and reader combinators corresponding to specific grammar operators.
+
+Basic support for reader combinators is provided by the 'Reader' module, which
+is not opened by default.
+
+2.14.1 READER DATATYPE AND EXCEPTION
+
+A datatype for reader functions is defined, parameterised by the source and read
+item datatypes.
+
+    type ('a,'b) reader = ('a -> 'b *'a)
+
+The ReadFail exception is intended specifically for short-circuit control flow
+between reader functions.  If a reader function fails to read its grammar
+component, it raises a ReadFail exception, which gets handled by the reader
+combinator accordingly, passing control to the next reader function or to error
+diagnosis as a last resort.
+
+    ReadFail
+
+2.14.2 BASIC COMBINATORS
+
+The basic combinators directly correspond to the grammar operators of BNF.
+
+The infix '|||' combinator is for alternation.  It returns a reader function
+that tries the LHS reader first, and if this fails then tries the RHS reader
+from the same starting point in the source.
+
+    # (read_uppercase_name ||| read_lowercase_name) "abc ABC ..."
+    - : string * string = ("abc", " ABC ...")
+
+The next three combinators are also infix, and are for sequential reading,
+returning a reader function that tries the LHS reader first, and if this
+succeeds then trying the RHS reader from the advanced point in the source, and
+failing if either the LHS or RHS reader fails.  With the '>>>' combinator, the
+resulting read item is the pairing of the items read from the LHS and RHS
+readers, whereas with '*>>' the LHS's read item is discarded, and with '>>*'
+the RHS's read item is discarded.
+
+    # (read_int >>> read_space) "123 ABC ..."
+    - : (int * string) * string = ((123, " "), "ABC ...")
+
+    # (read_space *>> read_int) " 123 ABC ..."
+    - : int * string = (123, " ABC ...")
+
+    # (read_int >>* read_space) "123 ABC ..."
+    - : int * string = (123, "ABC ...")
+
+2.14.3 POST-PROCESSING
+
+Two functions are provided to enable post-processing of the items read by a
+reader function.  These do not correspond to actual grammar operators, but are
+useful for packaging up information and error reporting.
+
+The infix '@:' combinator returns a reader function that applies the LHS post-
+processing function to the result of the RHS reader.
+
+    # (decrement @: read_int) "123 ABC ..."
+    - : int * string = (122, " ABC ...")
+
+The infix '@!:' function applies the LHS post-processing function to the result
+of the RHS reader, returning a string.  This function is for use in error
+reporting, where the string becomes the error message.
+
+    # ((fun x -> "Unexpected number " ^ string_of_int x) @!: read_int)
+           "123 ABC ..."
+    - : string = "Unexpected number 123"
+
+2.14.4 CONTEXT-PASSING COMBINATORS
+
+Three combinators are defined for passing on the result of one reader function
+as context to another reader function, either to enable efficient computation or
+to support error reporting.
+
+The infix '|@|' combinator is for alternation with a left factor, when the left
+factor forms the whole of one branch and the initial part of another branch.  It
+uses the LHS reader to read the left factor, and passes on the result as an
+argument to the RHS reader, for reading the remainder of the branch that starts
+with the left factor.  This saves on backtracking in the case of the RHS reader
+failing.
+
+    # (read_int
+       |@|
+       (fun n1 -> (fun n2 -> n1 * n2) @: (read_string "^" *>> read_int)))
+           "2*5 + ..."
+    - : int * string = (10, " + ...")
+
+The infix '>@>' and '*@>' combinators are for sequential reading, and are
+equivalents of '>>>' and '*>>', respectively, but pass on the result of the LHS
+reader as an argument to the RHS reader.  This can be useful for error reporting
+if the RHS reader fails.
+
+    # 
+    - ....
+
+    # ....
+    - ....
+
+2.14.5 OTHER GENERIC COMBINATORS
+
+The 'read_list' combinator takes an integer 'n' and a reader function, and
+repeatedly applies the reader, returning the results in a list, or failing if
+the reader fails in its first 'n' attempts.
+
+    # ....
+    - ....
+
+The 'lookahead' combinator applies the supplied reader function, returning the
+result but not advancing the source.
+
+    # ....
+    - ....
+
+2.14.6 LIST READER COMBINATORS
+
+2.14.7 COMBINATOR PRECEDENCE
+
+....
+These four operators are all left-associative, and '|||' has lower precedence
+than the sequential operators, which have equal precedence.  This reflects the
+precedence of their corresponding grammar operators in EBNF.
+....
+
+
+
+2.15 EXCEPTION HANDLING
+
+
+
+2.16 MESSAGE REPORTING
+
+Messages are feedback printed to standard output for the user.  Like the HolFail
+and HolError exceptions, they are prefixed with "[HZ]", to make clear that the
+message is coming from HOL Zero rather than the ML toplevel itself.
+
+2.16.1 REPORTING FUNCTIONS
+
+The 'report' function is for general feedback for the user.  It prints the
+supplied string followed by "." and a newline, and then flushes the output
+buffer.
+
+    # report "Hello";;
+    [HZ] Hello.
+    - : unit = ()
+
+The 'warn' function is for informing the user about a potentially hazardous
+situation.  It prints the supplied message preceded by "WARNING:" and followed
+by "." and a newline, and then flushes the output buffer.
+
+    # warn "Benign redefinition";;
+    [HZ] WARNING: Benign redefinition.
+    - : unit = ()

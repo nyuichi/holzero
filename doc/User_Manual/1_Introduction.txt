@@ -1,0 +1,358 @@
+================================================================================
+== CHAPTER 1: INTRODUCTION (HOL Zero User Manual)                             ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2011-2016                            ==
+================================================================================
+
+
+This is the HOL Zero User Manual, giving a complete description of how to use
+the HOL Zero system.  Its intended readership is all users of the system, from
+novices to expert implementors and proof auditors.  Refer to the documentation
+directory README for related documents, including a tutorial for users new to
+theorem proving in general, and a glossary for precise definitions of all
+technical terminology used in this manual.
+
+[Note that Tutorial is as yet unwritten!!!]
+
+This chapter gives a brief overview of HOL Zero and the manual.
+
+
+1.1 BASIC CONCEPTS
+
+1.1.1 HOL ZERO
+
+HOL Zero is a HOL theorem prover, i.e. a program supporting formal proof and
+theory development in the HOL logic (see Section 1.1.2).  It is a relatively
+simple theorem prover that concentrates on doing basic functionality well, and
+improves on other HOL systems in areas such as architectural robustness,
+concrete syntax design, complete and unambiguous pretty printing, and source
+code readability.  These qualities boost its trustworthiness credentials, making
+it suitable as a proof checker for proof auditing (see Section 1.1.3) of large
+proofs created on other HOL systems.  The same qualities also make it suitable
+as a pedagogical example for logicians, programmers and computer scientists
+wishing to understand how theorem provers work.
+
+To underline how seriously trustworthiness is taken in HOL Zero, there is a $100
+bounty reward for anyone finding soundness-related flaws in the system.  See
+'Bounty.txt' in the documentation directory for details.
+
+User interaction with HOL Zero is done by submitting ASCII text command-line
+instructions to a HOL Zero session.  These instructions are in fact expressions
+in the ML programming language which get evaluated by an ML toplevel as they
+are submitted.  However, the user does not need a deep understanding of ML in
+order to use HOL Zero effectively.
+
+Those who do have a deeper understanding of ML can extend the functionality of
+HOL Zero.  HOL Zero is implemented in the OCaml dialect of ML, and extension is
+done by submitting ML definitions to a HOL Zero session (which is simply an ML
+session that has the HOL Zero source code incorporated).  Any such extensions
+are safe in the sense that they cannot introduce logical unsoundness to the
+system.  This safety is due to HOL Zero being implemented according to an "LCF-
+style" architecture (see Section 4.1.3).  HOL Zero supports the Common HOL
+standard (see Section 1.1.4), which eases the porting of proofs and ML source
+code to and from other HOL systems.
+
+It should be noted that, although suited to the checking of large proofs, an
+unextended HOL Zero is not suited to the development of large proofs.  It only
+supports a simple natural deduction style of proof, and lacks the advanced
+interactive and automated facilities that other HOL systems have.
+
+1.1.2 THE HOL LOGIC
+
+The HOL logic is a typed, classical, higher-order predicate logic, i.e. a
+logic with a type system, that supports reasoning over propositions and
+predicates, with the Law of the Excluded Middle as a theorem of the logic, and
+with the ability to quantify over functions and predicates.  It is based on
+Church's typed lambda calculus, and has a relatively simple, polymorphic type
+system that is not dependently-typed and does not support the quantification of
+type variables.  Refer to the glossary for explanations of these concepts.
+
+The HOL logic was first developed in the 1980s for a prototype system called
+Cambridge HOL, and is now supported by the HOL family of theorem provers that
+includes HOL4, ProofPower HOL, HOL Light and Isabelle/HOL.  These systems have
+been used as crucial trusted tools on a variety of industrial projects,
+including the verification of computer chip designs and safety-critical
+software.  They have also been prominent in the formalisation of mathematics, in
+particular in Tom Hales's groundbreaking Flyspeck project to formalise his proof
+of the Kepler Conjecture.
+
+1.1.3 PROOF AUDITING
+
+Proof auditing is the human process of determining whether a proof script that
+is claimed to prove a statement does indeed prove the statement.  This should be
+performed for any important formal proof, because there are various potential
+pitfalls when using theorem provers, any of which could quite conceivably render
+the claimed formal proof completely invalid.  These range from basic mistakes
+such as the proof script simply not successfully resulting in a formal proof, or
+the proof script proving the wrong statement, to more subtle problems such as
+the constants occurring in the proved statement having incorrect definitions,
+the theorem prover's accumulated theory becoming inconsistent, or the theorem
+prover itself having flaws in its design or implementation.
+
+Proof auditing addresses these concerns by independently reviewing the proof
+script.  This at least requires the original system used for executing the
+script, so that it can be replayed through that system.  The auditor also needs
+to carry out checks on the proved statement, the definitions used and the
+consistency of the theory.  These checks would normally be done using the
+original system, and the auditor would have to take into account known flaws in
+this system and somehow make sure that at least these flaws were not being
+exploited (intentionally or unintentionally) by the proof script.
+
+HOL Zero offers a more effective solution than using the original system to
+perform the checks, by acting as an independent proof checker to be used for
+replaying the original formal proof on (via the export and import of proof
+objects, for example see Common HOL below) and for performing the checks with.
+This removes any concerns about soundness-related flaws in the original system
+and the need to examine the proof script.  Because of its own trustworthiness
+credentials, neither does the auditor need to be concerned about soundness-
+related flaws in the proof checker.  Thus the process of proof auditing is
+greatly simplified at the same time as significantly improving the assurance it
+provides.
+
+1.1.4 COMMON HOL
+
+Common HOL is a standard for basic HOL system functionality, facilitating the
+portability of source code and formal proofs between members of the HOL family.
+It consists of the following components:
+
+ - The specification of an API of basic HOL functionality, to enable
+  straightforward porting of source code between compliant HOL systems;
+ - The implementation of the API for various HOL systems;
+ - The specification of a file format for proof object files, to enable porting
+  of formal proofs between compliant HOL systems;
+ - The implementation of proof object exporters and importers for various HOL
+  systems.
+
+All of these components except the proof exporters are freely available from the
+Proof Technologies website.  The systems currently supported are HOL Zero, HOL
+Light and hol90.  Proof exporting is available as a commercial service from
+Proof Technologies, although various exported proof objects are freely available
+on the website.  See the HOL Zero README file for website and contact details.
+
+
+1.2 STARTING A SESSION
+
+This section explains how to start up a HOL Zero session.  It is assumed that
+the reader has access to a terminal window on a Unix-like operating system, and
+that HOL Zero has already been installed (see the INSTALL file in the HOL Zero
+home directory for instructions).
+
+A HOL Zero session is started by running the 'holzero' executable, which is
+created when HOL Zero is installed.  We give two alternatives for starting a
+session from a Unix-like terminal window:
+
+ 1. The simplest way is to run HOL Zero in the terminal window itself (however,
+   note that in-line editing facilities will be poor unless you have RLWrap
+   installed - see INSTALL file).  To do this, directly execute the 'holzero'
+   command from the terminal window:
+
+      > holzero           (the ">" indicates the terminal window prompt)
+
+ 2. A better alternative for substantial interaction is to start an editor
+   window that maintains separate subwindows for the user ML input script and
+   the ML session feedback.  A good simple editor for this is Xpp (see INSTALL
+   file), which is started by:
+
+      > xpp -c holzero
+
+   In Xpp, the upper window is for editing text and the lower window is for
+   session feedback.  To enter text into the session, select the text and
+   press Ctrl-Enter.  Text can also be entered line-by-line by pressing
+   Ctrl-N at each line.
+
+The first few seconds of starting HOL Zero involve building the system from
+scratch.  A few hundred lines of output whizz past the screen, and then the HOL
+Zero banner is printed, indicating a successful build.  HOL Zero is then ready
+for commands to be entered by the user.  These commands are actually ML
+expressions, but the novice user does not need to have a good knowledge of ML to
+use HOL Zero.
+
+
+1.3 OVERVIEW OF USAGE
+
+This section gives a brief introduction to simple operation of HOL Zero,
+including how to input HOL expressions and how to perform a simple proof.  For
+more in-depth information, the reader should proceed to subsequent chapters of
+this manual.
+
+1.3.1 TERMS AND TYPES
+
+Expressions in the HOL language are called "terms".  Terms are written using a
+series of ASCII characters and enclosed by backquote characters ("`"), which is
+called a "term quotation".  Entering a term quotation into the HOL Zero session
+will result in the quotation being checked and printed back.
+
+Term quotation syntax is simple but intuitive, and caters for various syntactic
+mechanisms.  For example, the following term means "for all natural numbers x, y
+and z, x is less than y and y is less than z implies that x is less than z":
+
+    # `!x y z. x < y /\ y < z ==> x < z`;;  (the '#' indicates the OCaml prompt)
+    - : term = `!x y z. x < y /\ y < z ==> x < z`
+
+Entering an ill-formed term quotation results in an error message.
+
+    # `x =`;;
+    Exception:
+    [HZ] SYNTAX ERROR: Unexpected end of quotation instead of RHS for infix
+    "=".
+
+Note that messages specifically reported by HOL Zero, rather than generally by
+the ML toplevel, are prefixed with "[HZ]".  This is for all messages reported
+by HOL Zero, including error messages, warnings and general user feedback.
+
+HOL is a typed language, so that every term/subterm has a type, and terms must
+be constructed so that they are type-correct.  This prevents the construction of
+meaningless statements such as "3 equals true".
+
+    # `3 = true`;;
+    Exception:
+    [HZ] TYPE ERROR: Function subterm domain type incompatible with argument
+    subterm type.
+
+Subterms in term quotations can be annotated to indicate their type, by
+following the subterm with a colon (":") and then its type, all enclosed by
+parentheses.  Type inference is used to automatically work out the types of any
+unannotated subterms, with indeterminable types given numbered type variables.
+By default, terms are printed back with just enough type annotation to avoid any
+ambiguity about the types of any subterms.
+
+    # `!(w:nat) (x:nat) y z. w = x /\ y = z`;;
+    - : term = `!(w:nat) x (y:'1) z. w = x /\ y = z`
+
+HOL types can be written outside the context of a term by using a type
+quotation.  Like term quotations, type quotations are delimited by backquote
+characters, but start with a colon.
+
+    # `:nat#nat->bool`;;
+    - : hol_type = `:nat#nat->bool`
+
+1.3.2 THEOREMS, PROOF AND ASSERTION
+
+HOL theorems consist of a set of boolean-valued assumption terms and a boolean-
+valued conclusion term, and are reserved for statements that have been
+established to hold (by proof or by assertion - see below).  The meaning of such
+a statement is that the conclusion holds assuming that all the assumptions hold.
+Theorems are displayed using a turnstile ("|-") to separate any assumptions from
+the conclusion.  The HOL Zero base system comes with over 100 pre-proved
+theorems, all of which have no assumptions.  These are listed in Appendix B2.
+
+    # excluded_middle_thm;;
+    - : thm = |- !p. p \/ ~ p
+
+The inference rules of the HOL logic are the mechanisms for performing proof,
+and are implemented as ML functions that take theorems and/or terms and return
+theorems.  A proof step is performed simply by evaluating the application of
+such a function.  Details about each inference rule are provided in Appendix A5.
+
+    # assume_rule `x + y < 5`
+    - : thm = x + y < 5 |- x + y < 5
+
+    # spec_rule `a = 0` excluded_middle_thm;;
+    - : thm = |- a = 0 \/ ~ (a = 0)
+
+Proofs are simply compound ML expressions with inference rule applications at
+each level.
+
+    # deduct_antisym_rule
+       (contr_rule `~ true` (assume_rule `false`))
+       (eq_mp_rule (eqf_intro_rule (assume_rule `~ true`)) truth_thm);;
+    - : thm = |- ~ true <=> false
+
+The HOL Zero base system supports the following basic mathematical theories:
+predicate logic, lambda calculus, ordered pairs and natural number arithmetic.
+Details about each theory are provided in Appendix B1.
+
+HOL Zero's theory can be extended using theory commands to declare new constants
+and type constants and to make assertions about them.  For example, the constant
+definition command introduces a new constant and returns a new theorem,
+asserting its value to be equal to a given expression.  It takes an equality
+term with the new constant as the LHS of the equality and the constant's value
+as the RHS.  Details about each theory command are provided in Appendix A4.
+
+    # new_const_definition `max_height = 7`;;
+    - : thm = |- max_height = 7
+
+1.3.3 HELP FACILITY
+
+There is a help facility that can be used in a HOL Zero session to supply
+details about a given HOL Zero command or theorem.
+
+    # help "disch_rule";;
+    ...
+
+It can also be used to look up terminology from the glossary:
+
+    # help "type operator";;
+    ...
+
+This help facility can also be used in the Unix terminal window, by calling the
+'hzhelp' executable:
+
+    > hzhelp disch_rule
+    ...
+
+
+1.4 SUBSEQUENT CHAPTERS
+
+The subsequent chapters and appendices provide a complete description of HOL
+Zero from a user's perspective.
+
+Roughly speaking, users of the system divide into four kinds:
+
+ - basic users, who perform simple proofs without the need to understand ML;
+ - advanced users, who perform proof using ML programming;
+ - auditors, who use HOL Zero for auditing proofs;
+ - programmers, who extend the functionality of HOL Zero using ML programming.
+
+This manual caters for all four kinds.  Even though HOL Zero is relatively
+simple for a HOL theorem prover, it still has quite an extensive user interface.
+However there are some aspects of the system that it is not necessary for basic
+users and/or proof auditors to be familiar with in order to be effective.  We
+explain here which parts of the manual are relevant for which users.
+
+Readership Key:
+
+  U1 - Basic users           *  - Highly relevant 
+  U2 - Advanced users        +  - Background reading
+  A  - Auditors
+  P  - Programmers
+
+The chapters break down as follows:
+
+  Chapter  Readership   Description
+           U1 U2 A  P
+
+     2        *  +  *   HOL Zero's ML programming library.
+
+     3     *  *  *  *   HOL Zero's variant of the HOL language and its language
+                        utilities.  Essential reading for all, except sections
+                        3.7 and 3.8, which can be skipped by basic users (U1).
+
+     4     *  *  *  *   HOL Zero's variant of the HOL logic, its inference
+                        rules, theory commands and theory.  Essential reading
+                        for all.
+
+The appendices provide detailed reference material.  The A-appendices provide
+details about HOL Zero's ML interface, whereas the B-appendices provide
+listings of its theory, and the C-appendix provides a HOL grammar.  This breaks
+down as follows:
+
+  Appendix Readership   Description
+           U1 U2 A  P
+
+    A1        *  +  *   ML programming library functions.
+
+    A2     *  *  *  *   Input and display commands.
+
+    A3     +  *  +  *   HOL language utilities.
+
+    A4     *  *  *  *   HOL theory commands.
+
+    A5     *  *     *   HOL inference rules.
+
+    B1     *  *  *  *   HOL theory listing.
+
+    B2     *  *     *   HOL theorems listing.
+
+    C      *  *  *  *   HOL language formal grammar.

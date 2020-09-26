@@ -1,0 +1,758 @@
+================================================================================
+==              INSTALLING HOL ZERO AND ITS SUPPORTING PROGRAMS               ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+                                QUICK GUIDE
+
+In this initial section, we provide a quick guide to installing HOL Zero
+assuming appropriate versions of OCaml and Camlp5 have already been installed.
+This is aimed at those already familiar with Unix Make-style source
+installation.  For more detailed instructions, jump to DETAILED GUIDE below.
+
+The HOL Zero distribution directory doubles as the HOL Zero home directory, and
+so should not be moved or deleted after installation.  By default, the HOL Zero
+executables are placed in the 'bin' subdirectory of the HOL Zero home directory,
+but this can be overriden by using the --bindir option to 'configure'.
+Executables for OCaml and Camlp5 should be in the user execution path or
+specified by the --ocaml-bindir and --camlp5-bindir options to 'configure'.
+
+Enter the following four commands in a Bash shell from the HOL Zero home
+directory:
+
+     > ./configure
+     > make
+     > make install
+     > make clean
+
+Refer to Section 1.2 of the HOL Zero user manual for instructions on how to
+start a HOL Zero session, and Section 1.3 for a brief introduction to using HOL
+Zero.
+
+        *         *         *         *         *         *         *
+
+                               DETAILED GUIDE
+
+The rest of this document provides detailed instructions for installing HOL Zero
+and its supporting programs on the 3 main Unix-like operating systems: Mac OS X,
+Linux and Cygwin (the instructions should work for other Unix-like OSs, but this
+has not been tested).  Installation can be a tricky process if things go wrong,
+but we aim to cover all the possible pitfalls to make sure it will go smoothly
+for you.  The result, we hope, is something more coherent and accessible than
+the patchwork of installation instructions bundled with each supporting program.
+No background knowledge is required, and information about basic system
+administration tasks is provided in appendices if required.  Complete novices
+are advised to read Appendices I and II before attempting any installation.
+
+The supporting programs covered by this guide are OCaml, Camlp5, RLWrap and Xpp.
+Both OCaml and Camlp5 are required to install HOL Zero.  RLWrap gives better
+in-line editing when running HOL Zero in a terminal window, and is optional.
+Xpp is a simple GUI alternative to running in a terminal window, and is also
+optional.  Note that RLWrap and Xpp can be installed after HOL Zero.
+
+Note that you need to be using the Bash shell in order for these instructions to
+work.  See Appendix I if you are unsure about whether you are using Bash.
+
+CONTENTS
+
+    1. Installing OCaml
+    2. Installing Camlp5
+    3. Installing HOL Zero
+    4. Installing RLWrap
+    5. Installing Xpp
+
+    Appendix I:   Basic Background
+    Appendix II:  Installing Software
+    Appendix III: The Execution Path
+    Appendix IV:  File Permissions
+    Appendix V:   The Patch Utility
+    Appendix VI:  Motif
+
+        *         *         *         *         *         *         *
+
+                            1. INSTALLING OCAML
+
+OCaml is the variant of ML used by HOL Zero.  Any version from 3.08 onwards will
+do.
+
+You may have OCaml installed already.  Check whether you do, and the version:
+
+     > ocaml -version
+
+If this returns a sufficiently recent version, then there is nothing to do, and
+so jump to Section 2.  If it fails or the version is too old, then follow the
+instructions below.
+
+AUTOMATED PACKAGE INSTALLATION
+
+For Fedora and Ubuntu Linux, the package manager can be used to install OCaml:
+
+  Fedora:
+     > yum install ocaml
+
+  Ubuntu:
+     > apt-get install ocaml
+
+MANUAL IMAGE/PACKAGE INSTALLATION
+
+OCaml image/package files can be accessed from the following webpage:
+
+        http://ocaml.org/releases/
+
+For Mac OS X, there are Apple Disk Image files.  For OCaml versions 3.11.2
+onwards there is only one for Intel-based Macs, but OCaml 3.11.1 and earlier
+have image files for both PowerPC-based and Intel-based Macs.
+
+For Linuxes, the download page has external links to RPM packages (for Fedora
+and Mandriva, but not SUSE) and DEB packages (for Debian).  Once downloaded,
+install the package:
+
+  Fedora/(Mandriva?):
+     > rpm -i <ocaml-package>.rpm
+
+  (Debian?):
+     > dpkg -i <ocaml-package>.deb
+
+SOURCE INSTALLATION
+
+1. First ensure that the following are already installed:
+
+      Make and GCC (see Appendix II)
+
+  Also check that you have enough disk space in the filesystem containing the
+  directory where you intend to perform the installation.  The disk space
+  required by a default installation tends to rise with later versions (although
+  4.02 needs less than 4.01) and with a 64-bit as opposed to a 32-bit operating
+  system.  For example, OCaml version 3.08 on 32-bit requires just 110M, whereas
+  OCaml version 4.01 on 64-bit requires as much as 579M.
+
+     > df -h <ocaml-install-directory>
+
+  If you intend to install OCaml versions 3.11.0 to 3.12.0, note that it will
+  not install if your OS uses 'binutils' version 2.21 or later.  To find out
+  your 'binutils' version, enter the following:
+
+     > ld -v
+
+  Also, for Mac OS X, if you intend to install OCaml versions earlier than
+  4.02.0, note that it will not install if you are using developer tools for
+  Apple LLVM version 5.1 (corresponding to Xcode version 5.1) or later.  See
+  Appendix II for instructions on how to uninstall and get earlier versions of
+  Xcode.  To find out your developer tools Apple LLVM version, enter the
+  following:
+
+     > gcc -v
+
+2. Download the OCaml source tarball from the following webpage:
+
+        http://ocaml.org/releases/
+
+  For versions older than 3.12.1, get the tarball via the link for earlier
+  releases.
+
+  Unpack the tarball file, change ownership to your current user (e.g. root),
+  and change directory to the unpacked distribution directory:
+
+     > tar -xzf ocaml-<version>.tar.gz
+     > chown -R <user> ocaml-<version>
+     > cd ocaml-<version>
+
+3. To configure a default installation that puts the files created by OCaml's
+  installation (including its executables) in standard 'bin', 'lib' and 'man'
+  directories (typically owned by root user), enter the following:
+
+     > ./configure
+
+  Alternatively, to specify a particular base directory for these directories,
+  enter the following (and ensure that the 'bin' directory is in your user
+  execution path - see Appendix III):
+
+     > ./configure --prefix <base-directory>
+
+  These directories can be shared with other programs (e.g. in '/usr/local'),
+  or will be created if they don't already exist.
+
+4. Enter the following to complete the installation:
+
+     > make world.opt       (takes a few minutes)
+     > make install
+     > make clean
+
+  Note that the "make install" command needs to be performed by a user who has
+  write permission for the 'bin', 'lib' and 'man' directories chosen in step 3
+  (see Appendix IV).
+
+        *         *         *         *         *         *         *
+
+                            2. INSTALLING CAMLP5
+
+Camlp5 is a program used by HOL Zero to make a small change to the OCaml lexical
+syntax.  The best Camlp5 versions to use for a given OCaml version are:
+
+    OCaml version         Camlp5 version
+        <= 3.11            5.10 to 5.15
+         3.12          5.15 or 6.02.1 to 6.14
+         4.00              6.07 to 6.14
+         4.01              6.11 to 6.14
+         4.02                >= 6.14
+         4.03                >= 6.15
+
+You may have Camlp5 installed already.  Check whether you do, and the version:
+
+     > camlp5 -v
+
+If this returns an appropriate version for your OCaml version, then there is
+nothing to do, and so jump to Section 3.  If it fails or the version is not
+suitable, then follow the instructions below.
+
+Source installation is the only option for installing Camlp5.
+
+SOURCE INSTALLATION
+
+1. First ensure that the following are already installed:
+
+      Make and GCC (see Appendix II)
+      OCaml (see Section 1)
+
+  Note that the OCaml 'bin' directory must be in your execution path (see
+  Appendix III) for the Camlp5 installation to succeed.
+
+2. Download the source tarball file for a version of Camlp5 that is appropriate
+  for your OCaml version, from the following webpage:
+
+        http://camlp5.gforge.inria.fr/
+
+  Older versions than the current can be obtained by clicking on a link towards
+  the bottom of the page.
+
+  Note that some versions of Camlp5 require one or more patch files to be
+  applied, and this will be indicated by download links immediately below the
+  main Camlp5 download link.  Download any such patch files.
+
+  Unpack the tarball file, change ownership to your current user (e.g. root),
+  and change directory to the unpacked distribution directory:
+
+     > tar -xzf camlp5-<version>.tgz
+     > chown -R <user> camlp5-<version>
+     > cd camlp5-<version>
+
+  If there are patch files for your Camlp5 version, then apply them from the
+  unpacked distribution directory (see Appendix V).
+
+3. To configure a default installation that puts the Camlp5 executables in the
+  same directory as your OCaml's 'bin' directory, enter the following:
+
+     > ./configure
+
+  Alternatively, to specify a particular directory for the Camlp5 executables,
+  for example if you do not have write permission for the OCaml 'bin' directory,
+  use the --bindir option (and ensure that this directory is in your user
+  exeuction path - see Appendix III):
+
+     > ./configure --bindir <dir>
+
+4. Enter the following to complete the installation:
+
+     > make world.opt       (takes a few minutes)
+     > make install
+     > make clean
+
+  Note that the "make install" command needs to be performed by a user who has
+  write permission for the directory chosen for the Camlp5 executables in step
+  3 (see Appendix IV).
+
+        *         *         *         *         *         *         *
+
+                          3. INSTALLING HOL ZERO
+
+Source installation is the only option for installing HOL Zero.
+
+SOURCE INSTALLATION
+
+1. First ensure that suitable versions of the following are installed:
+
+      Make (see Appendix II)
+      OCaml (see Section 1)
+      Camlp5 (see Section 2)
+
+   The following are optional programs for improved editing support over a raw
+   terminal window.  They can be installed either before or after HOL Zero is
+   installed.
+
+      RLWrap (see Section 4)
+      Xpp (see Section 5)
+
+2. (Note that if you are reading this file, then this step has probably already
+    been performed.)
+
+  Download the source tarball from the Proof Technologies HOL Zero webpage:
+
+        http://www.proof-technologies.com/holzero/
+
+  Unpack the tarball, and change directory to the unpacked directory:
+
+     > tar -xzf holzero-<version>.tgz
+     > cd holzero-<version>
+
+  We refer to this directory as the "HOL Zero home directory".  It serves dual
+  purpose as the distribution directory and the installation directory.
+
+3. To configure a default installation that puts the HOL Zero executables in
+  the 'bin' subdirectory of the HOL Zero home directory, enter the following:
+
+     > ./configure
+
+  Alternatively, to specify a particular directory for the executables, use the
+  --bindir option (and ensure that this directory is in your user execution
+  path - see Appendix III):
+
+     > ./configure --bindir <dir>
+
+  Options are also available to specify where to find OCaml and Camlp5:
+
+        --ocaml-bindir <dir>     Find the OCaml executables in <dir>.
+        --camlp5-bindir <dir>    Find the Camlp5 executables in <dir>.
+
+4. Enter the following to complete the installation:
+
+     > make
+     > make install
+     > make clean
+
+  Note that the "make install" command needs to be performed by a user who has
+  write permission for the directory chosen for the HOL Zero executables in
+  step 3 (see Appendix IV).
+
+Now that HOL Zero is installed, you can start using it to perform formal proof.
+Refer to Section 1.2 of the user manual for instructions on how to start a HOL
+Zero session, and to Section 1.3 for a brief introduction to using HOL Zero.
+
+Please note that the HOL Zero home directory should not be moved or deleted once
+installation is complete.  It is required for building HOL Zero each time it is
+run.  If you do wish to move the directory, then repeat the HOL Zero
+installation from step 3 (configuration).
+
+        *         *         *         *         *         *         *
+
+                           4. INSTALLING RLWRAP
+
+RLWrap is a widely-available utility for Unix-like operating systems, for
+wrapping around other commands to give classic in-line editing support for
+commands that don't already support it.  This support enables use of forward/
+backward arrow keys for navigating through the line, up/down arrow keys for
+command history navigation, and home/end keys for jumping to the start/end of a
+line.
+
+You may have RLWrap installed already.  Check whether you do:
+
+     > which rlwrap
+
+If this returns a file path rather than an error message then there is nothing
+to do.
+
+AUTOMATED PACKAGE INSTALLATION
+
+For Mac OS X, RLWrap is available using the Homebrew package manager:
+
+     > brew install rlwrap
+
+RLWrap is supported for the package managers of all major Linux distributions:
+
+  Fedora:
+     > yum install rlwrap
+
+  Ubuntu:
+     > apt-get install rlwrap
+
+        *         *         *         *         *         *         *
+
+                             5. INSTALLING XPP
+
+The Xpp editor is a nice and simple GUI for interactive theorem proving.  It
+maintains an upper window for editing the proof script, lines of which can be
+selected and executed in the session, with a lower window giving the session
+feedback.  It comes bundled with ProofPower (another HOL theorem prover), but
+there is no need to install the whole of ProofPower.  Version 2.8.1 or later is
+required for a good GUI.
+
+You may wish to install the whole of ProofPower, rather than just Xpp, in which
+case an installation of an SML toplevel (such as Poly/ML) is also required.  See
+the ProofPower README file for instructions.
+
+Source installation is the only option for installing ProofPower.  Note that
+installation can be troublesome, but that it is not essential in order to use
+HOL Zero.
+
+SOURCE INSTALLATION
+
+1. First ensure that the following are already installed:
+
+      GCC (see Appendix II)
+      Motif (see Appendix VI)
+
+  Various ancestor packages are also required, depending on you operating
+  system (see Appendix II for details on automated package installation):
+
+    Fedora:
+      libXt-devel  libXp-devel  libXmu-devel  texlive-latex
+      xorg-x11-fonts-misc
+
+    Mandriva:
+      libxt6-devel  libxp-devel  libxmu6-devel  texlive-latex
+      x11-font-misc-misc
+
+    Ubuntu:
+      groff  libxt-dev  libxp-dev  libxmu-dev  texlive-latex-base
+      texlive-generic-recommended
+
+2. Download the ProofPower source tarball from the Lemma One website:
+
+        http://www.lemma-one.com
+
+  Unpack the tarball file, change ownership to your current user (e.g. root),
+  and change directory to the unpacked ProofPower directory:
+
+     > tar -xzf OpenProofPower-<version>.tgz
+     > chown -R <user> OpenProofPower-<version>
+     > cd OpenProofPower-<version>
+
+3. For a default installation of just Xpp that automatically chooses a base
+  directory (typically owned by root user) for the various directories created
+  during ProofPower's installation (including its 'bin' directory), enter the
+  following configuration command:
+
+     > PPTARGETS="xpp" ./configure
+
+  Alternatively, to specify a particular base directory (e.g. a subdirectory of
+  your user home directory) for these directories, use the "PPHOME" environment
+  variable (and ensure that the 'bin' directory is in your user exeuction path
+  - see Appendix III):
+
+     > PPTARGETS="xpp" PPHOME=<base-directory> ./configure
+
+4. Enter the following command:
+
+     > ./install
+
+  Note that this command needs to be performed by a user who has write
+  permission for the 'bin' directory chosen in step 3 (see Appendix IV).
+
+5. Edit the 'XppKeyboard' file in the 'app-defaults' directory, and change the
+  following key mapping line (for use with OCaml):
+
+        Ctrl <Key>; : execute(";;\n")\n\
+
+        *         *         *         *         *         *         *
+
+                         APPENDIX I: BASIC BACKGROUND
+
+The instructions given in this document are for Unix-like operating systems.
+This appendix explains some very basic concepts, and is intended for complete
+beginners.  Subsequent appendices give more advanced background.
+
+TERMINAL WINDOWS
+
+The basic form of input in Unix-like operating systems is the Unix terminal
+window (also known as the "Unix command line"), where users enter ASCII text
+commands at a prompt (denoted by ">" in this document), and the system responds
+by printing any resulting output followed by another prompt for the next user
+command.  Input is case sensitive, i.e. commands and file locations must be
+written in exactly the right combination of uppercase or lowercase letters, or
+will otherwise fail.
+
+SHELLS
+
+There are numerous variants of Unix command line, called shells, which use
+slightly different command line syntax.  Bash is supported by all Unix-like
+operating systems, and is the default shell used in Mac OS X, Linux and Cygwin.
+The instructions in this document are written assuming Bash is being used.
+
+Enter the following in a terminal window to determine which shell you are using:
+
+     > echo $0
+
+If this does not return 'bash', then you can change the shell you are using in a
+given terminal window to Bash by entering the following:
+
+     > bash
+
+USERS
+
+Unix-like operating systems support multiple users.  Every running process
+(including any given terminal window) and every file on disk has a given user as
+its owner.  The "root" user has special privileges, and is used for system
+administration.
+
+To find out the owner of a given terminal window, enter the following:
+
+     > whoami
+
+To change to a different user in a given terminal window, enter the following,
+which will require you to enter the password of the user (if one exists):
+
+     > su <user-name>
+
+To keep things well organised, it's generally best to carry out program
+installation as root user, and to install programs in areas of the file system
+owned by root.  If you do not know your root password, it may still be possible
+to carry out tasks as root if your user is on the "sudoer" list.  If so, any
+commands prefixed by "sudo " will execute as though carried out by root, but
+will only require your user password instead of root's:
+
+     > sudo <command>
+
+If you don't know the root password and are not on the sudoer list, you will
+need to carry out all installation in your user directory.  You will generally
+need to use source installation (see Appendix II) for this.
+
+        *         *         *         *         *         *         *
+
+                      APPENDIX II: INSTALLING SOFTWARE
+
+There are two main ways of installing software on Unix-like operating systems:
+using packages/images and using source.
+
+PACKAGE/IMAGE INSTALLATION
+
+The simplest way to install software is by using package or image installation,
+which can be as quick as entering a single command.  The different Unix-like
+operating systems each have their own way of doing this.
+
+For Mac OS X, the classic way to install a program is by downloading an Apple
+Disk Image file (with a .dmg file extension), if one exists.  The file to
+download depends on whether you have a PowerPC-based or an Intel-based Mac, and
+may also depend on your version of Mac OS X.  Once downloaded, double-clicking
+on the image file will install the software automatically.  Other ways to
+install programs are by using the Fink, Homebrew or Macports package managers.
+
+Most Linux operating systems have a package manager for automatically
+downloading and installing the latest version of a program and its supporting
+programs.  Alternatively, a program and its supporting programs can each be
+manually downloaded and installed one-by-one by using the operating system's
+package installation command.  Packages for Fedora, Mandriva and SUSE are in the
+RPM format (with a .rpm file extension), whereas packages for Ubuntu and Debian
+are in the DEB format (with a .deb file extension).
+
+For Cygwin, there is a package manager called 'apt-cyg' for automatically
+downloading and installing the latest version of a program and its supporting
+programs.  Alternatively, packages can be manually downloaded and installed
+one-by-one using the "setup" command.
+
+SOURCE INSTALLATION
+
+The fall-back way of installing a program is by source installation.  This may
+involve several steps, but gives the user the greatest level of control,
+allowing them to set installation options such as where in the file system the
+program executables get located, and where to find supporting programs.  It
+involves retrieving a generic source tarball file (usually with a .tgz or
+.tar.gz file extension) from a website, unpacking it and following a (hopefully
+short) series of installation steps.  The same source tarball file should work
+for any Unix-like operating system.  Note that if a non-standard location is
+chosen for the program's executables, then your user execution path needs to be
+adjusted accordingly (see Appendix III).
+
+Source installation will typically require certain tools to be already
+installed, usually including Make and a C compiler.  The GNU variants of these
+tools is the standard choice on Unix-like operating systems, and will often be
+required in order for installation to go smoothly.  If you have these programs,
+the following will return their versions:
+
+      > make -v
+      > gcc -v
+
+These tools should be present by default on Linux and Cygwin.  If they are
+missing, then a package manager can be used to install them.  For Mac OS X,
+however, the default installation of the operating system does not include
+many of the tools often required, including Make and GCC.  The best way to
+obtain reliable versions of these tools is as part of the Xcode package (see
+below).
+
+THE XCODE PACKAGE FOR MAC OS X
+
+The Xcode package is a large suite of development tools for Mac OS X and iOS,
+and includes Make, GCC and numerous other tools included by default on other
+operating systems.  For all these tools, it is sufficient to install just the
+Xcode Command Line Developer Tools instead of the entire Xcode package.
+
+If you have the OS X Install CD/DVD, then Xcode or just the developer tools can
+be installed from the '/Xcode Tools' directory.  Alternatively, they can be
+installed by downloading Disk Image files from the Apple Developer website (you
+will first need to register, for free, as an Apple Developer):
+
+        https://developer.apple.com/downloads/
+ 
+Note that, if you want just the developer tools, this webpage only has versions
+for OS X versions 10.7 (Lion) and later.  Also, developer tools versions are
+tied to specific OS X versions, and earlier versions of the developer tools are
+not available for later versions of OS X.  However, the Disk Image files for
+entire Xcode packages are not tied to specific OS X versions.
+
+In OS X versions 10.9 (Mavericks) and later, it is not necessary to register or
+use the Apple Developer website to obtain just the developer tools.  It is
+sufficient to enter the following at a terminal window, which results in a popup
+window asking for confirmation before downloading and installing the latest
+version for your version of OS X:
+
+     > xcode-select --install
+
+Xcode can be uninstalled by simply deleting files as root.  If an entire Xcode
+package is installed, it is located in '/Applications', whereas the developer
+tools, if installed alone, are located at '/Library/Developer'.
+
+     > sudo rm -rf /Applications/Xcode.app               (entire Xcode package)
+     > sudo rm -rf /Library/Developer/CommandLineTools   (just developer tools)
+
+        *         *         *         *         *         *         *
+
+                      APPENDIX III: THE EXECUTION PATH
+
+Users in Unix-like operating systems have an "execution path" - i.e. a list of
+directories that are searched by the operating system to find the executable
+file (or "executable" for short) corresponding to a given command entered by the
+user.  The executable is identified by having the same name as the command, and
+having the execute flag set in its file permissions (see Appendix IV).  To find
+out your execution path, enter the following in a terminal window:
+
+     > echo $PATH
+
+This will return a ":"-separated list of directories that are searched in left-
+to-right order.  Note that the current working directory will not be searched
+unless "." occurs in your execution path (or if the given directory happens to
+occur explicitly in the path).
+
+The "which" command will return the first directory in your execution path that
+contains a given executable (or will return an error message if no such
+directory exists):
+
+     > which <executable-filename>
+
+If a given executable is not in your execution path, then, to execute its
+associated command, you must either supply a path to the executable (which is
+rather cumbersome) or add the full path of its directory to the execution path.
+This is also the case if an executable name occurs in more than one directory in
+your execution path, and is not the first in the left-to-right search of
+directories.  For files in the current working directory, it is sufficient to
+prepend the executable name with "./".
+
+To temporarily add a directory to the front of the execution path in the current
+terminal window, enter the following:
+
+     > export PATH=<directory>:$PATH
+
+The execution path can also be extended more permanently, automatically each
+time you log in, for any terminal windows that are opened.  To do this, add the
+above line to the file in your user home directory that is automatically
+executed when you log in.  This file will depend on the particular operating
+system and shell you are using, but will typically be one of the following:
+
+      .profile     .bash_profile     .bash_login
+
+Note that "ls -a" needs to be used to list files with names that start with ".".
+
+        *         *         *         *         *         *         *
+
+                       APPENDIX IV: FILE PERMISSIONS
+
+Files in Unix-like operating systems have 3 classes of permissions: "user",
+"group" and "others".  The user class is for the user assigned as the owner of
+the file.  The group class is for all other users in the same group as the owner
+of the file.  The others class is for all other users.
+
+For each class of permissions, a file has 3 flags: read, write and execute.
+There is also another flag that applies to all classes, to signify whether a
+file is a directory file.
+
+To view the permissions of a file, enter the following:
+
+     > ls -ld <filename>
+
+This results in output like this:
+
+     -rw-r--r-- 1 mark mark 22551 2012-12-06 23:15 INSTALL
+
+The first 10 characters capture the 10 file permission flags, starting with the
+directory flag, then the user flags, then the group flags and then the others
+flags (in this case: not a directory, user has read and write permission, and
+group and others have just read permission).  This is followed by other details
+about the file, including its ownership, size and modification timestamp.
+
+To be able to add files to a directory, you must have write permission for the
+directory file.  To give write permission to the owner user of a file, enter the
+following:
+
+     > chmod u+w <filename>
+
+For example:
+
+     > ls -ld bin
+     dr--r--r-- 1 mark mark 4096 2012-11-26 10:04 bin
+     > chmod u+w bin
+     > ls -ld bin
+     drw-r--r-- 1 mark mark 4096 2012-11-26 10:04 bin
+
+Note that the user changing a file's permissions needs to be either the owner of
+the file or root user.
+
+        *         *         *         *         *         *         *
+
+                       Appendix V: THE PATCH UTILITY
+
+Patch is a utility for updating text and source code files according to
+instructions in a directing file, called a "patch file".  Patch files are
+sometimes issued for source distributions of programs, to correct small problems
+in the source code files of a given version of a program instead of issuing a
+whole new version.
+
+INSTALLING PATCH
+
+You may have Patch installed already.  Check whether you do:
+
+     > which patch
+
+It this returns a location, then there is nothing to do.  Otherwise it needs to
+be installed.
+
+Automatic package installation can be used to install Patch on all the major
+Linux distributions:
+
+  Fedora:
+     > yum install patch
+
+  (SUSE?):
+     > zypper install patch
+
+  (Mandriva?):
+     > urpmi patch
+
+  Ubuntu/(Debian?):
+     > apt-get install patch
+
+USING PATCH
+
+Patches are performed relative to a given directory, by default the current
+directory.  For source distribution patches, this directory will by convention
+need to be the (unpacked) distribution directory.  So first ensure that your
+current directory is the distribution directory:
+
+     > cd <program-install-directory>
+
+To apply Patch to a given patch file, use the 'patch' command.  Sometimes there
+is more than one patch file to be applied, in which case repeat this operation
+for each patch file:
+
+     > patch -p 0 < <patch-file-1>
+     > patch -p 0 < <patch-file-2>
+     > ...
+
+        *         *         *         *         *         *         *
+
+                            Appendix VI: MOTIF
+
+Motif is a toolkit for building GUIs.  It is required in the source installation
+of Xpp (see Section 5).  We recommend OpenMotif version 2.3.1 or later.  We do
+not provide installation instructions here, but instead point you to the
+Motifzone website:
+
+        http://www.motifzone.net/filebrowser/openmotif

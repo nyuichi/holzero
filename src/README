@@ -1,0 +1,32 @@
+================================================================================
+==                      HOL ZERO SOURCE CODE DIRECTORY                        ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+This is the HOL Zero source code directory.
+
+To understand the implementation, start by examining the top-level build file,
+'holzero.ml'.  Refer to the glossary, in the HOL Zero documentation directory,
+for terminology used in the source code comments.
+
+Note that stepping through 'holzero.ml' needs to be done using HOL Zero's
+special version of the OCaml toplevel, called 'hzocaml' and found in the HOL
+Zero executables directory, rather than the standard OCaml toplevel 'ocaml'.
+For example, if you are using the Xpp GUI then execute the following from a
+terminal window from this direcotry:
+
+    > xpp -f holzero.ml -c hzocaml
+
+        *         *         *         *         *         *         *
+
+                             DIRECTORY CONTENTS
+
+This directory consists of the following files:
+
+  FILES          A list of .ml source code files and their descriptions.
+  README         This file.
+
+  <name>.ml      Base system source code (module bodies or open code).
+  <name>.mli     Base system source code (module interfaces).

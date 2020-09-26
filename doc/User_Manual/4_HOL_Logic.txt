@@ -1,0 +1,961 @@
+================================================================================
+== CHAPTER 4: HOL LOGIC (HOL Zero User Manual)                                ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2015                            ==
+================================================================================
+
+
+The HOL logic is the means for performing deduction on HOL language.  This
+chapter describes HOL Zero's variant of the logic, and how to use it to build
+theory and prove theorems.
+
+
+4.1 THEOREMS
+
+Theorems are statements that have been established to hold in the logic, either
+by proof (see Section 4.2) or by assertion (see Section 4.4).  They have ML
+abstract datatype 'thm'.
+
+A theorem takes the form of a sequent, i.e. a set of assumptions and a
+conclusion, all of which are HOL boolean terms.  The meaning of such a statement
+is that it is provable that the conclusion holds given that the assumptions all
+hold.
+
+Note that theorems never have different-but-alpha-equivalent assumptions.
+
+4.1.1 THEOREM CONCRETE SYNTAX
+
+Theorems are written with a turnstile ("|-") separating any assumptions from the
+conclusion, with "," separating assumptions (as in  x = 5, y > 3 |- x * y > 15).
+Note that, due to the use of an LCF-style architecture in HOL Zero (see Section
+4.1.3), this form of writing theorems can only be used for displaying theorems,
+and not for inputting theorems.
+
+Another consequence of the LCF-style architecture is that the ML 'thm' datatype
+label, displayed by the ML toplevel as part of displaying a theorem in a HOL
+Zero session, becomes a mark of authenticity that a theorem has indeed been
+established to hold in the logic (either by proof or assertion).  For example:
+
+    # excluded_middle_thm;;
+    - : thm = |- !p. p \/ ~ p
+
+Display modes (see Section 3.9) affect the display of theorems in the same way
+as they affect the display of term quotations.
+
+4.1.2 THEOREM UTILITY FUNCTIONS
+
+The 'dest_thm' utility breaks down a given theorem into its assumptions and its
+conclusion.  The 'concl' utility returns just the theorem's conclusion, and
+'asms' returns just its assumptions.  Note that the assumptions are returned as
+a list, even though the order of list items is irrelevant and there cannot be
+repeated items.
+
+    # dest_thm excluded_middle_thm;;
+    - : term list * term = ([], `!p. p \/ ~ p`)
+
+    # asms excluded_middle_thm;;
+    - : term list = []
+
+    # concl excluded_middle_thm;;
+    - : term = `!p. p \/ ~ p`
+
+The 'thm_free_vars' utility returns all the free variables of the assumptions
+and conclusion of a given theorem.
+
+    # let th1 = spec_rule `x + y = 1` excluded_middle_thm;;
+    val th1 : thm = |- x + y = 1 \/ ~ (x + y = 1)
+    # thm_free_vars th1;;
+    - : term list = [`x:nat`; `y:nat`]
+
+The 'thm_alpha_eq' utility returns whether two given theorems are alpha-
+equivalent.  Theorem alpha-equivalence is defined in terms of term alpha-
+equivalence (see Section 3.3.4).  For two theorems to be alpha-equivalent, their
+conclusions must be alpha-equivalent, and their assumption sets must have equal
+size and for each element in one set there must be an alpha-equivalent element
+in the other.
+
+    # thm_alpha_eq (assume_rule `!(x:'a).x=x`) (assume_rule `!(y:'a).y=y`);;
+    - : bool = true
+
+4.1.3 THEOREM CONSTRUCTION AND LCF-STYLE ARCHITECTURE
+
+Theorems in HOL Zero can be constructed by using its inference rules (see
+Section 4.2) and/or assertion commands (see Section 4.4), or by ML source code
+extensions added by the user.
+
+HOL Zero, like other systems in the HOL family, is implemented according to an
+LCF-style architecture.  This means that, whatever mechanism is used to
+construct a theorem, it is always ultimately done in terms of the primitive
+inference rules (see Section 4.2.2) and/or the primitive assertion commands (see
+Section 4.4.7) of the logic.  This is achieved by making the ML datatype for the
+internal representation of theorems an abstract datatype, with the primitive
+inference rules and primitive assertion commands as its only primitive
+constructors.
+
+By virtue of its LCF-style architecture, any concerns about the logical
+soundness of HOL Zero are limited to concerns about the correctness of the
+design and implementation of the primitives.  This means that users can safely
+implement extensions to the system without any risk of compromising logical
+soundness.
+
+4.1.4 THEOREM STORAGE
+
+Two facilities exist for storing theorems under a name index.  The first is for
+storing theorem results for general usage, and requires its theorems to have no
+free variables and no assumptions (thus ensuring that they meet minimal
+standards for neatly capturing a general property).  Such theorems are saved
+using the 'save_thm' command.
+
+    # save_thm ("sub_def_thm2", conjunct2_rule subtract_def);;
+    [HZ] Storing theorem "sub_def_thm2".
+    - : thm = |- !m n. m - SUC n = PRE (m - n)
+
+Stored general theorems can be retrieved using the 'get_thm' command.  The
+'get_all_thms' command returns all stored general theorems.  The HOL Zero base
+system comes with over 130 general stored theorems (see Appendix B2).
+
+    # get_thm "excluded_middle_thm";;
+    - : thm = |- !p. p \/ ~ p
+
+    # get_all_thms ();;
+    - : (string * thm) list =
+    [("bool_cases_thm", |- !p. (p <=> true) \/ (p <=> false));
+     ("conj_absorb_disj_thm", |- !p q. p /\ (p \/ q) <=> p);
+     ...]
+
+The second theorem storage facility is for storing intermediate theorem results
+(lemmas) that are not necessarily in an ideal form for general usage.  This has
+no restrictions on the form of its theorems.  Lemmas are saved using the
+'save_lemma' command.  Like for general theorems, there is a command for
+returning a given stored lemma ('get_lemma') and a command for returning all
+stored lemmas ('get_all_lemmas').
+
+    # save_lemma ("temp_result_1", assume_rule `l < m /\ m < SUC n`);;
+    [HZ] Storing lemma "temp_result_1".
+     - : thm = l < m /\ m < SUC n |- l < m /\ m < SUC n
+
+
+4.2 FORMAL PROOF
+
+Formal proof is the process of using a formal logic's deductive system to
+establish that a statement holds in the logic.  The primary purpose of a theorem
+prover is to support this process.  In HOL Zero, proof is done by evaluating
+applications of ML functions called "inference rules", typically in a nested
+fashion, and typically referring to previously established theorems.
+
+  For example, the following ML expression is a proof of a basic result in
+  propositional logic:
+
+    # deduct_antisym_rule
+        (contr_rule `~ true` (assume_rule `false`))
+        (eq_mp_rule
+          (eqf_intro_rule (assume_rule `~ true`))
+          truth_thm );;
+    - : thm = |- ~ true <=> false
+
+  It uses 5 inference rules ('deduct_antisym_rule', 'contr_rule',
+  'assume_rule', 'eq_mp_rule' and 'eqf_intro_rule') and one previously
+  established theorem ('truth_thm').
+
+Good examples of real proofs can be found in the parts of the HOL Zero source
+code where it establishes its library of stored theorems.  This is spread over
+various source code files, including 'boolalg.ml', 'boolclass.ml', 'pair.ml',
+'nat.ml', 'natarith.ml' and 'natrel.ml'.  All proofs in the source code are
+formatted with indentation to reflect their structure, and annotated with
+comments to show intermediate theorem results.
+
+4.2.1 INFERENCE RULES
+
+An inference rule is an ML function that takes theorem and/or term arguments
+and returns a theorem result, calculated by performing deduction on the
+arguments, according to the rules of the HOL logic.  Inference rules are
+ultimately based on the syntactic form of their arguments, and basic inference
+rules, that deal with only one specific syntactic form, can be neatly summarised
+using a formal Gentzen-style rule description.
+
+  For example, the 'eq_imp_rule2' rule takes a single theorem argument, where
+  the argument must have a logical equivalence as its conclusion.  The result
+  is a theorem stating that the equivalence's RHS implies its LHS.
+
+  This is summarised in the following Gentzen-style description:
+
+      A |- p <=> q
+      ------------
+      A |- q ==> p
+
+  Here is an example of its usage:
+
+    # eq_imp_rule2 not_true_thm;;
+    - : thm = |- false ==> ~ true
+
+A conversion is a special form of inference rule that takes a term argument and
+returns a theorem with an equality for its conclusion, where the LHS of the
+equality is the supplied term argument.
+
+  For example, 'eval_add_conv' is a conversion that takes a term in the form
+  of the "+" operator applied to two natural number numerals, and returns a
+  theorem giving its numeral value.
+
+  It is summarised by the following Gentzen-style description:
+
+         `m + n`
+      ------------
+      |- m + n = z
+
+  Here is an example of its usage:
+
+    # eval_add_conv `28 + 12`;;
+    - : thm = |- 28 + 12 = 40
+
+The HOL Zero base system comes with around 90 inference rules.  See Appendix A5
+for an informal English description and a formal Gentzen-style description of
+each rule.
+
+4.2.2 PRIMITIVE INFERENCE RULES
+
+Almost all inference rules in HOL Zero are implemented (or "derived") in terms
+of other, more basic inference rules.  At the bottom of this hierarchy of
+dependency are 10 very basic inference rules that are not implemented in terms
+of other rules, and that ultimately form the basis for all other rules.  These
+are called the "primitive inference rules" of the logic.  One call of a derived
+inference rule will typically result in several calls to primitive inference
+rules.
+
+Gentzen-style descriptions of the 10 primitive inference rules are listed here:
+
+       `t`
+    --------  eq_refl_conv
+    |- t = t
+
+         `(\x. t) s`
+    ---------------------  beta_conv
+    |- (\x. t) s = t[s/x]
+
+    A1 |- f1 = f2    A2 |- t1 = t2
+    ------------------------------  mk_comb_rule
+       A1 u A2 |- f1 t1 = f2 t2
+
+       `x`   A |- t1 = t2                    [ "x" not free in `A` ]
+    ------------------------  mk_abs_rule
+    A |- (\x. t1) = (\x. t2)
+
+       `p`
+    --------  assume_rule
+    {p} |- p
+
+      `p`   A |- q
+    ----------------  disch_rule
+    A\{p} |- p ==> q
+
+    A1 |- p ==> q    A2 |- p
+    ------------------------  mp_rule
+          A1 u A2 |- q
+
+    A1 |- p <=> q    A2 |- p
+    ------------------------  eq_mp_rule
+          A1 u A2 |- q
+
+         [(tv1,ty1);(tv2,ty2);..]    A |- p
+    ----------------------------------------------  inst_type_rule
+    A[ty1/tv1,ty2/tv2,..] |- p[ty1/tv1,ty2/tv2,..]
+
+        [(x1,t1);(x2,t2);..]    A |- p
+    --------------------------------------  inst_rule
+    A[t1/x1,t2/x2,..] |- p[t1/x1,t2/x2,..]
+
+4.2.3 COUNTING PRIMITIVE INFERENCES
+
+Two counters are maintained for the number of primitive inferences carried out
+by the system (regardless of whether they come from direct calls of primitive
+inference rules or indirect calls from derived inference rules).  The first is
+an absolute counter that counts every primitive step made, including those made
+during the build of HOL Zero.  This is queried by the 'step_total' command.
+
+    # step_total ();;
+    - : int = 73299
+
+The second counter is a relative counter that counts primitive steps made from
+the last time the counter was reset.  It is reset to zero at the end of the base
+system build.  It is queried by the 'step_counter' command and reset by the
+'reset_step_counter' command.
+
+    # reset_step_counter ();;
+    - : unit = ()
+    # eval_add_conv `1+1`;;
+    - : thm = |- 1 + 1 = 2
+    # step_counter ();;
+    - : int = 104
+
+
+4.3 DECLARATION
+
+The HOL language can be extended by introducing new constants and type
+constants.  This process is called "declaration".  At the same time as extending
+the language, declaration also introduces the new constants and type constants
+to the theory (see Section 4.5), and is one of two mechanisms for building
+theory (the other being assertion, see Section 4.4).  Declared constants and
+type constants are generically referred to as "theory entities".
+
+Performing a declaration has immediate effect on the HOL Zero session, affecting
+all subsequent parsing and pretty printing of quotations.
+
+Note that, in HOL Zero, it is not possible to undo a declaration without
+restarting HOL Zero.  This restriction helps keep the core system simple.
+
+4.3.1 TYPE CONSTANT DECLARATION
+
+Type constants are introduced by using the 'new_tyconst' declaration command.
+This takes a pair of arguments: one for the name of the type constant, and one
+for its arity.  As well as adding the type constant to the language, the command
+returns a generic instance of the new type.  For example:
+
+    # new_tyconst ("X", 2);;
+    - : hol_type = `:('1,'2)X`
+
+There is also a primitive version of the type constant declaration command,
+called 'prim_new_tyconst', which takes an OCaml 'big_int' instead of 'int', and
+returns unit instead of a type, and does not cater for benign redeclaration.
+
+Once a type constant has been declared, its arity can be queried by using the
+'get_tyconst_arity' command.  A list of all the type constant names, together
+with their arities, is returned by the 'get_all_tyconsts' command.  For example:
+
+    # get_tyconst_arity "X";;
+    - : int = 2
+
+A list of all the type constant names, together with their arities, is returned
+by the 'get_all_tyconsts' command.
+
+    # get_all_tyconsts ();;
+    - : (string * int) list =
+    [("#", 2); ("->", 2); ("bool", 0); ("ind", 0); ("nat", 0); ...]
+
+4.3.2 CONSTANT DECLARATION
+
+Constants are introduced by using the 'new_const' declaration command.  This
+takes a pair of arguments: one for the name of the constant, and one for its
+generic type.  As well as adding the constant to the language, the command
+returns the new constant as a term value.  For example:
+
+    # new_const ("c", `:nat->bool`);;
+    - : term = `c`
+
+There is also a primitive version of the constant declaration command, called
+'prim_new_const', which returns unit instead of a term, and does not cater for
+benign redeclaration (see Section 4.4.9).
+
+Once a constant has been declared, its generic type can be queried by using the
+'get_const_gtype' command.  For example:
+
+    # get_const_gtype "c";;
+    - : hol_type = `:nat->bool`
+
+A list of all the declared constant names and their generic types is returned by
+the 'get_all_consts' command.  For example:
+
+    # get_all_consts ();;
+    - : (string * hol_type) list =
+    [("!", `:('a->bool)->bool`); ("*", `:nat->nat->nat`);
+     ("+", `:nat->nat->nat`);
+     ...]
+
+Constants are not allowed to be overloaded with other constants in HOL Zero, and
+if a declaration is entered for an existing constant name but with a different
+type, then the declaration will fail.  Note that constants may be overloaded
+with other entities, including variables (see Section 3.6.2).
+
+
+4.4 ASSERTION
+
+Assertion is the process of building theory by asserting, without justification,
+that a statement holds in the logic.  This results in an assertion theorem being
+created, which becomes part of the theory (see Section 4.5).  Assertion is used
+when introducing new theory entities to the logic, to give them some meaning to
+act as the basis for deduction.  This section provides an overview of each form
+of assertion supported by HOL Zero.  See Appendix A4 for further information
+about each assertion command.
+
+Note that, in HOL Zero, it is not possible to undo an assertion without
+restarting HOL Zero.  This restriction helps keep the inference kernel simple.
+
+4.4.1 AXIOMS
+
+Assertion by axiom is the most basic form of assertion.  This is done by using
+the 'new_axiom' assertion command, which takes a string and a boolean term
+argument, and creates a theorem (called an "axiom") asserting that the term
+holds.  This theorem gets stored in a database of axioms using the supplied
+string as its index.  Note that, in HOL Zero, the supplied term is not allowed
+to contain free variables.
+
+    # new_axiom ("nat_rel_cases", `!x y. x < y \/ x = y \/ x > y`);;
+    [HZ] Adding axiom "nat_rel_cases".
+    - : thm = |- !x y. x < y \/ x = y \/ x > y
+
+The primitive 'prim_new_axiom' is the same as 'new_axiom' except that it does
+not cater for benign redefinition (see Section 4.4.9).
+
+Unlike other assertion commands in HOL Zero, axiom assertion is potentially
+dangerous because it can make the logic inconsistent if not done carefully (see
+Section 4.4.8).
+
+The 'get_axiom' command returns the axiom stored under a given name index, and
+the 'get_all_axioms' command returns all axioms of the logic.  The HOL Zero base
+system has just 4 axioms (see Appendix B1).
+
+    # get_all_axioms ();;
+    - : (string * thm) list =
+    [("eta_ax", |- !(f:'a->'b). (\x. f x) = f);
+     ("imp_antisym_ax",
+           |- !p1 p2. (p1 ==> p2) ==> (p2 ==> p1) ==> (p1 <=> p2));
+     ...]
+
+The 'get_all_axioms' command is useful for checking that no new axioms have been
+added to prove a theorem, which could be considered as "cheating" and/or a risk
+to consistency.
+
+4.4.2 CONSTANT DEFINITION
+
+Constant definition is the most basic mechanism for introducing constants by
+conservative extension (see Section 4.4.8).  This is done by declaring the new
+constant and asserting that it is equal to some expression involving no free
+variables.
+
+The 'new_const_definition' assertion command takes a single argument, which is
+an equality term with the new constant on the LHS (as a variable, because the
+constant will not have been declared at that stage) and the new constant's value
+on the RHS.  It declares the new constant and creates a theorem asserting the
+supplied equality (but with the variable replaced with the new constant).
+
+    # new_const_definition `doubleA = (\x. x+x)`;;
+    [HZ] Declaring constant "doubleA".
+    [HZ] Adding definition for constant "doubleA".
+    - : thm = |- doubleA = (\x. x + x)
+
+The primitive 'prim_new_const_definition' assertion command is slightly simpler
+in concept, but perhaps a little less easy to use.  Instead of taking an
+equality term argument it takes the new constant's name and the expression that
+it is equal to as separate argugment.  The resulting theorem is the same as for
+'new_const_definition'.  Note that 'prim_new_const_definition' does not accept
+benign redefinition (see Section 4.4.9).
+
+    # prim_new_const_definition ("doubleB", `\x. 2*x`);;
+    [HZ] Declaring constant "doubleB".
+    [HZ] Adding definition for constant "doubleB".
+    - : thm = |- doubleB = (\x. 2 * x)
+
+Constant definitions are stored in their own database, under the name of the new
+constant.  Definitions can be retrieved using the 'get_const_definition' and
+'get_all_const_definitions' commands.
+
+    # get_const_definition "doubleB";;
+    - : thm = |- doubleB = (\x. 2 * x)
+
+4.4.3 FUNCTION DEFINITION
+
+Special support is provided for defining function constants in an intuitive
+style.  Instead of supplying the definition in terms of an equality where the
+LHS is the new constant, the user can supply a definition term that states the
+value of the function constant in terms of given generic arguments of the
+function.  Two forms of function definition are supported: non-recursive and
+recursive.
+
+In non-recursive function definition, a single equality term is supplied, where
+the LHS is the new function applied to a series of variable (or compound pair of
+variables) arguments, and the RHS is the result of this application in terms of
+the LHS variable arguments (and cannot involve any other free variables).  This
+equality can optionally be universally quantified over LHS variables.  Note that
+the new function is not allowed to occur in the RHS.  The command for this is
+called 'new_fun_definition'.  The resulting definition theorem has the input
+term as its conclusion, but ensures that all variables are quantified.
+
+    # new_fun_definition `!x. doubleC x = x + x`;;
+    [HZ] Declaring constant "doubleC".
+    [HZ] Adding definition for constant "doubleC".
+    - : thm = |- !x. doubleC x = x + x
+
+Non-recursive function definitions are stored in their own database, under the
+name of the new function.  Definitions can be retrieved using the
+'get_fun_definition' and 'get_all_fun_definitions' commands.
+
+    # get_fun_definition "doubleC";;
+    - : thm = |- !x. doubleC x = x + x
+
+Recursive function definition is more complicated.  It is used to define a
+function recursively over one of its arguments, using the fact that the type of
+this argument is partitioned by the ranges of a collection of constructors.
+Despite the complexity of its generic functionality, in practice it is simple to
+use once a recursion theorem (see below) has been proved for the argument type.
+
+The definition term supplied in recursive function definition is a conjunction
+of equalities, each of which is optionally universally quantified.  The LHS of
+each equality is the new function applied to a given number of arguments.  All
+of these arguments must be variables except for precisely one, which must be
+one of the argument type's partitioning constructors applied to a (potentially
+empty) series of variables.  A similar constructor argument must occur in the
+same argument position for each equality's LHS, with a different constructor
+used for each equality.
+
+The RHS of each equality is expressed in terms of the variables in the LHS.
+However, the RHS may also include the function being defined.  For this to be
+valid, the function must be applied to the same number of arguments as in the
+LHS, and the argument that, in the LHS, features the constructor must, in the
+RHS, instead be a variable from the LHS (there are no such restrictions on the
+other arguments).
+
+  For example, the "+" function is defined recursively in HOL Zero using the
+  following conjunction of universally quantified equalities:
+
+    `(!n. 0 + n = n) /\
+     (!m n. (SUC m) + n = SUC (m + n))`
+
+  The LHS of each equality applies "+" to two arguments.  The first argument
+  of each "+" is chosen as the one to feature the constructors (and so the
+  second argument of each LHS "+" must be a variable).  The constructor
+  functions are "0" and "SUC" (where "0" takes no arguments), whose ranges
+  partition `:nat`.  Note that "+" occurs in the RHS of the second equality,
+  where its first argument (`m`) is necessarily a LHS variable.
+
+In addition to a defining conjunction term, a theorem argument must also be
+supplied.  This theorem is called a "recursion theorem" for a given type, and
+must show how any function over the type ....
+given type, partitioned by a collection of constructors, can be recursively
+defined in terms of those constructors.
+
+  For example, 'nat_recursion_thm' is the commonly used recursion theorem for
+  natural numbers:
+
+    |- !(e1:'a) e2.
+         ?F.
+           (F 0 = e1) /\
+           (!n. F (SUC n) = e2 (F n) n)
+
+The command for recursive function definition is 'new_recursive_fun_definition',
+which takes the recursion theorem as its first argument and the defining
+conjunction term as its second argument.
+
+  For example, the following defines "+" using the recursive definition
+  command:
+
+    # new_recursive_fun_definition nat_recursion_thm
+         `(!n. 0 + n = n) /\
+          (!m n. (SUC m) + n = SUC (m + n))`;;
+    [HZ] Declaring constant "+".
+    [HZ] Adding definition for constant "+".
+    - : thm = |- (!n. 0 + n = n) /\ (!m n. SUC m + n = SUC (m + n))
+
+4.4.4 CONSTANT SPECIFICATION
+
+Constant specification is a mechanism for introducing a group of constants
+at once.  Rather than supplying terms that give explicit values for each of the
+new constants, it involves supplying an existential theorem.  This existential
+theorem, which must have no assumptions, establishes that values for the new
+constants exist that satisfy the existential body predicate.  The new constants
+are declared, and it is asserted that the body of the existential is satisfied
+for the new constants.
+
+The 'new_specification' command performs constant specification.  It takes a
+list of name of new constants and an existential theorem.  It declares the new
+constants and asserts the body of the existential theorem, with the existential
+binding variables replaced with the new constants.
+
+  For example, given the following existential theorem:
+
+    # double_treble_exists_lemma;;
+    - : thm = |- ?db tr. !x. db x + tr x = 5 * x /\ db x <= tr x
+
+  then this can be used as the basis for introducing two new constants by
+  constant specification:
+
+    # new_const_specification
+           (["doubleD";"treble"],double_treble_exists_lemma);;
+    [HZ] Declaring constant "doubleD".
+    [HZ] Declaring constant "treble".
+    [HZ] Adding specification for constants "doubleD", "treble".
+    - : thm = |- !x. doubleD x + treble x = 5 * x /\ doubleD x <= treble x
+
+Constant specifications are stored in their own database, and can be retrieved
+by using the 'get_specification' command, supplying it with the name of one of
+the constants defined in the required specification.
+
+    # get_const_specification "treble";;
+    - : thm = |- !x. doubleD x + treble x = 5 * x /\ doubleD x <= treble x
+
+The 'prim_new_const_specification' is the same as 'new_const_specification'
+except that it does not cater for benign redefinition (see Section 4.4.9).
+
+4.4.5 TYPE CONSTANT DEFINITION
+
+Type constant definition is the mechanism for introducing type constants by
+conservative extension (see Section 4.4.8).  This is done by declaring a new
+type constant, and asserting that a general instance of it (i.e. with a unique
+type variable for each of its type parameters) is in bijection with a prescribed
+non-empty subset of an existing type (called the "representation type").  This
+determines the cardinality of instances of the new type constant in terms of the
+cardinalities of its type parameters and the existing type.
+
+Note that, by using beta-reduction in reverse, the body of an existential
+theorem with no free variables can always be re-expressed to be of the form
+`P x`, where `x` is the existential variable and `P` is some expression with no
+free variables.  Thus if `x` is of the representation type, then the existential
+theorem establishes that the set of elements that satisfy `P` (a subset of the
+representation type) is non-empty.  If defining a new type constant, `P` could
+be used to prescribe the non-empty subset of the representation type with which
+to assert is in bijection with a generic instance of the new type constant (by
+simply prescribing the elements of the representation type that satisfy it).
+Such a predicate `P` is called the "characteristic function" of the
+representation type.
+
+The 'new_tyconst_definition' assertion command is based on this principle.  It
+takes a pair of arguments: one for the name of the new type constant and one for
+the existential theorem.  The existential theorem must have no assumptions and
+no free variables.  The command calculates the characteristic function and
+declares a new type constant with arity equal to the number of type variables
+that occur in the characteristic function.  It also creates a theorem asserting
+that there exists a function (called a "representation function") mapping from a
+general instance of the new type constant to the representation type, and that
+this representation function is bijective with the subset of the representation
+type that satisfying the characteristic function.  The special constant
+"TYPE_DEFINITION" is used to state this assertion.
+
+  For example, consider the following existential theorem:
+
+    # pair_rep_exists_lemma;;
+    - : thm = |- ?(x:'a->'b->bool). IsPairRep x
+
+  This can be used as the basis for defining a new type constant "pair" with
+  arity 2 (where `:'a->'b->bool` is the representation type, and 'IsPairRep'
+  is the characteristic function):
+
+    # new_tyconst_definition ("pair", pair_rep_exists_lemma);;
+    [HZ] Declaring type constant "pair".
+    [HZ] Adding definition for type constant "pair".
+    - : thm = |- ?(f:('a,'b)pair->'a->'b->bool). TYPE_DEFINITION IsPairRep f
+
+The primitive 'prim_new_tyconst_definition' assertion command is slightly
+simpler in concept than 'new_tyconst_definition', and a little more restrictive
+in how it can be used.  It does not calculate the characteristic function, and
+instead requires the body of its existential theorem argument to be an explicit
+application of the characteristic function to the existential variable (note
+that the above example fits this restriction).  Also it does not cater for
+benign redefinition (see Section 4.4.9).
+
+4.4.6 TYPE BIJECTION DEFINITION
+
+....
+
+4.4.7 PRIMITIVE ASSERTION COMMANDS
+
+Like for inference rules, most of the assertion commands in HOL Zero are
+implemented in terms of other, more basic assertion commands.  Just four of the
+assertion commands are primitive: 'prim_new_axiom', 'prim_new_const_definition',
+'prim_new_const_specification' and 'prim_new_tyconst_definition'.
+
+Here are their Gentzen-style descriptions:
+
+  prim_new_axiom:
+
+    `p`                                  [ no free vars in `p` ]
+    ----
+    |- p
+
+  prim_new_const_definition:
+
+    "c"   `t`                            [ no free vars in `t`;
+    ---------                              tyvars in `t` must be in `t`'s type ]
+    |- c = t
+
+  prim_new_const_specification:
+
+    "c1" "c2" ..    |- ?x1 x2 .. . p     [ only "x<i>" free in `p`;
+    --------------------------------       tyvars in `p` must occur in "x<i>";
+           |- p[c1/x1;c2/x2;..]            "x<i>" must all have same tyvars ]
+
+  prim_new_tyconst_definition:
+
+         "ty"     |- ?(x:ty0). P x       [ no free vars in `P` ]
+    ------------------------------------
+    |- ?(f:ty->ty0). TYPE_DEFINITION P f
+
+Note that the primitive assertion commands do not cater for benign redefinition
+(see Section 4.4.9).
+
+4.4.8 INCONSISTENCY AND CONSERVATIVE EXTENSION
+
+Inconsistency is the dangerous state of a logic that has become self-
+contradictory.  An inconsistent logic is completely useless because any
+statement can be proved in it, including `false`.
+
+  For example, entering the following series of three commands makes the logic
+  inconsistent:
+
+    # new_const ("x",`:nat`);;
+    [HZ] Declaring constant "x".
+    - : term = `x`
+    # new_axiom ("Axiom1", `x = 2 + 2`);;
+    [HZ] Adding axiom "Axiom1".
+    - : thm = |- x = 2 + 2
+    # new_axiom ("Axiom2", `x = 5`);;
+    [HZ] Adding axiom "Axiom2".
+    - : thm = |- x = 5
+
+  It is straightforward to prove `false` from this, thus establishing that the
+  theory has become inconsistent:
+
+    # eq_mp_rule
+        (eval_nat_eq_conv `5=4`)
+        (list_eq_trans_rule
+           [ eq_sym_rule (get_axiom "Axiom2");
+             get_axiom "Axiom1";
+             eval_add_conv `2+2` ]);;
+    - : thm = |- false
+
+Note that an inconsistency in the theory can be very subtle and much more
+difficult to spot than the above easy example.
+
+The risk of entering an inconsistent state can be completely avoided by using a
+safe principle of theory extension called "conservative extension".  With
+conservative extension, new theory entities and assertions are added to the
+theory at the same time and in a way that does not alter the provability of
+statements that do not involve the new theory entities.  This means that
+existing theory entities are not further constrained by the new assertions, and
+thus the theory cannot become inconsistent.  This can be achieved by limiting
+the forms of assertion that can be performed, for example by insisting that new
+constant is defined in terms of existing constants.
+
+In HOL Zero, conservative extension is achieved by the primitive commands for
+constant definition (see Section 4.4.2), constant specification (see Section
+4.4.4) and type constant definition (see Section 4.4.5).  The only primitive
+assertion command that does not necessarily achieve conservative extension is
+for axiom assertion (see Section 4.4.1).  Thus it is possible to determine that
+conservative extension has necessarily been achieved if the theory's list of
+axioms has not been added to.
+
+Note that axiom assertion commands exist to "bootstrap" the HOL theory (see
+Section 4.5.1) and to support using traditional definitions of mathematical
+theory, but their usage should be avoided if possible and carefully checked by
+proof auditing.
+
+4.4.9 BENIGN REDECLARATION AND REDEFINITION
+
+All theory entities can have at most one declaration and at most one definition
+in the theory, and any attempt to use a declaration/definition command to
+provide an alternative declaration/definition for an existing theory entity will
+be rejected and result in a HolFail exception.  This happens whether the same
+command is used as was used for the existing theory entity or not.
+
+  For example, the following is rejected because "true" is already defined:
+
+    # new_const_definition `true <=> ~ false`;;
+    Exception: [HZ] FAIL: new_const_definition - Constant name "true" already
+    used.
+
+However, it is obviously harmless for the same declaration/definition to be
+supplied twice for the same theory entity.  In HOL Zero, this situation is
+recognised as "benign redeclaration" and "benign redefinition" respectively, and
+is allowed by all derived declaration and assertion commands (including
+'new_axiom' when supplying the same axiom for the same axiom name).  Instead of
+an exception being raised, benign redeclaration/redefinition results in a
+warning being printed and no change to the theory.  This is useful because it
+enables proof scripts to be re-entered in the same HOL Zero session without
+causing ML exceptions to be raised.
+
+  For example, enter this to repeat the definition of "true":
+
+    # new_const_definition `true <=> (\(p:bool). p) = (\p. p)`;;
+    [HZ] WARNING: Benign redefinition of constant "true".
+    - : thm = |- true <=> (\(p:bool). p) = (\p. p)
+
+Benign redeclaration/redefinition is not catered for in the primitive
+declaration or assertion commands, in order to simplify their implementation
+(and thus the process of checking their correctness).  However, these primitive
+commands all have "wrapped" counterparts that do cater for benign redeclaration/
+redefinition.
+
+
+4.5 THEORY
+
+The theory captures the logical state of the HOL Zero system.  It consists of
+all the HOL declarations and assertions that have been made during the base
+system build and in the subsequent user session.  Declarations (see Section 4.3)
+introduce constants and type constants to the theory, which are generically
+referred to as "theory entities".  Assertions (see Section 4.4) may only refer
+to declared theory entities, and thus the implementations of assertion commands
+that introduce new theory entities (i.e. all assertion commands except
+'prim_new_axiom' and 'new_axiom') necessarily ultimately involve the use of
+declaration commands.
+
+Note that in HOL Zero there is simply one monolithic theory, and no theory
+hierarchy like in other HOL systems.
+
+This section covers the theory in the HOL Zero base system.  See Appendix B1 for
+a summary of this theory and Appendix B2 for a summary of the derived theorems.
+It can also be instructive to examine the source code files that implement this
+theory, and so the relevent files are pointed to in each subsection.
+
+4.5.1 CORE THEORY
+
+The primitive inference rules and primitive assertion commands do not on their
+own fully capture the deductive power of a logic.  The theorems that they
+produce refer to certain theory entities that are assumed to have been
+appropriately defined.  The self-contained collection of declarations and
+assertions that introduce these theory entities "bootstraps" the theory, giving
+the logic its full deductive power, and is called the "core theory".  This is
+implemented in source code file 'corethy.ml'.
+
+The core theory introduces 11 HOL theory entities of lambda calculus, predicate
+logic and type definition.  The following two are type constants:
+
+    "bool"    the boolean base type
+    "->"      the function type operator
+
+and the remaining nine are constants:
+
+    "true"    the truth constant
+    "==>"     the implication operator
+    "/\"      the conjunction operator (also known as "and")
+    "="       the equality operator
+    "@"       the selection binder (also known as "select" or "choice operator")
+    "!"       the universal quantifier (also known as "for all")
+    "?"       the existential quantifier (also known as "exists")
+    "ONE_ONE" the one-to-one predicate for functions
+    "TYPE_DEFINITION"
+              the type definition predicate
+
+The core theory starts by declaring (rather than defining) its two type
+constants and the constants "=", "==>" and "@".  The remaining six constants are
+then built up in a succession of definitions.  The following three axioms are
+then used to complete the core theory by suitably constraining the declared
+theory entities:
+
+    |- !(f:'a->'b). (\x. f x) = f                              eta_ax
+
+    |- !p1 p2. (p1 ==> p2) ==> ((p2 ==> p1) ==> (p1 <=> p2))   imp_antisym_ax
+
+    |- !(P:'a->bool) x. P x ==> P ($@ P)                       select_ax
+
+Note that 'select_ax' (known as the Axiom of Choice in mathematical logic) makes
+the HOL logic classical as opposed to intuitionistic.
+
+4.5.2 EXTRA LAMBDA CALCULUS AND PREDICATE LOGIC
+
+The core theory defines just enough to "bootstrap" the theory.  Beyond this, the
+theory is extended to include other classic constants of lambda calculus and
+predicate logic together with various derived theorems and inference rules.
+These are implemented in source code files 'equal.ml', 'cong.ml', 'bool.ml',
+'boolalg.ml' and 'boolclass.ml'.
+
+The following 7 constants are built up in a succession of constant definitions:
+
+   "false"   the falsity constant
+   "~"       the logical negation operator (also known as "not")
+   "\/"      the disjunction operator (also known as "or")
+   "?!"      unique existential quantifier (also known as "unique exists")
+   "ONTO"    the "onto" predicate for functions
+   "COND"    the conditional operator (also known as "if")
+   "LET"     the "let" operator
+
+The "COND" function is used to represent a conditional expression (see Section
+3.4.1) and the "LET" function is used to represent a let-expression (see Section
+3.4.2).
+
+There are 54 derived theorems and 81 derived inference rules provided for lambda
+calculus and predicate logic.  Note that some of these derived theorems and
+inference rules are specific to classical logic and cannot be derived in
+intuitionistic logic, and these are derived separately, in the ML module
+'BoolClass' (see 'boolclass.ml').
+
+4.5.3 PAIRS
+
+Ordered pairs are two-component values that correspond to cartesian coordinates
+in two-dimensional space.  They are implemented in source code file 'pair.ml'.
+
+Firstly, a product type operator is defined, for giving ordered pairs their own
+type.  Its representation type is the type of two-argument-to-boolean functions,
+and its characteristic function is the predicate that returns "true" iff there
+is precisely one value for each argument of a given two-argument-to-boolean
+function that returns "true".
+
+   "#"       the product type operator
+
+The pairing function, for creating a pair from two values, is then defined,
+followed by functions for selecting components of a pair.
+
+   "PAIR"    the pairing function
+   "FST"     the first-component function
+   "SND"     the second-component function
+
+The "PAIR" function is used to represent a pair expression (see Section 3.4.3).
+
+There are 5 derived theorems provided for pairs.
+
+4.5.4 NATURAL NUMBERS
+
+The natural numbers are defined by first defining a base type whose only purpose
+is to serve as the representation type used in the definition of natural
+numbers.  This enables a neat development of the theory, separating out a
+crucial assertion from the mass of definitions and derived results related to
+natural numbers.  After this base type is defined (in source file 'ind.ml'), the
+natural numbers themselves are defined, followed by the arithmetic operators,
+the numerals and conversions for evaluating arithmetic on numerals, as well as
+numerous derived theorems.  This is done in 'nat.ml', 'natnumrl.ml',
+'natarith.ml', 'natrel.ml' and 'nateval.ml'.
+
+The representation type for natural numbers (called "the type of individuals")
+needs to have infinite cardinality.  However, the theory defined up to this
+point is not powerful enough to make it possible to construct an infinite type
+(none of the existing types are infinite, and finite types cannot be used to
+construct infinite types).  So its infiniteness is instead expressed by
+declaring the new type and then adding an axiom asserting that it is infinite.
+Note that this is the only axiom that needs to be added beyond the core theory,
+and that it gives the HOL logic its full power.
+
+The axiom states infiniteness for individuals by stating that there is an
+injective total function from individuals to individuals that is not surjective:
+
+    |- ?(f:ind->ind). ONE_ONE f /\ ~ ONTO f                     infinity_ax
+
+This axiom is then used to define constants called "IND_ZERO" and "IND_SUC",
+where "IND_SUC" is one such injective, non-surjective function over individuals,
+and "IND_ZERO" is a value not in the range of "IND_SUC".
+
+   "IND_ZERO"  the individuals zero constant
+   "IND_SUC"   the individuals successor function
+
+There are 2 derived theorems provided for individuals.
+
+The natural numbers type is defined in terms of the individuals type, as the
+type having the cardinality of the smallest subset of the set of individuals
+generated by "IND_ZERO" and "IND_SUC".  The constants "ZERO" and "SUC" are
+defined as the natural-number equivalents of "IND_ZERO" and "IND_SUC" (using the
+abstraction function for the natural numbers).  A recursion theorem for the
+natural numbers based on "ZERO" and "SUC" is then proved, and this is used to
+define the remaining arithmetic operators in a succession of definitions.  In
+all, the following 15 constants are defined for natural numbers:
+
+   "ZERO"    the zero constant
+   "SUC"     the successor function
+   "PRE"     the predecessor function
+   "+"       the addition operator
+   "-"       the subtraction operator
+   "*"       the multiplication operator
+   "EXP"     the exponentiation operator
+   "EVEN"    the evenness predicate
+   "ODD"     the oddness predicate
+   "<"       the less-than relation
+   "<="      the less-than-or-equal relation
+   ">"       the greater-than relation
+   ">="      the greater-than-or-equal relation
+   "BIT0"    the zero-bit operator
+   "BIT1"    the one-bit operator
+   "NUMERAL" the numeral tag function
+
+Note that "PRE" is defined to return `0` when its argument is `0`, and that "-"
+is defined to return `0` when its RHS is greater than its LHS.
+
+The "BIT0", "BIT1" and "NUMERAL" functions are used in the representation of
+natual number numerals (see Section 3.4.5).
+
+There are 71 derived theorems provided for natural numbers.  There are also 13
+derived conversions implemented for evaluating the numeral values of arithmetic
+operations on numerals.

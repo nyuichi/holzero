@@ -1,0 +1,510 @@
+================================================================================
+== APPENDIX A4: THEORY COMMANDS (HOL Zero User Manual)                        ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2013                            ==
+================================================================================
+
+
+********************************************************************************
+
+
+********************************************************************************
+
+
+    # 
+    - : 
+
+See also: .
+
+********************************************************************************
+
+get_all_axioms : unit -> (string * thm) list
+
+Returns the name and assertion theorem for each axiom.
+
+    # get_all_axioms ();;
+    - : (string * thm) list =
+    [("eta_ax", |- !(f:'a->'b). (\x. f x) = f);
+     ("imp_antisym_ax", |- !p1 p2. (p1 ==> p2) ==> (p2 ==> p1) ==> (p1 <=> p2));
+     .. ]
+
+See also: new_axiom, get_axiom.
+
+********************************************************************************
+
+get_all_const_definitions : unit -> (string * thm) list
+
+Returns the name and assertion theorem for each defined constant.
+
+    # get_all_const_definitions
+    - : (string * thm) list =
+    [("!", |- $! = (\(P:'a->bool). P = (\x. true)));
+     ("/\\", |- $/\ = (\p1 p2. !p. (p1 ==> p2 ==> p) ==> p)); .. ]
+
+See also: new_const_definition, get_const_definition, get_all_consts.
+
+********************************************************************************
+
+get_all_const_specifications : unit -> (string list * thm) list
+
+Returns the constant names and assertion theorem for each group of specified
+constants.
+
+    # get_all_const_specifications ();;
+    - : (string list * thm) list
+    [(["PairRep"; "PairAbs"],
+      |- (!(a:'a#'b). PairAbs (PairRep a) = a) /\
+         (!(r:'a->'b->bool). IsPairRep r <=> PairRep (PairAbs r) = r));
+     (["IND_SUC"; "IND_ZERO"],
+      |- ONE_ONE IND_SUC /\ (!i. ~ (IND_SUC i = IND_ZERO)));
+     .. ]
+
+See also: new_const_specification, get_const_specification, get_all_consts.
+
+********************************************************************************
+
+get_all_consts : unit -> (string * hol_type) list
+
+Returns the name and generic type of each declared constant.
+
+    # get_all_consts ();;
+    - : (string * hol_type) list =
+    [("!", `:('a->bool)->bool`); ("*", `:nat->nat->nat`); .. ]
+
+See also: new_const, get_const_gtype, is_const_name, get_all_tyconsts.
+
+********************************************************************************
+
+get_all_tyconst_definitions : unit -> (string * thm) list
+
+Returns the name and assertion theorem for each defined type constant.
+
+    # get_all_tyconst_definitions ();;
+    - : (string * thm) list =
+    [("#", |- ?(f:'a#'b->'a->'b->bool). TYPE_DEFINITION IsPairRep f);
+     ("nat", |- ?(f:nat->ind). TYPE_DEFINITION IsNatRep f)]
+
+See also: new_tyconst_definition, get_tyconst_definition, get_all_tyconsts.
+
+********************************************************************************
+
+get_all_tyconsts : unit -> (string * int) list
+
+Returns the name and arity of each declared type constant.
+
+    # get_all_tyconsts ();;
+    - : (string * int) list = [("#", 2); ("->", 2); ("bool", 0); .. ]
+
+See also: new_tyconst, get_tyconst_arity, is_tyconst_name, get_all_consts.
+
+********************************************************************************
+
+get_axiom : string -> thm
+
+Returns the assertion theorem for the axiom with the supplied name.
+
+    # get_axiom "eta_ax";;
+    - : thm = |- !(f:'a->'b). (\x. f x) = f
+
+See also: new_axiom, get_all_axioms.
+
+********************************************************************************
+
+get_const_definition : string -> thm
+
+Returns the assertion theorem for the defined constant with the supplied name.
+
+    # get_const_definition "true";;
+    - : thm = |- true <=> (\(p:bool). p) = (\p. p)
+
+See also: new_const_definition, get_all_const_definitions, get_const_gtype.
+
+********************************************************************************
+
+get_const_gtype : string -> hol_type
+
+Returns the generic type of the constant with the supplied name.
+
+    # get_const_gtype "=";;
+    - : 
+
+See also: new_const, is_const_name, get_all_consts.
+
+********************************************************************************
+
+get_const_specification : string -> thm
+
+Returns the assertion theorem for the specified constant with the supplied name.
+
+    # get_const_gtype "=";;
+    - : hol_type = `:'a->'a->bool`
+
+See also: new_const_specification, get_all_const_specifications,
+          get_const_gtype.
+
+********************************************************************************
+
+get_tyconst_arity : string -> int
+
+Returns the arity of the type constant with the supplied name.
+
+    # get_tyconst_arity "->";;
+    - : int = 2
+
+See also: new_tyconst, is_tyconst_name, get_all_tyconsts.
+
+********************************************************************************
+
+get_tyconst_definition : string -> thm
+
+Returns the assertion theorem for the defined type constant with the supplied
+name.
+
+    # get_tyconst_definition "#";;
+    - : thm = |- ?(f:'a#'b->'a->'b->bool). TYPE_DEFINITION IsPairRep f
+
+
+See also: new_tyconst_definition, get_all_tyconst_definitions,
+          get_tyconst_arity.
+
+********************************************************************************
+
+is_const_name : string -> bool
+
+The test for whether a given name is the name of a declared constant.
+
+    # is_const_name "==>";;
+    - : bool = true
+
+See also: new_const, get_const_gtype, get_all_consts.
+
+********************************************************************************
+
+is_tyconst_name : string -> bool
+
+The test for whether a given name is the name of a declared type constant.
+
+    # is_tyconst_name "bool";;
+    - : bool = true
+
+See also: new_tyconst, get_tyconst_arity, get_all_tyconsts.
+
+********************************************************************************
+
+.....
+
+********************************************************************************
+
+new_axiom : string * term -> thm
+
+This is the axiom assertion command.  It takes a string and a term.  The string
+becomes the name of a new axiom in the theory, and must not be an existing axiom
+name (unless in benign redefinition).  The term becomes the asserted axiom, and
+must be of boolean type and must not contain free variables.  The resulting
+assertion theorem states that the supplied boolean term holds, under no
+assumptions.  A note of the axiom is reported, and the assertion theorem is
+returned.
+
+      `p`      [ no free vars in `p` ]
+      ----
+      |- p
+
+See also: prim_new_axiom, get_axiom, get_all_axioms.
+
+********************************************************************************
+
+new_const : string * hol_type -> term
+
+This is the constant declaration command.  It takes a string and a type.  The
+string becomes the name of a new constant in the theory, and the type becomes
+its generic type.  Any name can be used for a constant, but supplying an
+existing constant's name will cause failure (unless the generic type is the same
+as the existing one's, in which case it is recognised as benign redeclaration
+and allowed).  A note of the declaration is reported, and an instance of the new
+constant with its generic type is returned.
+
+See also: prim_new_const, get_const_gtype, is_const_name, get_all_consts.
+
+********************************************************************************
+
+new_const_definition : term -> thm
+
+This is the constant definition command.  It takes an equality term argument.
+The LHS of the equality must be a variable which must not have the name of an
+existing constant (unless in benign redefinition), and the RHS must not contain
+any free variables.  The resulting theorem defines a new constant with the same
+name as the variable in the input LHS.  It has no assumptions and a conclusion
+that states the constant is equal to the input RHS.
+
+      `%c = t`       [ no free vars in `t`;
+      --------         any tyvars in `t` must occur in type of `t` ]
+      |- c = t
+
+See also: prim_new_const_definition, get_const_definition,
+          get_all_const_definitions, new_const.
+
+********************************************************************************
+
+new_const_specification : string list * thm -> thm
+
+This is the primitive specification command for constants.  It takes a non-empty
+string list and an existentially quantified theorem.  The strings correspond
+one-to-one to the names of the new constants to be added to the theory, and must
+not include any existing constant names (unless in benign redefinition).  They
+also correspond one-to-one to the outer-quantified variables of the supplied
+existential theorem, in the same order, although they potentially have different
+names.  The supplied existential theorem must have no free variables and no
+assumptions.  Furthermore, its outer-quantified variables must each have the
+same type variables, and the body of the existential must not involve any other
+type variables.
+
+The resulting definition theorem states that the body of the existential is
+satisfied for the new constants, where the constants replace the outermost
+quantified variables respectively according to the order in the string list,
+under no assumptions.
+
+      "c1" "c2" ..    |- ?x1 x2 .. . p   [ only "x1", "x2", .. free in `p` ]
+      --------------------------------
+             |- p[c1/x1;c2/x2;..]
+
+See also: prim_new_const_specification, get_const_specification,
+          get_all_const_specifications, get_const_specification_info,
+          get_all_const_specification_info, new_const.
+
+********************************************************************************
+
+new_fun_definition : term -> thm
+
+This is the definition command for non-recursive functions.  It takes an
+optionally universally-quantified equality term.  The LHS of the equality must
+be a variable (called the "main variable") applied to a (potentially empty)
+series of variable structure arguments, where the main variable must not have
+the name of an existing constant (unless in benign redefinition), and the
+arguments must not contain repeated variables.  Any free variables or type
+variables in the RHS must also occur in the LHS.
+
+The resulting theorem defines a new constant with the same name and type as the
+supplied main variable.  It has no assumptions and its conclusion is an equality
+universally quantified by all the argument variables, with the new constant
+replacing the main variable in the LHS.  The theorem quantifies the argument
+variables in the same order as they are quantified in the supplied term, and any
+variables not quantified in the term are quantified outermost, in the order they
+occur in the LHS's arguments.  For cases of benign redefinition, the "main
+variable" is allowed to be the existing constant.
+
+        `!xs0. %f u1 u2 .. = t`    (where `u1`, `u2` are variable structures)
+      ---------------------------  [ free vars in `t` must occur in `u1` ..;
+      |- !xs2 xs1. f u1 u2 .. = t    tyvars in `t` must occur in `f`, `u1` ..;
+                                     no repeated vars in `u1`, .. ]
+
+See also: get_fun_definition, get_all_fun_definitions,
+          new_recursive_fun_definition, new_const.
+
+********************************************************************************
+
+new_tyconst : string * int -> hol_type
+
+This is the type constant declaration command.  It takes a string and an
+integer.  The string becomes the name of a new type constant in the theory, and
+the integer becomes its arity.  Any name can be used for a type constant, but
+supplying an existing type constant's name will cause failure (unless the arity
+is the same as the existing one's, in which case it's recognised as benign
+redeclaration and allowed).  A note of the declaration is reported, and a
+general instance of the new type constant, with numbered tyvars for its type
+parameters, is returned.
+
+See also: prim_new_tyconst, get_tyconst_arity, is_tyconst_name,
+          get_all_tyconsts.
+
+********************************************************************************
+
+new_tyconst_definition : string * thm -> thm
+
+This is the type constant definition command.  It takes a string and a theorem.
+The string becomes the name of the new type constant, and must not be the name
+of an existing type constant (unless in benign redefinition).  The theorem
+argument must have no assumptions and a conclusion of the form `?x. p`, where
+`\x. p` is the characteristic function (prescribing the subset of the
+representation type that is in bijection with a general instance of the new type
+constant), and the theorem itself establishes that the subset is non-empty.  The
+term `p` must not contain free variables other than "x", and its number of type
+variables becomes the arity of the new type constant.
+
+The resulting definition theorem uses "TYPE_DEFINITION" to state that a
+bijection exists between a general instance of the new type constant and those
+elements of the representation type that satisfy `\x. p`, under no assumptions.
+
+           "ty"     |- ?(x:ty0). p               [ no free vars in `p` other
+      -----------------------------------------    than "x" ]
+      |- ?(f:ty->ty0). TYPE_DEFINITION (\x.p) f
+
+See also: prim_new_tyconst_definition, get_tyconst_definition,
+          get_all_tyconst_definitions, new_tyconst.
+
+********************************************************************************
+
+prim_new_axiom : string * term -> thm
+
+This is the primitive axiom assertion command.  It takes a string and a term.
+The string becomes the name of a new axiom in the theory, and must not be an
+existing axiom name.  The term becomes the asserted axiom, and must be of
+boolean type and must not contain free variables.  The resulting assertion
+theorem states that the supplied boolean term holds, under no assumptions.  A
+note of the axiom is reported, and the assertion theorem is returned.
+
+      `p`      [ no free vars in `p` ]
+      ----
+      |- p
+
+See also: new_axiom, get_axiom, get_all_axioms.
+
+********************************************************************************
+
+prim_new_const : string * hol_type -> unit
+
+This is the primitive declaration command for constants.  It takes a string and
+a type.  The string becomes the name of a new constant in the theory, and the
+type becomes its generic type.  Any name can be used for a constant, but
+supplying an existing constant's name will cause failure.  A note of the
+declaration is reported, and unit is returned.
+
+See also: new_const, get_const_gtype, is_const_name, get_all_consts.
+
+********************************************************************************
+
+prim_new_const_definition : string * term -> thm
+
+This is the primitive definition command for constants.  It takes a string and a
+term.  The string becomes the name of a new constant in the theory, and must not
+be the name of an existing constant.  The term becomes the definition term for
+the new constant, and must not contain free vars, and must not contain tyvars
+that are not in its top-level type.  The resulting definition theorem asserts
+that the new constant equals the supplied term, under no assumptions.  A note of
+the definition is reported, and the definition theorem is returned.
+
+      "c"   `t`     [ no free vars in `t`;
+      ---------       any tyvars in `t` must occur in type of `t` ]
+      |- c = t
+
+See also: new_const_definition, get_const_definition, get_all_const_definitions,
+          prim_new_const.
+
+********************************************************************************
+
+prim_new_const_specification : string list * thm -> thm
+
+This is the primitive specification command for constants.  It takes a non-empty
+string list and an existentially quantified theorem.  The strings correspond
+one-to-one to the names of the new constants to be added to the theory, and must
+not include any existing constant names.  They also correspond one-to-one to the
+outer-quantified variables of the supplied existential theorem, in the same
+order, although they potentially have different names.  The supplied existential
+theorem must have no free variables and no assumptions.  Furthermore, its
+outer-quantified variables must each have the same type variables, and the body
+of the existential must not involve any other type variables.
+
+The resulting definition theorem states that the body of the existential is
+satisfied for the new constants, where the constants replace the outermost
+quantified variables respectively according to the order in the string list,
+under no assumptions.
+
+      "c1" "c2" ..    |- ?x1 x2 .. . p   [ only "x1", "x2", .. free in `p` ]
+      --------------------------------
+             |- p[c1/x1;c2/x2;..]
+
+See also: new_const_specification, get_const_specification,
+          get_all_const_specifications, get_const_specification_info,
+          get_all_const_specification_info, prim_new_const.
+
+********************************************************************************
+
+prim_new_tyconst : string * big_int -> unit
+
+This is the primitive declaration command for type constants.  It takes a string
+and a 'bit_int' integer.  The string becomes the name of a new type constant in
+the theory, and the integer becomes its arity.  Any name can be used for a type
+constant, but supplying an existing type constant's name will cause failure.  A
+note of the declaration is reported, and unit is returned.
+
+See also: new_tyconst, get_tyconst_arity, is_tyconst_name, get_all_tyconsts.
+
+********************************************************************************
+
+prim_new_tyconst_definition : string * thm -> thm
+
+This is the primitive definition command for type constants.  It takes a string
+and a theorem.  The string becomes the name of a new type constant in the
+theory, and must not be the name of an existing type constant.  The theorem
+argument must have no assumptions and a conclusion of the form `?v. P v`, where
+`P` is the characteristic function (prescribing the subset of the representation
+type that is in bijection with a general instance of the new type constant), and
+the theorem itself establishes that the subset is non-empty.  The predicate `P`
+must not contain free variables, and its number of type variables becomes the
+arity of the new type constant.
+
+The resulting definition theorem uses the "TYPE_DEFINITION" predicate applied to
+`P` to assert that a bijection exists between a general instance of the new type
+constant and those elements of the representation type that satisfy `P`, under
+no assumptions.  The general instance of the new type constant in this theorem
+has type variable parameters corresponding to the type variables of `P` in
+alphabetical order.  A note of the definition is reported, and the definition
+theorem is returned.
+
+           "ty"     |- ?(x:ty0). P x           [ no free vars in `P` ]
+      ------------------------------------
+      |- ?(f:ty->ty0). TYPE_DEFINITION P f
+
+See also: new_tyconst_definition, get_tyconst_definition,
+          get_all_tyconst_definitions, prim_new_tyconst.
+
+********************************************************************************
+
+save_lemma : string * thm -> thm
+
+This is the lemma storage command.  It takes a string and a theorem argument.
+The theorem gets stored in the database under the string index.  The string must
+not be used for the name of an existing lemma (unless in benign redefinition).
+
+See also: get_lemma, get_all_lemmas, save_thm.
+
+********************************************************************************
+
+save_thm : string * thm -> thm
+
+This is the theorem storage command.  It takes a string and a theorem argument.
+The theorem gets stored in the database under the string index.  The string must
+not be used for the name of an existing theorem (unless in benign redefinition),
+and the theorem must not contain free variables or assumptions.
+
+See also: get_thm, get_all_thms, save_lemma.
+
+********************************************************************************
+
+get_tyconst_definition_info : string -> thm * thm
+get_all_tyconst_definition_info : unit -> (string * (thm * thm)) list
+
+get_const_specification_info : string -> (string list * thm) * thm
+get_all_const_specification_info : unit -> ((string list * thm) * thm) list
+
+new_type_bijections : string -> string * string -> thm * thm
+get_type_bijections : string -> thm * thm
+get_type_bijection_info : string -> (string * string) * (thm * thm)
+get_all_type_bijections : unit -> (string * (thm * thm)) list
+get_all_type_bijection_info :
+                      unit -> (string * ((string * string) * (thm * thm))) list
+
+get_fun_definition : string -> thm
+get_all_fun_definitions : unit -> (string * thm) list
+
+new_rec_fun_definition : thm -> term -> thm
+
+step_total : unit -> int
+step_counter : unit -> int
+reset_step_counter : unit -> unit
+
+get_thm : string -> thm
+get_all_thms : unit -> (string * thm) list
+
+get_lemma : string -> thm
+get_all_lemmas : unit -> (string * thm) list

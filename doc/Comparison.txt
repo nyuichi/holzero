@@ -1,0 +1,138 @@
+================================================================================
+==                        COMPARISON OF HOL DIALECTS                          ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2014                            ==
+================================================================================
+
+This file is for those already familiar with using another HOL system, who just
+need a quick comparison of corresponding aspects of basic HOL language dialect
+to get started in HOL Zero.  Comparisons with HOL90, HOL4, ProofPower HOL, HOL
+Light and Isabelle/HOL are given here.  Refer to the HOL Zero glossary document
+for precise definitions of technical terminology.
+
+Note that Xpp is required to view some of the ProofPower HOL entries.
+
+        *         *         *         *         *         *         *
+
+Feature                         H90     H4      PPH     HL      IH      HZ
+--------------------------------------------------------------------------------
+                                                
+IMPLEMENTATION LANGUAGE                         
+                                                
+ML dialect                      SML     SML     SML     OCaml   SML     OCaml
+                                                
+ML lexer significantly altered? no      no      yes *1  yes *1          no
+                                                
+HOL BASIC SYNTAX                                
+                                                
+Type annotation within term     x:ty    x:ty    x:ty    x:ty    x::ty   x:ty
+Defixing mechanism              $       $  ( )  $       ( )     op      $
+Mark for var overloading const  -       -       -       -       -       %
+Mark for tyvar overloadng tycon -       -       -       -       -       '
+Delimiters for irregular names  -       -       $" "    -       -       " "
+                                                
+Lambda abstraction form         \ .     \ .     Ì · *2  \ .     % .     \ .     
+Binder expression form          Q .     Q .     Q · *2  Q .     Q .     Q .     
+Pair expression form            ,       ,       ,       ,       ( , )   ( , )
+List enumeration form           [ ; ]   [ ; ]   [ ; ]   [ ; ]   [ , ]   [ , ]*3
+Set enumeration form                            { ; }   { , }           { , }*3
+                                                
+HOL CONSTANTS AND TYPE OPERATORS                
+                                                
+Function type operator          -> *4   -> *4   ­ *2    -> *4   =>      ->
+Equality operator               =       =       =       =       =       =
+                                                
+Boolean type constant           bool    bool    BOOL    bool    bool    bool
+Boolean true                    T       T       T       T       True    true
+Boolean false                   F       F       F       F       False   false
+Logical negation operator       ~       ~       ³ *2    ~       ~ *4    ~
+Conjunction operator / assoc    /\      /\  R   ± R *2  /\  R   &  R    /\  R
+Disjunction operator / assoc    \/      \/  R   ² R *2  \/  R   |  R    \/  R
+Implication operator / assoc    ==>     ==>  R  ´ R *2  ==>  R  -->  R  ==>  R
+Alias for logical equivalence   -       -       ¤ *2    <=>     -       <=>
+Existential quantifier          ?       ?       ¶ *2    ?       ? *4    ?
+Universal quantifier            !       !       µ *2    !       ! *4    !
+Unique existential quantifier   ?!      ?!      ¶‰1 *2  ?!      ?! *4   ?!
+Selection quantifier            @       @       Å *2    @       @ *4    @
+Conditional expression operator COND *5 COND *5 Cond *5 COND *5         COND *5
+Let-expression operator         LET *5  LET *5  Let *5  LET *5          LET *5
+                                                
+Cartesian product type operator # *4    # *4    ¸ *2    # *4    *       #
+Pair expression operator        ,       ,       ,       ,               PAIR *5
+Pair 1st component operator     FST     FST     Fst     FST     fst     FST
+Pair 2nd component operator     SND     SND     Snd     SND     snd     SND
+                                                
+Individuals type constant       ind     ind     IND     ind     ind     ind
+Naturals type constant          num     num     î *2    num     nat     nat
+Successor operator              SUC     SUC     Suc     SUC     Suc     SUC
+Addition operator / assoc       +       +  L    +  R    +  R    +  L    +  L
+Subtraction operator / assoc    -       -  L    -  L    -  L    -  L    -  L
+Multiplication operator / assoc *       *  L    *  R    *  R    *  L    *  L
+Less-than relation              <       <       <       <       <       <
+Less-than-or-equals relation    <=      <=      ¼ *2    <=      <=      <=      
+Greater-than relation           >       >       >       >       >       >
+Greater-than-or-equals relation >=      >=      ¾ *2    >=      >=      >=      
+                                                
+HOL TERM/TYPE QUOTATIONS                                
+                                                
+Delimiters for term quotations  `` ``   `` ``   ¬ ® *2  ` `     " " *6  ` `
+Delimiters for type quotations  ``: ``  ``: ``  ¬: ® *2 `: `            `: `
+Supports anitquotation?         yes     yes     yes     no              no
+                                                
+Symbolic identifier chars       !#%&*+  !#%&*+  !#&*+-  !#$%&*  !#$%&*  !#&*+-
+                                -/:;<=  -/:<=>  ./<>?@  +-./:<  +-/<=>  ./;<=>
+                                >?@\_|  ?@\|    \^_~    =>?@\^  ?@^_|~  ?@[\]^
+                                                    *2  _|~             {|}~
+
+Numerals may contain '_' chars? no      yes     no      no      no      yes
+                                                
+Warning if generate tyvars?     yes     yes     no      yes     no      no
+Generated tyvar names           'a 'b   'a 'b   'a 'b   ?1 ?2   'a 'b   1 2
+Vars take subgoal pckage types? no      no      yes     no              -
+                                                
+Supports const aliases?         no      yes     yes     yes     yes     no
+Supports generalisd abstractns? yes     yes     yes     yes     yes     no
+                                                
+Can parse overloaded variables? no      no      no      no      no      yes *7
+Can parse overloaded entities?  no      no      no      no      no      yes
+Can parse irregular names?      no      no      yes     no      no      yes
+Can parse overloaded aliases?   no      yes     yes     yes     yes     -
+                                                
+Reparsing output = original?    no      no      no      no      no      yes
+Type-annotated output?          option  option  no      no      no      yes
+                                                
+Prefix term fixity?/Precedence? no/no   yes/yes yes/yes yes/no          yes/no
+Infix term fixity?/Precedence?  yes/yes yes/yes yes/yes yes/yes yes/yes yes/yes
+Infix L/R assoc?/Non-assoc?     no/no   yes/yes yes/no  yes/no  yes/no  yes/yes
+Postfix term fixity?/Precednce? no/-    yes/yes yes/yes no/-            yes/no
+Binder term fixity?             yes     yes     yes     yes     yes     yes
+Mixfix term fixity?             no      yes     no      no      yes     no
+Infix type fixity?              no *8   yes     yes *9  no *8           yes
+Enumeration delimiters?         no      no      no      no              yes
+                                                
+HOL THEOREM DISPLAY
+
+Assumptions                     [P, Q]  [P, Q]  P, Q    P, Q            P, Q
+Turnstile                       P |- Q  P |- Q  P ô Q*2 P |- Q          P |- Q
+                                                
+HOL THEORY                                      
+                                                
+Supports theory hierarchy?      yes     yes     yes     no *A   yes     no *A
+Supports theory entity delete?          yes     yes     no              no
+
+NOTES
+
+*1 - PPH allows special non-ASCII chars in ML identifiers.  HL adjusts OCaml's
+    lexical rules about use of upper/lowercase letters in ML identifiers.
+*2 - PPH uses special non-ASCII characters for some HOL identifiers and reserved
+    words.  These have their own lexical class, and are only displayable in Xpp.
+*3 - HZ does not define lists, but supports user-defined enumeration syntax.
+*4 - In fact an alias for the internal name.
+*5 - These operators can also be used with their own special syntax in term
+    quotations.
+*6 - IH term quotations are parsed by applying 'read' to an ML string.
+*7 - HZ allows variable overloading for sufficiently type-annotated variables.
+*8 - H90 and HL have infix type operators fixed at "->" and "#".
+*9 - PPH does not distinguish between var/const and type operator fixity.
+*A - HL and HZ have just a single, monolithic theory.

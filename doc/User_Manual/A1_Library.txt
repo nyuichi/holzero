@@ -1,0 +1,1495 @@
+================================================================================
+== APPENDIX A1: PROGRAMMING LIBRARY (HOL Zero User Manual)                    ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+
+This appendix gives descriptions of the programming library in HOL Zero's ML
+user interface.
+
+! Note that some programming library descriptions are missing or incomplete in
+! this early release of HOL Zero.
+
+
+********************************************************************************
+
+apply : ('a -> 'b) -> 'a -> 'b
+
+The function that applies its first argument to its second, returning the
+result.  Called the 'A' combinator in combinatory logic.
+
+    # apply increment 5;;
+    - : int = 6
+
+See also: con_fn, id_fn, swap_arg, dbl_arg, ( <* ).
+
+********************************************************************************
+
+append : 'a list -> 'a list -> 'a list
+
+Joins the two supplied lists together.  The nonfix curried form of '@'.
+
+    # append [3;1;4] [1;5];;
+    - : int list = [3; 1; 4; 1; 5]
+
+See also: flatten, cons.
+
+********************************************************************************
+
+con_fn : 'a -> 'b -> 'a
+
+The curried binary function that returns its first argument.  Called the 'K'
+combinator in combinatory logic.
+
+    # con_fn 3 "x";;
+    - : int = 3
+
+See also: apply, id_fn, swap_arg, dbl_arg, ( <* ).
+
+********************************************************************************
+
+assert0 : bool -> exn -> unit
+
+Raises the supplied exception if the supplied boolean is "false", otherwise
+returning unit.
+
+    # assert0 (2 = 3) LocalFail;;
+    LocalFail
+
+See also: assert1, check, try0, hol_fail, HolFail, LocalFail.
+
+********************************************************************************
+
+assert1 : bool -> string * string -> unit
+
+Raises a HolFail exception for the supplied function name and message if the
+supplied boolean is "false", and otherwise returns unit.
+
+    # assert1 (2 = 3) ("foo", "2 does not equal 3");;
+    Exception: [HZ] FAIL: foo - 2 does not equal 3.
+
+See also: assert0, check, try1, hol_fail, HolFail.
+
+********************************************************************************
+
+assoc : 'a -> ('a * 'b) list -> 'b
+
+Returns the right component of the first pair in the supplied list of pairs
+whose left component equals the supplied value.  Fails if cannot find such a
+pair.
+
+    # assoc 7 [(5,"x");(4,"y");(7,"z")];;
+    - : string = "z"
+
+See also: inv_assoc, try_find, fst_filter.
+
+********************************************************************************
+
+bimap : ('a -> 'b -> 'c) -> 'a list -> 'b list -> 'c list
+
+Applies a given curried binary function to corresponding items of two given
+lists.  Fails if the lists don't have the same length.
+
+     bimap (+) [x1;x2;..;xn] [y1;y2;..;yn] = [x1 + y1; x2 + y2; ..; xn + yn]
+
+    # bimap ( * ) [1;3;5;7] [2;4;6;8];;
+    - : int list = [2; 12; 30; 56]
+
+See also: map, fst_map, snd_map, pair_apply, zip, curry, uncurry.
+
+********************************************************************************
+
+can : ('a -> 'b) -> 'a -> bool
+
+Returns "true" iff applying the supplied function to the supplied argument
+doesn't cause a HolFail exception.
+
+    # can (el 3) [3;1;4;1;5];;
+    - : bool = true
+
+See also: cannot, check, HolFail.
+
+********************************************************************************
+
+cannot : ('a -> 'b) -> 'a -> bool
+
+Returns "true" iff applying the supplied function to the supplied argument
+causes a HolFail exception.
+
+    # cannot (el 3) [3;1;4;1;5];;
+    - : bool = false
+
+See also: can, check, HolFail.
+
+********************************************************************************
+
+char_explode : string -> char list
+
+Breaks up a string into a list of characters.
+
+    # char_explode "head";;
+    - : char list = ['h'; 'e'; 'a'; 'd']
+
+See also: char_implode, explode, implode.
+
+********************************************************************************
+
+char_implode : char list -> string
+
+Joins a list of characters into a single string.
+
+    # char_implode ['h';'e';'a';'d'];;
+    - : string = "head"
+
+See also: char_explode, implode, explode.
+
+********************************************************************************
+
+check : ('a -> bool) -> 'a -> 'a
+
+Raises a HolFail exception if the supplied argument does not satisfy the
+supplied test function, otherwise returning the argument.
+
+    # check (fun x -> x = 3) 2;;
+    Exception: [HZ] FAIL: check - Test fails.
+
+See also: assert0, try0, hol_fail, HolFail.
+
+********************************************************************************
+
+cons : 'a -> 'a list -> 'a list
+
+Adds a given item to the start of a given list.  The nonfix curried form of
+'::'.
+
+    # cons 3 [1;4];;
+    - : int list = [3; 1; 4]
+
+See also: append, flatten.
+
+********************************************************************************
+
+copy : int -> 'a -> 'a list
+
+Produces a list composed of the supplied element copied the supplied number of
+times.
+
+    # copy 3 5;;
+    - : int list = [5; 5; 5]
+
+See also: rev.
+
+********************************************************************************
+
+curry : ('a * 'b -> 'c) -> 'a -> 'b -> 'c
+
+Returns the curried equivalent of a given tupled binary function.
+
+    # 
+    - : 
+
+See also: uncurry, pair_apply, swap_arg, dbl_arg.
+
+********************************************************************************
+
+cut : int -> 'a list -> 'a list * 'a list
+
+Cuts the supplied list into two according to 1-based index 'n', with items 1 up
+to 'n' in the first list and the remaining in the second.  Fails if 'n' is
+negative or greater than the list's length.
+
+    # cut 2 [3;1;4;1;5;9;2];;
+    - : int list * int list = ([3; 1], [4; 1; 5; 9; 2])
+
+See also: cut_while, partition, el, hd_tl, front_last.
+
+********************************************************************************
+
+cut_while : ('a -> bool) -> 'a list -> 'a list * 'a list
+
+Cuts the supplied list into two segments, with the second segment starting at
+the first item not satisfying the supplied test function.
+
+    # cut_while (fun n -> n < 5) [3;1;4;1;5;9;2];;
+    - : int list * int list = ([3; 1; 4; 1], [5; 9; 2])
+
+See also: cut, partition, filter.
+
+********************************************************************************
+
+dbl_arg : ('a -> 'a -> 'b) -> 'a -> 'b
+
+Applies the supplied curried binary function using the supplied argument for
+both arguments of the function.  Called the 'W' combinator in combinatory logic.
+
+    # dbl_arg ( * ) 5;;
+    - : int = 25
+
+See also: apply, swap_arg, id_fn, con_fn, ( <* ).
+
+********************************************************************************
+
+decrement : int -> int
+
+Subtracts 1 if the supplied integer is positive, otherwise returns 0.
+
+    # decrement 42;;
+    - : int = 41
+
+See also: up_to.
+
+********************************************************************************
+
+dltree : (arity 2)
+
+The datatype for dynamic lookup trees.  These trees are self-balancing as
+entries are added/removed.
+
+See also: dltree_elems, dltree_elem, dltree_lookup, dltree_mem, dltree_insert,
+          dltree_delete.
+
+********************************************************************************
+
+dltree_delete : 'a -> ('a,'b) dltree -> ('a,'b) dltree
+
+Deletes the entry at the supplied index in a given lookup tree.  Fails if the
+tree does not contain an entry for the supplied index.
+
+See also: dltree, dltree_empty, dltree_insert.
+
+********************************************************************************
+
+dltree_elem : 'a -> ('a,'b) dltree -> 'a * 'b
+
+Returns the index and item held at the supplied index in a given lookup tree.
+Fails if the tree has no entry for the supplied index.
+
+See also: dltree, dltree_elems, dltree_lookup, dltree_mem.
+
+********************************************************************************
+
+dltree_elems : ('a,'b) dltree -> ('a * 'b) list
+
+Converts the information held in a given lookup tree into an index-ordered
+association list.
+
+See also: dltree, dltree_elem, dltree_lookup, dltree_mem.
+
+********************************************************************************
+
+dltree_empty : ('a,'b) dltree
+
+Returns a fresh empty dltree.
+
+See also: dltree, dltree_insert, dltree_delete.
+
+********************************************************************************
+
+dltree_insert : 'a * 'b -> ('a,'b) dltree -> ('a,'b) dltree
+
+Inserts the supplied single indexed item into a given lookup tree. Fails if the
+tree already contains an entry for the supplied index.
+
+See also: dltree, dltree_empty, dltree_delete.
+
+********************************************************************************
+
+dltree_lookup : 'a -> ('a,'b) dltree -> 'b
+
+Returns the item held at the supplied index in a given lookup tree.
+
+See also: dltree, dltree_mem, dltree_elem.
+
+********************************************************************************
+
+dltree_mem : 'a -> ('a,'b) dltree -> bool
+
+Returns "true" iff the supplied index occurs in a given lookup tree.
+
+See also: dltree, dltree_lookup, dltree_elem.
+
+********************************************************************************
+
+do_map : ('a -> unit) -> 'a list -> unit
+
+Applies the supplied unit-valued function in turn to each item of the supplied
+list, returning unit.
+
+    # do_map (fun x -> print_string ("*" ^ x ^ "*\n")) (explode "mark");;
+    *m*
+    *a*
+    *r*
+    *k*
+    - : unit = ()
+
+See also: map.
+
+********************************************************************************
+
+el : int -> 'a list -> 'a
+
+Returns the nth item of the supplied list, using 1-based indexing.  Fails if the
+index is out of range.
+
+    # el 2 ["a";"b";"c";"d";"e"];;
+    - : string = "b"
+
+See also: el0, cut, hd, tl, front, last, enumerate.
+
+********************************************************************************
+
+el0 : int -> 'a list -> 'a
+
+Returns the nth item of the supplied list, using 0-based indexing.  Fails if the
+index is out of range.
+
+    # el0 2 ["a";"b";"c";"d";"e"];;
+    - : string = "c"
+
+See also: el, cut, hd, tl, front, last.
+
+********************************************************************************
+
+enumerate : 'a list -> (int * 'a) list
+
+Turns the supplied list into an association list, where each item is indexed by
+its 1-based position in the list.
+
+    # enumerate ["red";"green";"blue"];;
+    - : (int * string) list = [(1, "red"); (2, "green"); (3, "blue")]
+
+See also: el, zip.
+
+********************************************************************************
+
+exists : ('a -> bool) -> 'a list -> bool
+
+Returns "true" iff there is at least one item in the supplied list satisfying a
+given test function.
+
+    # 
+    - : 
+
+See also: forall, find, try_find, filter, partition.
+
+********************************************************************************
+
+explode : string -> string list
+
+Breaks up a string into a list of single-character strings.
+
+    # explode "head";;
+    - : string list = ["h"; "e"; "a"; "d"]
+
+See also: implode, char_explode, char_implode.
+
+********************************************************************************
+
+filter : ('a -> bool) -> 'a list -> 'a list
+
+Removes all items of the supplied list not satifying a given test function.
+
+    # 
+    - : 
+
+See also: try_filter, find, partition, exists, forall.
+
+********************************************************************************
+
+find : ('a -> bool) -> 'a list -> 'a
+
+Returns the first item of the supplied list satisfying a given test function.
+Fails if no such item exists.
+
+    # 
+    - : 
+
+See also: try_find, filter, partition, exists, forall.
+
+********************************************************************************
+
+flatten : 'a list list -> 'a list
+
+Flattens the supplied list of lists into a single list.
+
+    # flatten [ [3]; [1;4;1]; [5;9;2] ];;
+    - : int list = [3; 1; 4; 1; 5; 9; 2]
+
+See also: append, cons.
+
+********************************************************************************
+
+foldl : ('b -> 'a -> 'b) -> 'b -> 'a list -> 'b
+
+Applies the supplied curried binary operator over the items of the supplied
+list, from left to right, starting with the operator applied to the supplied
+extra argument and the first item of the list.  Returns the extra argument if
+the list is empty.
+
+        foldl (+) a [x1;x2;..;xn]  ==  (..((a + x1) + x2) + ..) + xn
+
+    # foldl (-) 100 [10;5;17];;
+    - : int = 68
+
+See also: foldl', foldr, foldl1, unfoldl.
+
+********************************************************************************
+
+foldl' : ('b * 'a -> 'b) -> 'b -> 'a list -> 'b
+
+The equivalent of 'foldl', but for tupled binary operators.
+
+See also: foldl, foldr', foldl1', unfoldl.
+
+********************************************************************************
+
+foldl1 : ('a -> 'a -> 'a) -> 'a list -> 'a
+
+Applies the supplied curried binary operator over the items of the supplied
+list, from left to right.  Fails if the list is empty.
+
+        foldl1 (+) [x1;x2;..;xn]  ==  (..(x1 + x2) + ..) + xn
+
+    # foldl1 (^) ["ab";"ra";"cadab";"ra"];;
+    - : string = "abracadabra"
+
+See also: foldl1', foldr1, foldl, unfoldl1.
+
+********************************************************************************
+
+foldl1' : ('a * 'a -> 'a) -> 'a list -> 'a
+
+The equivalent of 'foldl1', but for tupled binary operators.
+
+See also: foldl1, foldr1', foldl', unfoldl1.
+
+********************************************************************************
+
+foldr : ('a -> 'b -> 'b) -> 'a list -> 'b -> 'b
+
+Applies the supplied curried binary operator over the items of the supplied
+list, from right to left, starting with the operator applied to the last item of
+the list and the supplied extra argument.  Returns the extra argument if the
+list is empty.
+
+        foldr (+) [x1;x2;..;xn] a  ==  x1 + (x2 + (.. + (xn + a)..))
+
+    # foldr cons [9;2;6;5] [3;5];;
+    - : int list = [9;2;6;5;3;5]
+
+See also: foldr', foldl, foldr1, unfoldr.
+
+********************************************************************************
+
+foldr' : ('a * 'b -> 'b) -> 'a list -> 'b -> 'b
+
+The equivalent of 'foldr', but for tupled binary operators.
+
+See also: foldr, foldl', foldr1', unfoldr.
+
+********************************************************************************
+
+foldr1 : ('a -> 'a -> 'a) -> 'a list -> 'a
+
+Applies a given curried binary operator over the items of the supplied list,
+from right to left.  Fails if the list is empty.
+
+         foldr1 (+) [x1;x2;..;xn]  ==  x1 + (x2 + (.. + (xn-1 + xn)..))
+
+    # foldr1 ( * ) [1;2;3;4;5;6];;
+    - : int = 720
+
+See also: foldr1', foldl1, foldr, unfoldr1.
+
+********************************************************************************
+
+foldr1' : ('a * 'a -> 'a) -> 'a list -> 'a
+
+The equivalent of 'foldr1', but for tupled binary operators.
+
+See also: foldr1, foldl1', foldr', unfoldr1.
+
+********************************************************************************
+
+forall : ('a -> bool) -> 'a list -> bool
+
+Returns "true" iff every item in the supplied list satisfies a given test
+function.
+
+    # 
+    - : 
+
+See also: exists, find, filter, partition.
+
+********************************************************************************
+
+front : 'a list -> 'a list
+
+Returns all but the last item of a list.  Fails if the list is empty.
+
+    # front [8;3;2;7];;
+    - : int list = [8; 3; 2]
+
+See also: last, front_last, hd, tl, cut, el.
+
+********************************************************************************
+
+front_last : 'a list -> 'a list * 'a
+
+Destructs a list into its front items and its last item.  Fails if the list is
+empty.
+
+    # front_last [8;3;2;7];;
+    - : int list * int = ([8; 3; 2], 7)
+
+See also: front, last, hd, tl, cut, el.
+
+********************************************************************************
+
+fst : 'a * 'b -> 'a
+
+Selects the first component of a pair.
+
+    # fst ("x",3);;
+    - : string = "x";;
+
+See also: snd, pair, switch.
+
+********************************************************************************
+
+fst_filter : ('a -> bool) -> ('a * 'b) list -> ('a * 'b) list
+
+Removes all items from the supplied association list that have a left component
+that does not satisfy the supplied test function.
+
+    # 
+    - : 
+
+See also: snd_filter, fst_map, filter, fst, assoc.
+
+********************************************************************************
+
+fst_map : ('a -> 'c) -> ('a * 'b) list -> ('c * 'b) list
+
+Applies the supplied function respectively to the left component of each pair in
+the supplied list of pairs.
+
+    # 
+    - : 
+
+See also: snd_map, fst_filter, map, fst.
+
+********************************************************************************
+
+funpow : int -> ('a -> 'a) -> 'a -> 'a
+
+Applies the nth-power of the supplied function, i.e. recurses the function n
+times, feeding the result back into the input, and returning the original input
+if n is 0.  Fails if the power is negative.
+
+    # funpow 4 (fun (m,n) -> (m+n, m+2*n)) (1,1);;
+    - : int * int = (34, 55)
+
+See also: ( <* ), id_fn, repeat.
+
+********************************************************************************
+
+hd : 'a list -> 'a
+
+Returns the head item of a list.  Fails if the list is empty.
+
+    # hd [8;3;2;7];;
+    - : int = 8
+
+See also: tl, hd_tl, front, last, cut, el.
+
+********************************************************************************
+
+hd_tl : 'a list -> 'a * 'a list
+
+Destructs a list into its head item and its tail items.  Fails if the list is
+empty.
+
+    # hd_tl [8;3;2;7];;
+    - : int * int list = (8, [3; 2; 7])
+
+See also: hd, tl, front, last, cut, el.
+
+********************************************************************************
+
+HolError : exception of string * string
+
+This exception is for short-circuit errors that directly drop out at the top
+level, avoiding any traps for HolFail exceptions.  It consists of a string that
+broadly classifies the error (by convention written in uppercase) and a message
+describing the error in some detail.
+
+On hitting the top level, 'HolError (err,msg)' is printed as follows:
+
+    Exception: [HZ] err: msg.
+
+See also: hol_err, HolFail, LocalFail.
+
+********************************************************************************
+
+hol_err : string * string -> 'a
+
+This raises a HolError exception for the supplied error class and error message.
+
+    # hol_error ("BIG ERROR", "Out of storage space");;
+    Exception: [HZ] BIG ERROR: Out of storage space.
+
+See also: HolError, HolFail, LocalFail.
+
+********************************************************************************
+
+HolFail : exception of string * string
+
+This exception is for errors that can ultimately reach the top level, but that
+can also get trapped by calling functions.  It is the classic exception for
+error cases in HOL Zero functions.  It consists of the name of the function that
+fails and a message describing the error in some detail.  Various supporting
+functions for trapping and raising HolFails are defined.
+
+On hitting the top level, 'HolFail (func,msg)' is printed as follows:
+
+    Exception: [HZ] FAIL: func - msg.
+
+See also: hol_fail, check, try0, try1, try2, assert0, assert1, can, cannot,
+          try_find, try_filter, HolError, LocalFail.
+
+********************************************************************************
+
+hol_fail : string * string -> 'a
+
+This raises a HolFail exception for the supplied function name and error
+message.
+
+    # hol_fail ("foo", "Argument out of range");;
+    Exception: [HZ] FAIL: foo - Argument out of range.
+
+See also: check, assert1, try1, HolFail, HolError, LocalFail.
+
+********************************************************************************
+
+id_fn : 'a -> 'a
+
+The function that returns its argument as its result.  Called the 'I' combinator
+in combinatory logic.
+
+    # id_fn 5;;
+    - : int = 5
+
+See also: apply, con_fn, swap_arg, dbl_arg, ( <* ), funpow.
+
+********************************************************************************
+
+implode : string list -> string
+
+Joins a list of strings into a single string.
+
+    # implode ["h";"ea";"d"];;
+    - : string = "head"
+
+See also: explode, char_implode, char_explode.
+
+********************************************************************************
+
+int_of_string : string -> int
+
+Returns the integer represented by the supplied string.  Disregards any '0'
+characters at the start of the string, and any '_' characters after the start of
+the string.  A single '-' character prefixed to the start of the string (without
+any separating spaces) signifies a negative number.
+
+    # int_of_string "-02_884_1971";;
+    - : int = -28841971
+
+See also: string_of_int.
+
+********************************************************************************
+
+inv_assoc : 'b -> ('a * 'b) list -> 'a
+
+Returns the left component of the first pair in the supplied list of pairs whose
+right component equals the supplied value.  Fails if cannot find such a pair.
+
+    # inv_assoc "y" [(5,"x");(4,"y");(7,"z")];;
+    - : int = 4
+
+See also: assoc, try_find, snd_filter.
+
+********************************************************************************
+
+is_empty : 'a list -> bool
+
+Returns "true" iff the supplied list is empty.
+
+    # is_empty [];;
+    - : bool = true
+
+See also: is_nonempty, length.
+
+********************************************************************************
+
+is_nonempty : 'a list -> bool
+
+Returns "true" iff the supplied list is not empty.
+
+    # is_nonempty [2];;
+    - : bool = true
+
+See also: is_empty, length.
+
+********************************************************************************
+
+last : 'a list -> 'a
+
+Returns the last item of a list.  Fails if the list is empty.
+
+    # last [8;3;2;7];;
+    - : int = 7
+
+See also: front, front_last, hd, tl, cut, el.
+
+********************************************************************************
+
+length : 'a list -> int
+
+Returns the length of the supplied list.
+
+    # length [8;9;7;9];;
+    - : int = 4
+
+See also: is_empty, is_nonempty, length_big_int.
+
+********************************************************************************
+
+length_big_int : 'a list -> big_int
+
+Returns the length of the supplied list as an OCaml arbitrary precision integer.
+
+    # length_big_int [3;1;4];;
+    - : big_int = 3
+
+See also: length.
+
+********************************************************************************
+
+list_eq : ('a->'a->bool) -> 'a list -> 'a list -> bool
+
+Returns "true" iff the two inputted lists are equivalent modulo the supplied
+equivalence relation 'eq', i.e. the lists have equal length and corresponding
+elements are equal modulo 'eq'.
+
+    # list_eq (fun x y -> x mod 10 = y mod 10) [13;21;4;1;55] [23;21;14;1;5];;
+    - : bool = true
+
+See also: set_eq'.
+
+********************************************************************************
+
+LocalFail : exception
+
+This exception is for simple local failures, raised to escape from the main part
+of a function and typically caught in an outer exception trap of the same
+function.  This can be useful for removing error-reporting clutter from the main
+body of a function and grouping it together at the end.  It can also be useful
+for non-error control flow, when there is nothing more elegant in ML.
+
+See also: check, assert0, try0, HolFail, HolError.
+
+********************************************************************************
+
+map : ('a -> 'b) -> 'a list -> 'b list
+
+Applies the supplied function to each item of the supplied list.
+
+     map f [x1;x2;..;xn]  ==  [f x1; f x2; ..; f xn]
+
+    # map decrement [3;1;4;1];;
+    - : int list = [2; 0; 3; 0]
+
+See also: fst_map, snd_map, bimap, pair_apply, try_filter.
+
+********************************************************************************
+
+merge : ('a->'a->bool) -> 'a list -> 'a list -> 'a list
+
+Merges the two supplied sorted lists into a single sorted list, with respect to
+the supplied total order relation, assuming the supplied lists are already
+sorted with respect to the same relation.
+
+    # merge (<) [1;3;3;5] [3;4;6];;
+    - : int list = [1; 3; 3; 3; 4; 5; 6]
+
+See also: mergesort.
+
+********************************************************************************
+
+mergesort : ('a->'a->bool) -> 'a list -> 'a list
+
+Sorts the supplied list using the merge technique, with respect to the supplied
+total order relation.
+
+    # mergesort (<) [3;1;4;1;5];;
+    - : int list = [1; 1; 3; 4; 5]
+
+See also: merge.
+
+********************************************************************************
+
+pair : 'a -> 'b -> 'a * 'b
+
+The curried binary operator for constructing pairs.
+
+    # pair "x" 3;;
+    - : string * int = ("x", 3)
+
+See also: fst, snd, switch.
+
+********************************************************************************
+
+pair_apply : ('a -> 'b) * ('c -> 'd) -> 'a * 'c -> 'b * 'd
+
+Applies supplied pair of functions to corresponding components of a given pair.
+
+    # 
+    - : 
+
+See also: curry, uncurry, map.
+
+********************************************************************************
+
+partition : ('a -> bool) -> 'a list -> 'a list * 'a list
+
+Separates the supplied list into two lists, for those items respectively
+satisfying and not satisfying a given test function.
+
+    # partition (fun x -> x >= 5) [3;1;4;1;5;9;2];;
+    - : int list * int list = ([5; 9], [3; 1; 4; 1; 2])
+
+See also: filter, find, exists, forall.
+
+********************************************************************************
+
+quote : string -> string
+
+Puts double-quotes around the supplied string, backslash-escapes backslashes and
+double-quotes, and uses ASCII codes for backquotes and unprintable characters.
+
+    # print_string ("And I said " ^ quote "hello" ^ ".\n");;
+    And I said "hello".
+    - : unit = ()
+
+See also: quote0.
+
+********************************************************************************
+
+quote0 : string -> string
+
+Puts single-quotes around the supplied string.  Does not perform any escaping of
+special characters.
+
+    # print_string ("It's name was " ^ quote0 "X" ^ ".\n");;
+    It's name was 'X'.
+    - : unit = ()
+
+See also: quote.
+
+********************************************************************************
+
+repeat : ('a -> 'a) -> 'a -> 'a
+
+Repeatedly applies the supplied function to an argument until it causes a
+HolFail exception, returning the manifestation of the argument that causes the
+exception.  Note that this will not terminate if the function never raises an
+exception.
+
+    # repeat (fun (n,xs) -> (n+1, tl xs)) (0, ["a";"b";"c"]);;
+    - : int * string list = (3, [])
+
+See also: funpow.
+
+********************************************************************************
+
+report : string -> unit
+
+Outputs the supplied string prepended with "[HZ] " to standard output, followed
+by a full stop and newline, and then flushes the output stream.
+
+    # report "hello";;
+    [HZ] hello.
+    - : unit = ()
+
+See also: warn, quote.
+
+********************************************************************************
+
+rev : 'a list -> 'a list
+
+Reverses the order of the items in the supplied list.
+
+    # rev [6;2;6;4;3;3];;
+    - : int list = [3; 3; 4; 6; 2; 6]
+
+See also: copy.
+
+********************************************************************************
+
+snd : 'a * 'b -> 'b
+
+Selects the second component of a pair.
+
+    # snd ("x",3);;
+    - : int = 3;;
+
+See also: fst, pair, switch.
+
+********************************************************************************
+
+snd_filter : ('b -> bool) -> ('a * 'b) list -> ('a * 'b) list
+
+Removes all items from the supplied association list that have a right component
+that does not satisfy the supplied test function.
+
+    # 
+    - : 
+
+See also: fst_filter, snd_map, filter, snd, inv_assoc.
+
+********************************************************************************
+
+snd_map : ('b -> 'c) -> ('a * 'b) list -> ('a * 'c) list
+
+Applies the supplied function respectively to the right component of each pair
+in the supplied list of pairs.
+
+    # 
+    - : 
+
+See also: fst_map, snd_filter, map, snd.
+
+********************************************************************************
+
+string_of_int : int -> string
+
+Returns the string representation of the supplied integer.
+
+    # string_of_int (-02_884_1971);;
+    - : string = "-2884197"
+
+See also: int_of_string.
+
+********************************************************************************
+
+string_variant : string list -> string -> string
+
+Creates a variant of the supplied string by appending apostrophes to its end
+until it avoids any string in the supplied avoidance list.  Does not append any
+apostrophes if the original string already avoids the avoidance list.
+
+    # string_variant ["x";"y";"x'"] "x"
+    - : string = "x''"
+
+********************************************************************************
+
+swap_arg : ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+
+Takes a curried binary function, and returns an equivalent function that takes
+its arguments in opposite order.  Called the 'C' combinator in combinatory
+logic.
+
+    # swap_arg (@) [1;2;3] [4;5];;
+    - : int list = [4; 5; 1; 2; 3]
+
+See also: apply, dbl_arg, id_fn, con_fn, ( <* ).
+
+********************************************************************************
+
+switch : 'a * 'b -> 'b * 'a
+
+Switches around the two components of a given pair.
+
+    # switch ("x",3);;
+    - : int * string = (3, "x")
+
+See also: fst, snd, pair.
+
+********************************************************************************
+
+tl : 'a list -> 'a list
+
+Returns the tail items of a list.  Fails if the list is empty.
+
+    # tl [8;3;2;7];;
+    - : int list = [3; 2; 7]
+
+See also: hd, hd_tl, front, last, cut, el.
+
+********************************************************************************
+
+try0 : ('a -> 'b) -> 'a -> exn -> 'b
+
+Applies the supplied function to the supplied argument, and if this causes a
+HolFail exception then catches this and raises the supplied exception instead.
+
+    # try0 foo 5 LocalFail;;
+    LocalFail
+
+See also: assert0, check, try1, try2, hol_fail, HolFail, HolError, LocalFail.
+
+********************************************************************************
+
+try1 : ('a -> 'b) -> 'a -> string * string -> 'b
+
+Applies the supplied function to the supplied argument, and if this causes a
+HolFail exception then catches this and raises a HolFail exception with the
+supplied function name and message instead.
+
+    # try1 foo 5 ("bar", "5 is an invalid argument");;
+    Exception: [HZ] FAIL: bar - 5 is an invalid argument.
+
+See also: try0, try2, assert1, check, hol_fail, HolFail.
+
+********************************************************************************
+
+try2 : ('a -> 'b) -> 'a -> string -> 'b
+
+Applies the supplied function to the supplied argument, and if this causes a
+HolFail exception then catches this and reraises the HolFail with the same
+message but for the supplied function name.
+
+    # try2 (fun n -> assert1 (n = 3) ("foo","Not equal to 3")) 5 "bar";;
+    Exception: [HZ] FAIL: bar - Not equal to 3.
+
+See also: try0, try1, assert1, check, hol_fail, HolFail.
+
+********************************************************************************
+
+try_filter : ('a -> 'b) -> 'a list -> 'b list
+
+Applies the supplied function to those items of the supplied list that don't
+cause a HolFail exception, and removing items that do.
+
+    # try_filter (tl <* tl) [ []; [1]; [2]; [3;4;5;6]; [7;8;9] ];;
+    - : int list list = [[5; 6]; [9]]
+
+See also: try_find, map, filter, HolFail.
+
+********************************************************************************
+
+try_find : ('a -> 'b) -> 'a list -> 'b
+
+Applies the supplied function to the first item of the supplied list that
+doesn't cause a HolFail exception.  Fails if there is no such list item.
+
+    # try_find (tl <* tl) [ []; [1]; [2]; [3;4;5;6]; [7;8;9] ];;
+    - : int list = [5; 6]
+
+See also: try_filter, find, mem, exists, HolFail.
+
+********************************************************************************
+
+uncurry : ('a -> 'b -> 'c) -> 'a * 'b -> 'c
+
+Returns the tupled equivalent of the supplied curried binary function.
+
+    # 
+    - : 
+
+See also: curry, pair_apply, swap_arg, dbl_arg.
+
+********************************************************************************
+
+unfold : ('a -> 'a * 'a) -> 'a -> 'a list
+
+Uses a given binary destructor to repeatedly destruct all branches of the
+supplied argument until the destructor causes a HolFail exception on each
+subbranch.  Returns a flattened list of the resulting tips.
+
+    # 
+    - : 
+
+See also: unfoldl1, unfoldr1, unfoldl, unfoldr.
+
+********************************************************************************
+
+unfoldl : ('a -> 'a * 'b) -> 'a -> 'a * 'b list
+
+Uses a given binary destructor to repeatedly destruct the LHS branch of the
+supplied argument until the destructor causes a HolFail exception.  Returns the
+innermost LHS paired with the list of RHSs.
+
+    # 
+    - : 
+
+See also: unfoldr, unfoldl1, foldl', foldl.
+
+********************************************************************************
+
+unfoldl1 : ('a -> 'a * 'a) -> 'a -> 'a list
+
+Uses a given binary destructor to repeatedly destruct the LHS branch of the
+supplied argument until the destructor causes a HolFail exception.  Returns the
+list starting with innermost LHS followed by the RHSs.
+
+    # 
+    - : 
+
+See also: unfoldr1, unfoldl, foldl1', foldl1.
+
+********************************************************************************
+
+unfoldr : ('a -> 'b * 'a) -> 'a -> 'b list * 'a
+
+Uses a given binary destructor to repeatedly destruct the RHS branch of the
+supplied argument until the destructor causes a HolFail exception.  Returns the
+list of LHSs, paired with the innermost RHS.
+
+    # 
+    - : 
+
+See also: unfoldl, unfoldr1, foldr', foldr.
+
+********************************************************************************
+
+unfoldr1 : ('a -> 'a * 'a) -> 'a -> 'a list
+
+Uses a given binary destructor to repeatedly destruct the RHS branch of the
+supplied argument until the destructor causes a HolFail exception.  Returns the
+list of the LHSs and ending with the innermost RHS.
+
+    # 
+    - : 
+
+See also: unfoldl1, unfoldr, foldr1', foldr1.
+
+********************************************************************************
+
+unzip : ('a * 'b) list -> 'a list * 'b list
+
+Splits up the supplied list of pairs into the list of the first components and
+the list of the second components of each pair.
+
+    # unzip [(1,"a");(2,"b");(3,"c")];;
+    - : int list * string list = ([1; 2; 3], ["a"; "b"; "c"])
+
+See also: zip, pair_apply.
+
+********************************************************************************
+
+up_to : int -> int -> int list
+
+Returns the contiguous increasing list of integers ranging from the first
+supplied integer to the second.  Returns an empty list if the second argument is
+less than the first.
+
+    # up_to 1 10;;
+    - : int list = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10]
+
+See also: decrement.
+
+********************************************************************************
+
+warn : string -> unit
+
+Outputs the supplied string prepended with "[HZ] WARNING: " to standard output,
+followed by a full stop and newline, and then flushes the output stream.
+
+    # warn "hello";;
+    [HZ] WARNING: hello.
+    - : unit = ()
+
+See also: report, quote.
+
+********************************************************************************
+
+zip : 'a list -> 'b list -> ('a * 'b) list
+
+Combines corresponding items of the two supplied lists into pairs.  Fails if the
+lists do not have the same length.
+
+    # zip [1;2;3] ["a";"b";"c"];;
+    - : (int * string) list = [(1, "a"); (2, "b"); (3, "c")]
+
+See also: unzip, pair_apply.
+
+********************************************************************************
+
+( <* ) : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b
+
+The infix binary function for function composition.  Called the 'B' combinator
+in combinatory logic.
+
+    # (length <* explode <* string_of_int) 5358;;
+    - : int = 4
+
+See also: funpow, id_fn, con_fn, swap_arg, dbl_arg.
+
+********************************************************************************
+
+.... reader combinators ....
+.... Readfail exception ....
+
+
+********************************************************************************
+********************************************************************************
+********************************************************************************
+
+setify : 'a list -> 'a list
+
+Removes any duplicate items from the supplied list.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+mem : 'a -> 'a list -> bool
+
+Returns "true" iff the supplied item is in the supplied list.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+insert : 'a -> 'a list -> 'a list
+
+Adds the supplied item to the supplied list unless it is already in the list.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+union : 'a list -> 'a list -> 'a list
+
+Creates a list of items that occur in either of the two supplied lists.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+unions : 'a list list -> 'a list
+
+Creates a list of items that occur in any list in the supplied list of lists.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+intersect : 'a list -> 'a list -> 'a list
+
+Creates a list of items that occur in both of the two supplied lists.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+subset : 'a list -> 'a list -> bool
+
+Returns "true" iff all items in the first supplied list also occur in the
+second.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+subtract : 'a list -> 'a list -> 'a list
+
+Removes items from the first supplied list that also occur in the second.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+disjoint : 'a list -> 'a list -> bool
+
+Returns "true" iff there are no items common to both supplied lists.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+set_eq : 'a list -> 'a list -> bool
+
+Returns "true" iff the two supplied lists have the same items (disregarding
+duplicates).
+
+    # 
+    - : 
+
+See also: seq_eq', subset, mem, union...
+
+********************************************************************************
+
+no_dups : 'a list -> bool
+
+Returns "true" iff the supplied list contains no duplicates.
+
+    #
+    - :
+
+See also: 
+
+********************************************************************************
+
+no_dups' : ('a->'a->bool) -> 'a list -> bool
+
+Returns "true" iff the supplied list contains no duplicates, modulo the supplied
+equivalence relation.
+
+    #
+    - :
+
+See also: 
+
+********************************************************************************
+
+setify' : ('a->'a->bool) -> 'a list -> 'a list
+
+Removes any duplicate items from the supplied list, modulo the supplied
+equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+mem' : ('a->'a->bool) -> 'a -> 'a list -> bool
+
+Returns "true" iff the supplied item is in the supplied list, modulo the
+supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+insert' : ('a->'a->bool) -> 'a -> 'a list -> 'a list
+
+Adds the supplied item to the supplied list unless it is already in the list,
+modulo the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+union' : ('a->'a->bool) -> 'a list -> 'a list -> 'a list
+
+Creates a list of items that occur in either of the two supplied lists, modulo
+the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+unions' : ('a->'a->bool) -> 'a list list -> 'a list
+
+Creates a list of items that occur in any list in the supplied list of lists,
+modulo the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+intersect' : ('a->'a->bool) -> 'a list -> 'a list -> 'a list
+
+Creates a list of items that occur in both of the two supplied lists, modulo the
+supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+subtract' : ('a->'a->bool) -> 'a list -> 'a list -> 'a list
+
+Removes items from the first supplied list that also occur in the second, modulo
+the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+subset' : ('a->'a->bool) -> 'a list -> 'a list -> bool
+
+Returns "true" iff all items in the first supplied list also occur in the
+second, modulo the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+disjoint' : ('a->'a->bool) -> 'a list -> 'a list -> bool
+
+Returns "true" iff there are no items common to both supplied lists, modulo the
+supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************
+
+set_eq' : ('a->'a->bool) -> 'a list -> 'a list -> bool
+
+Returns "true" iff the two supplied lists have the same items (disregarding
+duplicates), modulo the supplied equivalence relation.
+
+    # 
+    - : 
+
+See also: 
+
+********************************************************************************

@@ -1,0 +1,51 @@
+================================================================================
+==                       HOL ZERO UNSOUNDNESS BOUNTY                          ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2014                            ==
+================================================================================
+
+There is a $100 bounty reward for any problems found in HOL Zero relating to
+unsoundness.  The bounty will be awarded per problem to the first person/people
+to contact Proof Technologies with a demonstration.  See the README file for
+contact details.
+
+QUALIFYING FOR THE REWARD
+
+For something to qualify as an unsoundness problem, it must relate to either an
+unsoundness in HOL Zero's logic (design or implementation), or a problem in its
+pretty printer that makes it appear that there is an unsoundness in its logic.
+The problem must be reproducible and demonstrated by ML source code to be run in
+a standard HOL Zero base system session.  The source code must clearly expose
+the unsoundness by providing an ML value that gets displayed with ML datatype
+'thm' and showing what appears to be an unsound result (given examination of the
+theory's assertions).
+
+Note that the bounty will not (or no longer) be paid out for any of the
+following known dangerous scenarios:
+
+ - using a non-standard install/build of HOL Zero (e.g. OCaml with parallelism);
+ - overwriting key ML objects (e.g. the 'thm' datatype or 'get_all_axioms');
+ - overwriting the pretty printer for key ML datatypes (e.g. 'thm' or 'list');
+ - circumventing the ML language proper or its type system (e.g. 'Obj.magic');
+ - circumventing, reconfiguring or interfering with the implementation of ML;
+ - exploiting bugs in the implementation of ML;
+ - changing the OS environment in which the implementation of ML runs.
+
+Neither will it be paid out if Proof Technologies are already aware of the
+problem or if the latest release of HOL Zero already fixes the problem.
+
+Proof Technologies shall ultimately be the judge of whether an unsoundness has
+been uncovered.  All successful bounty claims shall be reported on the Proof
+Technologies website.
+
+SUCCESSFUL CLAIMANTS TO DATE
+
+The following individuals have successfully claimed the bounty:
+
+   Martin von Gagern [2010-09-16]
+      - for exposing how escape characters can be confusingly displayed in
+       certain circumstances
+
+   Carl Witty [2010-09-16]
+      - for exposing how 'Obj.magic' can be used to create arbitrary theorems

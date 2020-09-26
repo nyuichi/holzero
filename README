@@ -1,0 +1,219 @@
+================================================================================
+==                               HOL ZERO                                     ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2009-2016                            ==
+================================================================================
+
+This is the HOL Zero theorem prover.  See VERSION file for the version number.
+
+Subsequent sections in this README deal with:
+
+    1. Directory Contents
+    2. Overview of HOL Zero
+    3. System Requirements and Installation
+    4. Starting HOL Zero
+    5. Author and Acknowledgements
+    6. Copyright, Licence and Disclaimer
+    7. Website, Bounty and Contact Details
+
+        *         *         *         *         *         *         *
+
+                           1. DIRECTORY CONTENTS
+
+The HOL Zero home directory consists of the following files:
+
+  CHANGES     List of changes between versions.
+  INSTALL     Instructions on how to install HOL Zero and supporting software.
+  LICENSE     Disclaimer and terms of the open source licence.
+  README      This file.
+  VERSION     File containing the version number of this HOL Zero release.
+
+  configure   Executable for configuring the installation.
+  Makefile    File used by 'make' to direct the installation.
+
+the following temporary file:
+
+  Makefile.config
+              Installation configuration file resulting from 'configure'.
+
+the following directories:
+
+  doc         Documentation.  Includes user manual and glossary.
+  etc         Supporting files used in the installation.
+  src         Source code.
+
+and, by default, the following temporary directory:
+
+  bin         Executables.  Default location created on installation.
+
+        *         *         *         *         *         *         *
+
+                          2. OVERVIEW OF HOL ZERO
+
+HOL Zero is a HOL theorem prover, i.e. a program for performing mechanised
+formal proof according to the formal logic Higher Order Logic (HOL).  HOL is a
+classical, higher-order logic with a simple polymorphic type system.  There are
+various HOL theorem provers, and HOL Zero is the simplest.
+
+HOL Zero's primary intended role is:
+
+ - A trusted platform for replaying formal proofs performed on other systems,
+  for the purposes of checking and/or consolidating proofs.  Note that, for this
+  role, some mechanism for exporting proof objects from other systems and for
+  importing them into HOL Zero is required (but not included).  One such
+  mechanism is currently under development at Proof Technologies.
+
+HOL Zero also has various other, overlapping roles:
+
+ - A simple tool for mechanised formal proof, for teaching formal logic;
+ - A pedagogical example of a simple LCF-style theorem prover implementation,
+  for teaching computer science;
+ - A clear example of the Common HOL API (an API for basic HOL functionality);
+ - A basis for experimentation in theorem prover design;
+ - A driving force for improvements in basic aspects of other HOL systems.
+
+With these roles in mind, it has been carefully designed and implemented from
+scratch, with priorities in trustworthiness, basic, reliable functionality and
+simple, well-commented source code.  The source code aims to be understandable
+to people unfamiliar with theorem prover implementation.  Source code comments
+give clear explanation of context, and included in the documentation directory
+is an extensive glossary of technical terminology.
+
+HOL Zero is a basic system, much smaller than the other HOL systems.  Its
+theory covers just lambda calculus, predicate logic, ordered pairs and natural
+numbers.  Interactive proof is done by joining basic forward proof steps via a
+simple command line interface.  It lacks the interactive and automated resaoning
+facilities considered as almost essential in other systems.  However, like the
+other HOL systems, it has an LCF-style architecture.  This means it can be
+extended indefinitely by the user, to include the extensive theory and reasoning
+facilities of other systems and beyond.  Furthermore, this architecture
+guarantees that these extensions cannot compromise system soundness.  Most of
+mathematics can be built upon this basic, robust system.
+
+        *         *         *         *         *         *         *
+
+                  3. SYSTEM REQUIREMENTS AND INSTALLATION
+
+HOL Zero can run on any Unix-like operating system (e.g. Mac OS X, Cygwin,
+Linux, Solaris, BSD, Minix) that runs the Bash shell.  It requires the programs
+OCaml and Camlp5 to be installed.  OCaml and Camlp5 are available from the
+following webpages respectively:
+
+        http://ocaml.org/releases/
+
+        http://camlp5.gforge.inria.fr/
+
+HOL Zero itself is installed by a classic Make-style process, but where the
+distribution directory doubles as the HOL Zero home directory, and so should not
+be moved or deleted after installation.  Detailed instructions are provided in
+INSTALL, but for a simple installation, with executables placed in the 'bin'
+subdirectory of the HOL Zero home directory, enter the following in a Unix
+terminal window (and add the 'bin' subdirectory to your user execution path):
+
+      > ./configure         (the ">" indicates the terminal window prompt)
+      > make
+      > make install
+      > make clean
+
+This is sufficient to get HOL Zero running.  However, for anything more than
+trivial interaction, a GUI that supports classic text editing and interactive
+session feedback in separate subwindows is almost essential.  The Emacs editor
+is well-equipped for this task, but for those uncomfortable with its
+idiosyncratic editing conventions, we recommend the editor that comes bundled
+with the ProofPower theorem prover, called Xpp.  Note that Xpp requires Motif to
+be installed.  ProofPower can be downloaded from:
+
+        http://www.lemma-one.com/
+
+For more detailed installation instructions for all the above programs,
+including background appendices for Unix novices, see INSTALL.
+
+        *         *         *         *         *         *         *
+
+                           4. STARTING HOL ZERO
+
+Once installed, HOL Zero is started by running the executable 'holzero'.  We
+give two alternatives for doing this from a Unix terminal window:
+
+ 1. The simplest way is to run HOL Zero in the terminal window itself.
+   However, note that in-line editing facilities will be poor unless you have
+   RLWrap installed (see INSTALL file).  Directly execute the 'holzero'
+   command from the terminal window:
+
+      > holzero           (the ">" indicates the terminal window prompt)
+
+ 2. A better alternative for substantial interaction is to start an editor
+   window that maintains separate subwindows for the user ML input script and
+   the ML session feedback.  A good simple editor for this is Xpp (see INSTALL
+   file), which is started by:
+
+      > xpp -c holzero
+
+   In Xpp, the upper window is for editing text and the lower window is for
+   session feedback.  To enter text into the session, select the text and
+   press Ctrl-Enter.  Text can also be entered line-by-line by pressing
+   Ctrl-N at each line.
+
+The first few seconds of starting HOL Zero involve building the system from
+scratch.  A few hundred lines of output whizz past the screen, and then the HOL
+Zero banner is printed, indicating a successful build.  HOL Zero is then ready
+for user interaction.  Refer to Section 1.3 of the user manual (in the
+documentation directory) for a brief introduction to using HOL Zero.
+
+        *         *         *         *         *         *         *
+
+                      5. AUTHOR AND ACKNOWLEDGEMENTS
+
+HOL Zero is written by Mark Adams, Proof Technologies Ltd.  Many aspects of its
+design draw on the work of others who have worked in the field, most notably
+Robin Milner, Mike Gordon, Larry Paulson, Tom Melham, Roger Jones, Konrad Slind
+and John Harrison.  HOL Zero is inspired, in particular, by the beauty and
+simplicity of Harrison's HOL Light system.
+
+We would like to acknowledge the following individuals, whose comments and
+suggestions have helped make HOL Zero a better system:
+
+  Rob Arthan            Phil Clayton        Mike Gordon        Tom Hales
+  John Harrison         Peter Homier        Roger Jones        Cezary Kaliszyk
+  Daniel Moniz          Michael Norrish     Randy Pollack      Cris Perdue
+  Daniel de Rauglaudre  Sebastian Reichelt  Matt Wampler-Doty  Makarius Wenzel
+  Roland Zumkeller
+
+HOL Zero is dedicated to Robin Milner, inventor of the "LCF style" of theorem
+prover design and the ML programming language, who sadly passed away in 2010,
+and to Mike Gordon, who created the HOL logic and the first HOL system.
+
+        *         *         *         *         *         *         *
+
+                    6. COPYRIGHT, LICENCE AND DISCLAIMER
+
+All files in this distribution are copyright Proof Technologies Ltd, 2008-2016.
+
+All files are distributed under the terms of the GNU General Public License
+(version 3): they are free and open source and come with no warranty.  See the
+LICENSE file for details.
+
+        *         *         *         *         *         *         *
+
+                   7. WEBSITE, BOUNTY AND CONTACT DETAILS
+
+The Proof Technologies website has pages dedicated to HOL Zero, including the
+download for the latest version, at:
+
+        http://www.proof-technologies.com/holzero/
+
+Users are encouraged to contact Proof Technologies with any problems found in
+the HOL Zero system, or with any suggestions for improvements.  There is a $100
+bounty for any soundness-related problems found (see the 'Bounty.txt' file in
+the documentation directory).
+
+You can contact us via the website HOL Zero pages.  Alternatively, you can
+e-mail us:
+
+        holzero@proof-technologies.com
+
+To receive occasional news about HOL Zero, e-mail the following address, with
+"subscribe" in the subject field:
+
+        holnews@proof-technologies.com

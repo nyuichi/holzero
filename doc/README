@@ -1,0 +1,43 @@
+================================================================================
+==                      HOL ZERO DOCUMENTATION DIRECTORY                      ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2013                            ==
+================================================================================
+
+This is the HOL Zero documentation directory, both for users and for those
+looking to understand the implementation.  It includes the user, auditor and
+programmer manuals plus various other useful documents.
+
+! Note that in this early release of HOL Zero, various parts of the manuals are
+! incomplete.  Please refer to the Proof Technologies website for updates.
+
+        *         *         *         *         *         *         *
+
+                             DIRECTORY CONTENTS
+
+This directory consists of the following files:
+
+  File                   Readers Description
+                         U A P
+
+  README                 * * *   This file.
+
+  Bounty.txt                 *   Details of the bounty reward for unsoundness.
+  Comparison.txt         + + +   Comparison of HOL system language dialects.
+  Glossary.txt           + + +   Glossary of HOL-related terminology.
+
+and the following directories:
+
+  Directory              Readers Description
+                         U A P
+
+  User_Manual            * * *   Main manual for all users of the system.
+
+Readership key:
+
+  U  - Basic/advanced users
+  A  - Auditors
+  P  - Programmers and bounty hunters
+  *  - Highly relevant
+  +  - Background reading

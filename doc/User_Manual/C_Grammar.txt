@@ -1,0 +1,136 @@
+================================================================================
+== APPENDIX C: FORMAL GRAMMAR OF HOL LANGUAGE (HOL Zero User Manual)          ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2014                            ==
+================================================================================
+
+
+This appendix gives a formal grammar for the HOL language type and term concrete
+syntax described in Chapter 3.  This grammar consists of three levels:
+characters, lexical syntax and type/term syntax.  Left-recursion is avoided in
+order to ease implementation of a recursive descent parser.
+
+        *         *         *         *         *         *         *
+
+                                  NOTATION
+
+A form of Extended BNF notation is used to describe the grammar.
+
+At a given level of the grammar, names starting with uppercase letters are
+terminal symbols, whereas names starting with lowercase letters are nonterminal
+symbols, so uppercase names become lowercase names when referred to at the next
+level.  Hyphenated prefixes denote qualifying conditions (so Nonfix-Var-
+termatom, for example, denotes a term atom that is both nonfix and a variable).
+
+The following symbols are used:
+
+    ... | ...     Alternation
+    { ... }?      0 or 1 occurrences
+    { ... }*      0 or more occurrences
+    { ... }+      1 or more occurrences
+    { ... }++     2 or more occurrences
+    ...-"x"       Separator "x" between each occurrence
+
+        *         *         *         *         *         *         *
+
+                                   GRAMMAR
+
+
+CHARACTERS
+
+letter           =  'a' .. 'z' | 'A' .. 'Z'
+
+digit            =  '0' .. '9'
+
+dquote           =  '"'
+backslash        =  '\'
+backquote        =  '`'
+normal_char      =  <any printable char other than '\', '"' and '`'>
+
+whitespace_char  =  Space | Tab | Line_Feed | Carriage_Return | Form_Feed
+
+alphanum_char1   =  letter | '_'
+
+alphanum_char2   =  letter | digit | '_' | '''
+
+punctuation      =  '(' | ')' | ',' | ':'
+
+symbolic_char    =  '!' | '#' | '&' | '*' | '+' | '-' | '.' | '/'
+                  | ';' | '<' | '=' | '>' | '?' | '@'
+                  | '[' | '\' | ']' | '^' | '{' | '|' | '}' | '~'
+
+
+LEXICAL SYNTAX
+
+keyword    =  Backslash | "." | "|-"
+            | "if" | "then" | "else" | "let" | "and" | "in"
+
+enumbrkt   =  <user-defined>
+
+alphanum   =  Alphanum_char1 { Alphanum_char2 }*
+
+symbolic   =  { Symbolic_char }+
+
+quote      =  Dquote
+                 {   Normal_char
+                   | Backslash ( Backslash | Dquote | Digit Digit Digit ) }*
+              Dquote
+
+ident      =  { "$" }? { "'" | "%" }? ( alphanum | symbolic | quote )
+
+numeric    =  { "$" }? { "'" }? Digit { Digit | "_" }*
+
+resword    =  Punctuation | keyword | enumbrkt
+
+token      =  ident | numeric | resword
+
+
+TYPE SYNTAX
+
+The start symbol for type syntax is 'type'.
+
+type2      =  Tyvar-Ident/Numeric
+            | Nonfix-Tyconst-Ident/Numeric
+            | "(" { type }++-"," ")" Nonfix-Tyconst-Ident/Numeric
+            | "(" type ")"
+
+type1      =  type2
+            | type2 { Nonfix-Tyconst-Ident/Numeric }+
+
+type       =  type1
+            | type1 { Infix-Tyconst-Ident/Numeric type1 }+
+
+
+TERM SYNTAX
+
+The start symbol for term syntax is 'term'.
+
+termatom   =  Var-Ident
+            | Const-Ident
+            | "(" termatom ":" type ")"
+
+term5      =  Nonfix-termatom
+            | Numeric
+            | "if" term1 "then" term1 "else" term1
+            | "let" { Nonfix-Var-termatom "=" term1 }+-"and" "in" term1
+            | Backslash { Nonfix-Var-termatom }+ "." term1
+            | Binder-termatom { Nonfix-Var-termatom }+ "." term1
+            | Enumbrkt { term }*-"," Enumbrkt
+            | "(" { term }++-"," ")"
+            | "(" term ")"
+
+term4      =  term5
+            | { term5 }++
+
+term3      =  term4
+            | term4 Postfix-termatom
+
+term2      =  term3
+            | Prefix-termatom term2
+
+term1      =  term2
+            | term2 { Infix-termatom term2 }+
+
+term       =  term1
+            | term1 : type

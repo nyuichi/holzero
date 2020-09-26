@@ -1,0 +1,600 @@
+================================================================================
+==                            HOL ZERO CHANGES                                ==
+==                                                                            ==
+== by Mark Adams                                                              ==
+== Copyright (c) Proof Technologies Ltd, 2010-2016                            ==
+================================================================================
+
+This file details significant changes made since version 0.3.0 of HOL Zero.
+
+        *         *         *         *         *         *         *
+
+                                   SUMMARY
+
+Version / Date     Main Changes
+
+0.6.3  2016-04-25  Correct bugs; Platform 0.5; Improve installation & robustness
+0.6.2  2013-10-15  Improve installation & docs
+0.6.1  2013-06-26  Improve installation, robustness, docs & comments
+0.6.0  2013-01-31  Use Make-style installation; Platform 0.4; Use numeral wrap;
+                   Improve robustness, parser, help, terminology & docs
+
+0.5.4  2012-03-31  Simplify kernel & AA trees; Extra bool thms; Improve docs
+0.5.3  2011-11-08  Improve docs
+0.5.2  2011-10-15  Add const spec primitive; Correct AA tree bug
+0.5.1  2011-09-12  Correct unsoundness
+0.5.0  2011-08-22  Improve nat theory; Use AA trees; Platform 0.3; API module
+
+0.4.7  2011-05-24  Correct unsoundness
+0.4.6  2011-04-28  Correct unsoundness & help bug
+0.4.5  2011-04-08  Correct unsoundness
+0.4.4  2011-02-19  Correct unsoundness; Support Camlp5 6.x; Simplify kernel
+0.4.3  2011-01-24  Correct unsoundness
+0.4.2  2011-01-17  Improve docs & parser/printer
+0.4.1  2010-11-13  Improve docs; Correct parser/printer bugs
+0.4.0  2010-11-06  Extra bool/nat thms/convs; Improve parser & docs
+
+0.3.2  2010-09-23  Add help facility; Improve docs
+0.3.1  2010-09-16  Correct unsoundness; Improve lexer
+0.3.0  2010-09-14  (baseline)
+
+        *         *         *         *         *         *         *
+
+KEY
+
+(*)     Not a backwardly compatible change.
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.6.3                    [2016-04-25]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Robustness: Overwrite type-unsafe functions in 'Marshal' & 'Obj' modules
+- Theory Commands: Use tree for const spec database
+- Naming: Rename 'prim_refl_conv' -> 'prim_eq_refl_conv' (*)
+
+Theories
+- Boolean: Further simplify proof of Excluded Middle
+- Boolean: Add theorem 'imp_alt_def_thm' for Common HOL Platform 0.5
+- Boolean: Add theorem 'exists_value_thm'
+- Equality: Rename 'sym_rule' -> 'eq_sym_rule', 'sym_conv' -> 'eq_sym_conv',
+       '{list_}trans_rule' -> '{list_}eq_trans_rule',
+       'refl_conv' -> 'eq_refl_conv' (*)
+- Naturals: Correct bug in 'eval_nat_eq_conv'
+- Naturals: Correct bug in 'mk_nat'
+
+Utilities
+- HOL utilities: Rename 'rename_avar' -> 'rename_bvar' (*)
+- ML library: Add 'apply' and 'copy' functions
+- ML library: Make 'up_to' tail recursive
+- Files: Remove 'FileCmd' module and incorporate 'use_file' into main build file
+
+General
+- Install: Work out Camlp5 lib dir instead of assuming in 'camlp5' of OCaml lib 
+- Install: Improve checks and user feedback in 'Makefile'
+- Install: Add 'distclean' option to 'Makefile'
+- Install: Put 'Makefile.config' in HZ home dir instead of HZ 'etc' dir
+- Common HOL: Update to version 0.5 of Common HOL Platform
+
+DOCUMENTATION
+
+User Manual
+- Chapter 4: Correct error in example inconsistency proof in section 4.4.8
+
+Supporting Documents
+- Glossary: Improve numerous entries
+
+Home Directory
+- INSTALL: Restructure sections and appendices
+- INSTALL: Update URLs for OCaml & Camlp5
+- INSTALL: Add details about installing tools from source for Mac OS X
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.6.2                    [2013-10-15]
+
+SOURCE CODE
+
+Utilities
+- ML library: Rename 'map2' -> 'bimap' (*)
+
+General
+- Install: Use Camlp5 6.11 source in 'pa_o.ml' & 'plexer.ml', for OCaml 4.01
+- Install: Add 'compiler-libs' to lib path, for OCaml 4.00 and later
+- Install: Correct bug in 'Makefile' for dependency on 'etc/Makefile.config'
+- Install: Improve user feedback for 'configure' and 'Makefile' scripts
+- Help: Correct bug in help for Mac OS X
+
+DOCUMENTATION
+
+User Manual
+- Chapter 2: Add sections for meta functions, sorting, sets and reporting
+
+Supporting Documents
+- Glossary: Add 31 entries on parsing/grammars
+- Glossary: Add 5 other entries, improve various entries
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.6.1                    [2013-06-26]
+
+SOURCE CODE
+
+General
+- Robustness: Overwrite 'Obj' module with a blank module
+- Install: Remove --prefix 'configure' options, and add --help option
+- Datatypes: Consistent use of 'big_int' inside core system and 'int' outside
+- Comments: Various small improvements
+
+DOCUMENTATION
+
+User Manual
+- Chapter 2: Write first draft of most sections
+- Chapter 3: Revise sections 3.2 and 3.3
+
+Supporting Documents
+- Glossary: Add 14 entries on syntax/parsing
+- Glossary: Add 11 entries on mathematical logic
+- Glossary: Add 5 other entries, improve various others
+
+Home Directory
+- INSTALL: Add Quick Guide section
+
+General
+- Terminology: "theory object" -> "theory entity"
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.6.0                    [2013-01-31]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Robustness: Use 'big_int' datatype in core system instead of 'int'
+- Robustness: Ensure that 'immutise' is used at the start of primitives
+
+Parser/Printer
+- Parser: Improve error reporting for various syntax errors
+- Printer: Improve printing of curried applications to handle fixity subterms
+- Printer: Invert parse level, so that low for low precedence binding constructs
+- Syntax: Change precedence so that Postfix lower precedence than Nonfix (*)
+- Display modes: Rename ML command for summarising display modes (*)
+
+Theories
+- Equality: Change order of arguments for 'alpha_link_conv' (*)
+- Equality: Remove meta conversionals (*)
+- Boolean: Rename 'hspec_rule' -> 'bspec_rule' (*)
+- Naturals: Add wrap for numerals
+- Naturals: Rename numeral syntax fns, and use 'big_int' instead of 'num' (*)
+- Naturals: Add alternative 'int' numeral syntax functions
+
+Utilities
+- HOL utilities: Add 'same_types' function
+- ML library: Add 'no_dups' function
+- ML library: Rename 'null_intersection' -> 'disjoint' (*)
+
+General
+- Install: Adopt a Make-style installation process and 'holzero' executable
+- Install: Create a separate OCaml top level, called 'hzocaml'
+- Install: Set 'hol_version' in 'hzocaml' according to VERSION
+- Install: Correct bugs in installation when in Mac OS X & Cygwin
+- Help: Add theorems and glossary entries to help facility
+- Naming: Rename commands involving 'type'/'tyop' -> 'tyconst (*)
+- Common HOL: Change version 0.3 -> 0.4 (*)
+- Style: Ensure type-specific comparison operations used for types/terms
+- Style: Use '==' comparison for recognising identical subterms
+- Files: Rename modules 'TypeCalc' -> 'TypeAnal'; 'Cong' -> 'EqCong'
+- Files: Split 'Extras' module into 'Help' and 'Banner'
+- Files: Rename file 'sys.ml' -> 'system.ml'
+
+DOCUMENTATION
+
+User Manual
+- Chapter 3: Reorganise sections and improve content
+- Chapter 4: Reorganise sections and update content
+- Appendix A5: Add 6 entries
+
+Supporting Documents
+- Glossary: Add 12 entries on theorem provers
+- Glossary: Add 17 entries on mathematical logic
+- Glossary: Add 21 other entries, improve various others
+
+Home Directory
+- INSTALL: Add section for HOL Zero installation
+- INSTALL: Reorganise existing sections and improve content
+
+General
+- Terminology: "type operator" -> "type constant"; "type constant" ->"base type"
+- Terminology: "core logic" -> "logical core"
+- Terminology: "abstraction variable" -> "binding variable"
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.5.4                    [2012-03-31]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Inference rules: Move step counting out of inference kernel into wrapped rules
+- Inference rules: Give kernel inference rule names "prim_" prefix
+
+Parser/Printer
+- Files: Split off display modes into separate module
+- Display modes: Rename ML display mode commands (*)
+- Display modes: Add command for summarising all display modes
+
+Theories
+- Boolean: Add 7 algebraic logic thms
+
+Utilities
+- ML library: Simplify implementation of AA trees, improve comments
+- ML library: Rename "dltree_remove" -> "dltree_delete" (*)
+- ML library: Improve layout of reported messages
+
+General
+- Comments: Various small improvements and corrections
+
+DOCUMENTATION
+
+User Manual
+- Appendix A1: Add entries for tree operations
+
+Supporting Documents
+- Glossary: Add 24 entries, improve various others
+
+Home Directory
+- INSTALL/README: Add instructions for installing/using Rlwrap
+- INSTALL: Improve instructions for OCaml and Camlp5
+
+General
+- Filenames: Give text files '.txt' extension
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.5.3                    [2011-11-08]
+
+SOURCE CODE
+
+General
+- Common HOL: Rename the Common HOL API module 'Platform' -> 'CommonHOL' (*)
+
+DOCUMENTATION
+
+User Manual
+- Reorganise chapters and add an introductory chapter
+
+Supporting Documents
+- Glossary: Add 6 entries, improve various others
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.5.2                    [2011-10-15]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Theory commands: Move const spec to inference kernel
+
+Utilities
+- ML library: Correct bug in AA tree delete operation
+- ML library: Simplify datatype representation for AA trees
+
+General
+- OCaml style: Change logical operator names "&"/"or" -> "&&"/"||"
+
+DOCUMENTATION
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.5.1                    [2011-09-12]
+
+SOURE CODE
+
+Parser/Printer
+- Soundness bug: Correct setting of enum brackets to immutise the name ins/outs
+- Names: Neater implementation of enum brackets database & fuller comments
+
+Theories
+- Naturals: Give simpler definition of "EXP"
+
+DOCUMENTATION
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.5.0                    [2011-08-22]
+
+SOURE CODE
+
+Theories
+- Naturals: Prove primitive recursion theorem for natural numbers
+- Naturals: Remove dependence on "+" in defs of "BIT0" & "BIT1"
+- Naturals: Give simpler definition of "ODD"
+- Naturals: Rename ML fns for "plus"/"times"/"minus" -> "add"/"mult"/"sub" (*)
+- Naturals: Make 'eval_pre_conv' & 'eval_sub_conv" work for floor cases
+- Naturals: Correct bugs in 'eval_even_conv', 'eval_odd_conv'
+- Naturals: Add 3 natural arithmetic thms
+- Boolean: Add 10 predicate logic thms & 1 equality congruence rule
+
+Utilities
+- ML library: Replace static lookup trees with AA trees
+- ML library: Add 'unfoldl{1}' & 'unfoldr{1}' compound destructor utils
+
+General
+- Common HOL: Add a module for the Common HOL API
+- Files: Reorganise and rename the 3 boolean and 4 naturals modules
+
+DOCUMENTATION
+
+Supporting Documents
+- Glossary: Add 9 entries, improve various others
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.7                    [2011-05-24]
+
+SOURCE CODE
+
+Parser/Printer
+- Files: Split off type annotation into separate module
+- Soundness bug: Correct preterm destructors used in printer
+- Printer: Lighter-weight type-annotation in Full mode
+
+Utilities
+- ML library: Rename 'do_list' -> 'do_map' (*)
+
+General
+- Style: Use defensive programming to ensure asserts are checked
+
+DOCUMENTATION
+
+Supporting Documents
+- Glossary: Various small improvements
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.6                    [2011-04-28]
+
+SOURCE CODE
+
+Parser/Printer
+- Soundness bug: Correct numeral printing, banning innermost "BIT0"
+- Comments: Various small improvements
+
+General
+- Help: Correct bug in 'hzhelp' for the new user manual directory location
+
+DOCUMENTATION
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.5                    [2011-04-08]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Utilities: Correct termination bug in 'cvariant' for when a const name is hit
+
+Parser/Printer
+- Soundness bug: Correct lexical status of turnstile, making it a reserved word
+- Comments: Various small improvements
+
+DOCUMENTATION
+
+Supporting Documents
+- Glossary: Add 9 entries and 12 links
+
+General
+- Put user manual files into their own subdirectory
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.4                    [2011-02-19]
+
+SOURCE CODE
+
+Language/Inference Kernel
+- Theory commands: Move benign redefinition support out of inference kernel
+- Theory commands: Give primitive theory command names "prim_" prefix
+
+Parser/Printer
+- Soundness bug: Correct let-expression printer to add parentheses
+
+Theories
+- Boolean: Change 'eq_imp_rule1/2' & 'imp_trans_rule' for simpler behaviour (*)
+
+General
+- Install: Cater for usage of Camlp5 6.x
+
+DOCUMENTATION
+
+General
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.3                    [2011-01-24]
+
+SOURCE CODE
+
+Parser/Printer
+- Soundness bug: Correct setting of type/term fixity to immutise the name input
+
+DOCUMENTATION
+
+General
+- Filenames: Restrict use of fully capitalised filenames to standard files
+- Various small improvements and corrections
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.2                    [2011-01-17]
+
+SOURCE CODE
+
+Parser/Printer
+- Syntax: Change classification of char ';' from punctuation to symbolic (*)
+- Syntax: Change separator for enumerations and thm asms from ";" to "," (*)
+- Syntax: Add fixity assochand datatype and use NonAssoc for infix relations (*)
+- Printer: Remove superfluous display of innermost compound infix brackets
+- Fixity: Rename 'remove_{type_}fixity' -> 'reset_{type_}fixity' (*)
+
+Theories
+- Files: Rename naturals modules with numeric suffix
+- Naturals: Add error messages for arithmetic evaluation conversions
+- Naturals: Add syntax functions for "EVEN" and "ODD"
+
+General
+- File headers: Correct copyright date ranges to reflect original start dates
+
+DOCUMENTATION
+
+User Manual
+- Chapter 2: Write syntax functions section; Improve various paragraphs
+- Chapter 3: Write theory & proof auditing sections; Improve various paragraphs
+- General: Add file headers
+
+Supporting Documents
+- Comparison: Add column for Isabelle/HOL; Reorganise entries
+- Glossary: Add 22 entries, including 17 for mathematical logic
+- Glossary: Improve various entries
+
+Home Directory
+- CHANGES: Create this file
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.1                    [2010-11-13]
+
+SOURCE CODE
+
+Parser/Printer
+- Parser: Correct bug in parsing of type operators with numeric names
+- Printer: Correct bug in printing of backquote characters
+- Lexer/Parser: Improve detection of lexical/syntax errors
+
+DOCUMENTATION
+
+User Manual
+- Chapter 2: Write declaration subsections; Improve various paragraphs
+- Chapter 3: Write theorem, proof and assertion sections
+- Appendix A1: Improve various entries
+- Appendix A5: Improve various entries; Add 1 entry
+
+Supporting Documents
+- Glossary: Add 2 entries; Improve various entries
+- Grammar: Correct lex and syntax descriptions
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.4.0                    [2010-11-06]
+
+SOURCE CODE
+
+Parser/Printer
+- Display modes: Add user feedback for setting display modes
+- Lexer: Improve lexical error messages for escaped chars & annotation marks
+- Parser: Improve comments relating to error detection
+- Parser: Improve syntax error messages for prefix & infix expressions
+- Reader utils: Add reader combinator '>@>' to help give better error messages
+- Reader utils: Rename reader combinators '>>@' -> '*@>'; '|>@|' -> '|@|' (*)
+
+Theories
+- Core theory: Rename module 'Init' -> 'CoreTheory'
+- Boolean: Create separate module for algebraic thms & congruence rules
+- Boolean: Add 27 algebraic logic thms
+- Boolean: Add 'deduct_contrapos_rule'
+- Naturals: Add 64 algebraic number thms
+- Naturals: Add evaluation conversions for arithmetic operators
+- Naturals: Add definitions for 'EXP', 'EVEN' and 'ODD'
+- Naturals: Rename 'nat_bij_thm1/2' -> 'nat_bij_def1/2' (*)
+
+Utilities
+- HOL utilities: Rename '{thm_}aconv' -> '{thm_}alpha_eq' (*)
+- ML library: Rename 'holfail' -> 'hol_fail' (*); move 'enumerate' into 'lib.ml'
+
+General
+- Error messages: Improve inference rule error messages
+- Error messages: Add 'Hol_Err' exception for unstoppable & internal errors
+- Feedback: Change user feedback prefix from "HOL Zero: " to "[HZ] "
+
+DOCUMENTATION
+
+User Manual
+- Chapter 2: Write display options and error messages sections
+- Chapter 2: Write type inference and setting/querying fixity subsections
+- Chapter 2: Add and improve various paragraphs
+- Appendix A1: Improve numerous entries
+- Appendix A4: Add 4 entries
+- Appendix A5: Add 14 entries, add links & informal descriptions for others
+- Appendix B1: Create file
+- Appendix B2: Create file
+
+Supporting Documents
+- Comparison: Add associativity information
+- Glossary: Add 9 entries on mathematical logic
+- Glossary: Add 10 other entries, improve various others
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.3.2                    [2010-09-23]
+
+SOURCE CODE
+
+Parser/Printer
+- Files: Split off lexer into separate file
+- Lexer: Improve reporting of lexical errors
+
+Theories
+- Naturals: Move arithmetic operator defs into separate file
+- Naturals: Add comments explaining "BIT0" and "BIT1" operators
+
+General
+- Help: Add help facility
+
+DOCUMENTATION
+
+User Manual
+- General: Reorganise and rename chapters and appendices
+- Chapter 2: Write free/bound vars subsection; Improve various paragraphs
+- Appendix A1: Add examples and links for 5 entries
+- Appendix A4: Add 7 entries
+- Appendix A5: Add informal descriptions for 24 entries
+
+Home Directory
+- Bounty: Reword qualifying criteria; Add list of successful claimants
+- INSTALL: Reorganise sections for each program
+
+        *         *         *         *         *         *         *
+
+                                VERSION 0.3.1                    [2010-09-16]
+
+SOURCE CODE
+
+Parser/Printer
+- Soundness bug: Correct lib routine for escaping characters, used in printer
+- Lexer: Add support for reading character ASCII codes inside quotes
+
+DOCUMENTATION
+
+User Manual
+- Appendix ML2: Improve various entries
+
